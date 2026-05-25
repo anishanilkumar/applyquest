@@ -126,10 +126,10 @@ def notify_daily_reminder(user_name: str, streak: int) -> None:
 def notify_streak_broken(user_name: str, streak: int) -> None:
     html = f"""
     <h2>Streak broken 😔</h2>
-    <p><strong>{user_name}</strong>'s <strong>{streak}-day streak</strong> was not maintained yesterday.</p>
-    <p>This might be a good time to check in and offer some encouragement.</p>
+    <p>Your <strong>{streak}-day streak</strong> was not maintained yesterday.</p>
+    <p>Keep going — you can rebuild it today!</p>
     """
-    _send(_mentor_emails(), f"{user_name}'s streak was broken", html)
+    _send([settings.USER_EMAIL], "Your streak was broken", html)
 
 
 def notify_weekly_summary(
