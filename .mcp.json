@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "applyquest": {
+      "command": "backend/.venv/bin/python",
+      "args": ["backend/mcp_server.py"],
+      "env": {
+        "APPLYQUEST_API_BASE": "http://localhost:8000/api/v1",
+        "APPLYQUEST_API_KEY": "${APPLYQUEST_API_KEY}"
+      }
+    }
+  }
+}

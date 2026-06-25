@@ -12,6 +12,8 @@ class Settings(BaseSettings):
 
     # Auth
     SECRET_KEY: str = "CHANGE_THIS_IN_PRODUCTION_TO_A_STRONG_SECRET_KEY"
+    # Static key for agent/MCP access. Empty disables API-key auth entirely.
+    APPLYQUEST_API_KEY: str = ""
 
     # Email
     RESEND_API_KEY: str = ""

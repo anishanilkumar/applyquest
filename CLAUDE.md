@@ -24,7 +24,12 @@ cd backend && .venv/bin/pytest tests/test_gamification.py -v
 
 # Frontend tests
 make test-frontend
+
+# Install the pre-commit hook (runs the full `make test` suite before every commit)
+make install-hooks
 ```
+
+Backend tests use the `applyquest_test` Postgres DB (set via `POSTGRES_DB=applyquest_test`); `tests/conftest.py` handles fixtures. `make setup` bootstraps `backend/.venv` and is a prerequisite of the backend/test targets. A `shell.nix` is provided for a reproducible Nix dev environment.
 
 ### Database migrations
 
@@ -35,15 +40,7 @@ cd backend && .venv/bin/alembic revision --autogenerate -m "description"
 
 ### Backend environment
 
-Requires a `.env` file in `backend/` with:
-```
-POSTGRES_SERVER=
-POSTGRES_USER=
-POSTGRES_PASSWORD=
-POSTGRES_DB=
-SECRET_KEY=
-RESEND_API_KEY=
-```
+Settings are defined in `core/config.py` (pydantic `BaseSettings`, loaded from `backend/.env`). Required (no default): `POSTGRES_SERVER`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`. Others have defaults but should be overridden: `SECRET_KEY`, `RESEND_API_KEY`, `SHARE_PASSWORD` (mentor view), `USER_EMAIL` (the single target user), `MENTOR_EMAILS` (comma-separated), `EMAIL_FROM`. `SQLALCHEMY_DATABASE_URI` is derived from the `POSTGRES_*` values if not set explicitly.
 
 ## Architecture
 
@@ -73,6 +70,14 @@ Models: `User`, `Application` + `ApplicationHistory`, `NetworkContact`, `PointHi
 - Two auth modes: regular user (JWT token in `localStorage`) and mentor view (password-based, read-only via the share endpoint).
 - The dev server proxies `/api` to `http://localhost:8000` (set in `package.json`).
 
+### MCP server (`backend/mcp_server.py`)
+
+A stdio MCP server that lets an AI agent (e.g. Claude with the Gmail connector) reconcile the inbox with tracked applications — find a job, mark it Applied/Rejected, or create it from an email's job details. It is a **thin client over the REST API** (via `httpx`), so all status-transition rules, history, gamification, and notification emails run exactly as in the web UI. Tools: `list_applications`, `find_applications`, `get_application`, `mark_status`, `create_application`, `update_application`.
+
+- **Auth:** the server sends `X-API-Key: $APPLYQUEST_API_KEY`. `api/deps.py:get_current_user` accepts this header as an alternative to JWT and resolves it to the single `USER_EMAIL` user (`reusable_oauth2` is `auto_error=False` so a missing token falls through to the key check). An empty `APPLYQUEST_API_KEY` disables key auth entirely.
+- **Run:** `APPLYQUEST_API_KEY=… backend/.venv/bin/python backend/mcp_server.py` (reads `APPLYQUEST_API_BASE`, default `http://localhost:8000/api/v1`). Requires the backend to be running.
+- **Wire into Claude:** project-scoped `.mcp.json` at the repo root launches it; set `APPLYQUEST_API_KEY` in the environment. Enable the Gmail connector alongside it, then ask Claude to reconcile applications against recent mail.
+
 ### Firefox Extension (`extension/`)
 
 Plain HTML/CSS/JS, no build step. Manifest V3, Firefox-only (`browser.*` APIs).
@@ -87,6 +92,10 @@ Plain HTML/CSS/JS, no build step. Manifest V3, Firefox-only (`browser.*` APIs).
 **To load in Firefox:** `about:debugging#/runtime/this-firefox` → Load Temporary Add-on → select `extension/manifest.json`.
 
 **CORS:** `backend/app/main.py` uses `allow_origin_regex=r"moz-extension://.*"` with `allow_credentials=False` (safe — the app uses Bearer tokens, not cookies).
+
+### Deployment
+
+The frontend deploys to the VPS `applyquest.vps.anishsheela.com` via GitHub Actions (nginx serves the static build). See `DEPLOYMENT.md` for server setup, required GitHub secrets, and the nginx config in `nginx/`. `scripts/start-tunnel.sh` exposes a local instance.
 
 ### Points system
 
