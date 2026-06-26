@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { TrendingUp, AlertTriangle } from 'lucide-react';
 import { JobApplication } from '../../types';
+import { hasReachedInterview, hasReachedFinalRound, hasReachedOffer } from '../../utils/stages';
 
 interface ApplicationFunnelChartProps {
   applications: JobApplication[];
@@ -16,20 +17,14 @@ const ApplicationFunnelChart: React.FC<ApplicationFunnelChartProps> = ({ applica
       !['Applied', 'Ghosted'].includes(app.status)
     ).length;
 
-    // Applications that reached interview stages
-    const interviewed = applications.filter(app =>
-      ['Phone Screen', 'Technical Round 1', 'Technical Round 2', 'Final Round'].includes(app.status)
-    ).length;
+    // Applications that ever reached interview stages
+    const interviewed = applications.filter(hasReachedInterview).length;
 
-    // Applications that reached final rounds
-    const finalRound = applications.filter(app =>
-      app.status === 'Final Round'
-    ).length;
+    // Applications that ever reached the final round
+    const finalRound = applications.filter(hasReachedFinalRound).length;
 
     // Applications that received offers
-    const offers = applications.filter(app =>
-      app.status === 'Offer'
-    ).length;
+    const offers = applications.filter(hasReachedOffer).length;
 
     // Calculate drop-offs at each stage
     const ghosted = applications.filter(app => app.status === 'Ghosted').length;

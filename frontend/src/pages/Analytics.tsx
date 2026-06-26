@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ApplicationStatus } from '../types';
 import { useAppContext } from '../context/AppContext';
+import { hasReachedInterview } from '../utils/stages';
 import {
   Filter,
   Download
@@ -47,9 +48,7 @@ const Analytics: React.FC = () => {
     const responded = filteredApplications.filter(app =>
       !['Applied', 'Ghosted'].includes(app.status)
     ).length;
-    const interviewed = filteredApplications.filter(app =>
-      ['Phone Screen', 'Technical Round 1', 'Technical Round 2', 'Final Round'].includes(app.status)
-    ).length;
+    const interviewed = filteredApplications.filter(hasReachedInterview).length;
     const rejected = filteredApplications.filter(app => app.status === 'Rejected').length;
     const ghosted = filteredApplications.filter(app => app.status === 'Ghosted').length;
     const easyApplied = filteredApplications.filter(app => app.easyApply).length;

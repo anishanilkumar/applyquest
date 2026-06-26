@@ -5,6 +5,7 @@ import { useAppContext } from '../../context/AppContext';
 import { JobApplication, NetworkContact } from '../../types';
 import { userService } from '../../services/api';
 import { classifyApp } from '../../utils/followup';
+import { hasReachedInterview } from '../../utils/stages';
 
 const motivationalMessages = [
   "Every application is a step closer to your dream job! 🚀",
@@ -150,9 +151,7 @@ const ApplyQuestDashboard: React.FC = () => {
     if (total === 0) return { totalApplications: 0, responseRate: 0, interviewRate: 0, activeApplications: 0 };
 
     const responded = applications.filter(app => !['Applied', 'Ghosted'].includes(app.status)).length;
-    const interviewed = applications.filter(app =>
-      ['Phone Screen', 'Technical Round 1', 'Technical Round 2', 'Final Round'].includes(app.status)
-    ).length;
+    const interviewed = applications.filter(hasReachedInterview).length;
     const active = applications.filter(app =>
       !['Rejected', 'Ghosted', 'Offer'].includes(app.status)
     ).length;
