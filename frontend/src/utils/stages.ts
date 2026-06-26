@@ -23,11 +23,25 @@ function statusesHeld(app: JobApplication): ApplicationStatus[] {
   return held;
 }
 
+// Statuses that count as a genuine, positive response from the company — a
+// human actually engaged. A rejection is NOT a positive response (it's a "no"),
+// and ghosting is silence; both are deliberately excluded. This is what the
+// headline "response rate" should measure — see Analytics.tsx.
+const POSITIVE_RESPONSE: ApplicationStatus[] = ['Replied', ...REACHED_INTERVIEW];
+
 // True if the application ever reached an interview stage, even if it has
 // since been rejected, ghosted, or progressed to an offer. This is what the
 // "interview rate" should measure — not just who is currently interviewing.
 export function hasReachedInterview(app: JobApplication): boolean {
   return statusesHeld(app).some(s => REACHED_INTERVIEW.includes(s));
+}
+
+// True if the application ever got a genuine response (a reply or further),
+// excluding rejections and ghosting. Most job searches are dominated by
+// rejections, so counting those as "responses" paints a misleadingly rosy
+// picture — this is the honest signal of "did a human actually engage".
+export function hasPositiveResponse(app: JobApplication): boolean {
+  return statusesHeld(app).some(s => POSITIVE_RESPONSE.includes(s));
 }
 
 // True if the application ever reached the final round (or an offer).

@@ -95,7 +95,17 @@ Plain HTML/CSS/JS, no build step. Manifest V3, Firefox-only (`browser.*` APIs).
 
 ### Deployment
 
-The frontend deploys to the VPS `applyquest.vps.anishsheela.com` via GitHub Actions (nginx serves the static build). See `DEPLOYMENT.md` for server setup, required GitHub secrets, and the nginx config in `nginx/`. `scripts/start-tunnel.sh` exposes a local instance.
+The frontend deploys via GitHub Actions (nginx serves the static build). See `DEPLOYMENT.md` for server setup, required GitHub secrets, and the nginx config in `nginx/`. `scripts/start-tunnel.sh` exposes a local instance over a Cloudflare tunnel.
+
+**Live production:** `https://applyquest.anishsheela.com` (frontend + the API under `/api/v1`). The older `applyquest.vps.anishsheela.com` host in `DEPLOYMENT.md` no longer resolves — use the bare domain. The access-token (login) endpoint is `POST /api/v1/access-token`.
+
+### Reading production data
+
+There is no committed DB dump and the local `applyquest` DB is usually empty, so inspecting real data means hitting prod read-only. Two ways:
+
+- **API key (single-user):** `curl https://applyquest.anishsheela.com/api/v1/applications/ -H "X-API-Key: $APPLYQUEST_API_KEY"` — same key the MCP server uses (see [MCP server](#mcp-server-backendmcp_serverpy)). The key value must match prod's `APPLYQUEST_API_KEY` env (which can differ from any local value); a mismatch returns `403 Could not validate credentials`. Never commit the key.
+- **Share password (read-only mentor view):** `curl -X POST https://applyquest.anishsheela.com/api/v1/share/data -H 'Content-Type: application/json' -d '{"password":"<SHARE_PASSWORD>"}'` — returns the full mentor dataset (applications + history, contacts, user) without needing the API key.
+- **SSH (most reliable):** `ssh anish@vps.anishsheela.com`, then `cd ~/applyquest/backend` (its `.env` symlinks to `~/applyquest/.env.prod`). Source `.env` for `POSTGRES_*` and run read-only `psql` queries directly. Note the DB stores enum *names* (`REJECTED`, `PHONE_SCREEN`) while the API serializes the title-case *values* (`Rejected`, `Phone Screen`).
 
 ### Points system
 
