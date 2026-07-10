@@ -14,6 +14,7 @@ interface ApplicationFormData {
   germanRequirement: string;
   relocationSupport: boolean;
   easyApply: boolean;
+  followupFlagged: boolean;
   jobBoardSource: string;
   priorityStars: number;
   notes: string;
@@ -43,6 +44,7 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
     germanRequirement: initialData?.germanRequirement || 'None',
     relocationSupport: initialData?.relocationSupport || false,
     easyApply: initialData?.easyApply || false,
+    followupFlagged: initialData?.followupFlagged || false,
     jobBoardSource: initialData?.jobBoardSource || '',
     priorityStars: initialData?.priorityStars || 3,
     notes: initialData?.notes || '',
@@ -234,6 +236,20 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                   <div>
                     <label className="text-sm font-medium text-gray-700 cursor-pointer">Easy Apply</label>
                     <p className="text-xs text-gray-500">Applied via LinkedIn or similar with standard resume, minimal effort</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:border-amber-300 transition-colors">
+                  <input
+                    type="checkbox"
+                    name="followupFlagged"
+                    checked={formData.followupFlagged}
+                    onChange={handleChange}
+                    className="w-5 h-5 text-amber-600 rounded focus:ring-2 focus:ring-amber-500"
+                  />
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 cursor-pointer">Needs follow-up</label>
+                    <p className="text-xs text-gray-500">Adds this role to the followup queue — only flagged roles appear there</p>
                   </div>
                 </div>
 

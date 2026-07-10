@@ -192,11 +192,12 @@ def update_application(
     tech_stack: Optional[str] = None,
     job_board_source: Optional[str] = None,
     notes: Optional[str] = None,
+    followup_flagged: Optional[bool] = None,
 ) -> Any:
     """Enrich an existing application with job details discovered from an email.
 
     Only the provided fields are changed. Does NOT change status — use mark_status
-    for that.
+    for that. Set followup_flagged to put the application in the followup queue.
     """
     body = {
         "location": location,
@@ -205,6 +206,7 @@ def update_application(
         "tech_stack": tech_stack,
         "job_board_source": job_board_source,
         "notes": notes,
+        "followup_flagged": followup_flagged,
     }
     body = {k: v for k, v in body.items() if v is not None}
     if not body:

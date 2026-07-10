@@ -135,63 +135,10 @@ def job_weekly_summary():
         db.close()
 
 
-def job_followup_digest():
-    """9 AM Berlin — send followup digest if there are actionable items (skips off-days)."""
-    from datetime import datetime
-    from app.db.session import SessionLocal
-    from app.models.application import Application, ApplicationStatus
-    from app.core.working_days import load_off_days, _is_off_day
-    from app.core.email import notify_followup_digest
-    from app.core.followup import needs_followup, needs_decision, FOLLOWUP_STALE_DAYS, DECISION_STALE_DAYS
-
-    today = datetime.now(BERLIN).date()
-    if _is_off_day(today, load_off_days()):
-        return
-
-    db = SessionLocal()
-    try:
-        user = _load_user(db)
-        if user is None:
-            return
-
-        applications = db.query(Application).filter(
-            Application.user_id == user.id,
-            Application.status != ApplicationStatus.REJECTED,
-        ).all()
-
-        followup_apps = [
-            {
-                "company": a.company_name,
-                "position": a.position_title,
-                "status": a.status.value if hasattr(a.status, 'value') else str(a.status),
-                "days_stale": (today - (a.updated_at.date() if a.updated_at else a.applied_date)).days,
-            }
-            for a in applications if needs_followup(a, today)
-        ]
-        decision_apps = [
-            {
-                "company": a.company_name,
-                "position": a.position_title,
-                "followed_up_days_ago": (today - a.followed_up_at).days,
-            }
-            for a in applications if needs_decision(a, today)
-        ]
-
-        if not followup_apps and not decision_apps:
-            return
-
-        notify_followup_digest(user.name, followup_apps, decision_apps)
-    except Exception:
-        logger.exception("Error in followup digest job")
-    finally:
-        db.close()
-
-
 def start_scheduler():
     scheduler.add_job(job_daily_reminder, CronTrigger(hour=20, minute=0, timezone=BERLIN))
     scheduler.add_job(job_streak_check, CronTrigger(hour=0, minute=5, timezone=BERLIN))
     scheduler.add_job(job_weekly_summary, CronTrigger(day_of_week="sun", hour=19, minute=0, timezone=BERLIN))
-    scheduler.add_job(job_followup_digest, CronTrigger(hour=9, minute=0, timezone=BERLIN))
     scheduler.start()
     logger.info("Scheduler started")
 

@@ -56,6 +56,7 @@ const transformApplication = (data: any): JobApplication => ({
     notes: data.notes,
     appliedDate: data.applied_date,
     followedUpAt: data.followed_up_at ?? undefined,
+    followupFlagged: data.followup_flagged ?? false,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     referralContactId: data.referral_contact_id,
@@ -149,6 +150,10 @@ export const applicationService = {
     },
     markFollowedUp: async (id: string): Promise<JobApplication> => {
         const response = await apiClient.post(`/applications/${id}/followup`);
+        return transformApplication(response.data);
+    },
+    setFollowupFlag: async (id: string, flagged: boolean): Promise<JobApplication> => {
+        const response = await apiClient.post(`/applications/${id}/followup-flag`, { flagged });
         return transformApplication(response.data);
     },
     delete: async (id: string): Promise<void> => {

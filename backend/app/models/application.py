@@ -42,6 +42,7 @@ class Application(Base):
     notes = Column(Text, nullable=True)
     applied_date = Column(Date, default=date.today)
     followed_up_at = Column(Date, nullable=True)
+    followup_flagged = Column(Boolean, default=False, nullable=False, server_default='false')
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     referral_contact_id = Column(UUID(as_uuid=True), ForeignKey("networkcontact.id", ondelete="SET NULL"), nullable=True)

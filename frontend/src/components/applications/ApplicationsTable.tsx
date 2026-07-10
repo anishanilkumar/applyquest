@@ -13,7 +13,8 @@ import {
   MapPin,
   Calendar,
   Briefcase,
-  Users
+  Users,
+  Bell
 } from 'lucide-react';
 
 interface ApplicationsTableProps {
@@ -21,6 +22,7 @@ interface ApplicationsTableProps {
   onEdit: (application: JobApplication) => void;
   onDelete: (applicationId: string) => void;
   onStatusUpdate: (applicationId: string, newStatus: ApplicationStatus) => void;
+  onToggleFollowupFlag: (applicationId: string, flagged: boolean) => void;
 }
 
 type SortField = 'appliedDate' | 'companyName' | 'positionTitle' | 'location' | 'status' | 'priorityStars';
@@ -30,7 +32,8 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
   applications,
   onEdit,
   onDelete,
-  onStatusUpdate
+  onStatusUpdate,
+  onToggleFollowupFlag
 }) => {
   const { isMentorView } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
@@ -427,6 +430,13 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
                             <ExternalLink className="w-4 h-4" />
                           </button>
                         )}
+                        <button
+                          onClick={() => onToggleFollowupFlag(app.id, !app.followupFlagged)}
+                          className={`p-1 ${app.followupFlagged ? 'text-amber-500 hover:text-amber-600' : 'text-gray-600 hover:text-amber-500'}`}
+                          title={app.followupFlagged ? 'Remove from followup queue' : 'Flag for followup'}
+                        >
+                          <Bell className={`w-4 h-4 ${app.followupFlagged ? 'fill-amber-400' : ''}`} />
+                        </button>
                         <button
                           onClick={() => onEdit(app)}
                           className="text-gray-600 hover:text-blue-900 p-1"

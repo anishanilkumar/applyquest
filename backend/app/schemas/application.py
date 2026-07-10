@@ -21,6 +21,7 @@ class ApplicationBase(BaseModel):
     notes: Optional[str] = None
     applied_date: date
     followed_up_at: Optional[date] = None
+    followup_flagged: bool = False
     referral_contact_id: Optional[UUID] = None
 
 class ApplicationCreate(ApplicationBase):
@@ -42,6 +43,7 @@ class ApplicationUpdate(BaseModel):
     notes: Optional[str] = None
     applied_date: Optional[date] = None
     followed_up_at: Optional[date] = None
+    followup_flagged: Optional[bool] = None
     referral_contact_id: Optional[UUID] = None
 
 class ApplicationHistoryBase(BaseModel):

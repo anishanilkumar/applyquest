@@ -1,22 +1,5 @@
-import sys
-import types as _types
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
-
-# Stub runtime deps that may not be installed in the test venv
-sys.modules.setdefault("resend", MagicMock())
-
-# Prevent app.core.config from loading (it requires postgres env vars).
-# Must happen before any import of app.core.email.
-if "app.core.config" not in sys.modules:
-    _cfg = _types.ModuleType("app.core.config")
-    _cfg.settings = SimpleNamespace(
-        RESEND_API_KEY="",
-        EMAIL_FROM="ApplyQuest <noreply@test.com>",
-        USER_EMAIL="user@example.com",
-        MENTOR_EMAILS="",
-    )
-    sys.modules["app.core.config"] = _cfg
+from unittest.mock import patch
 
 from datetime import date, datetime, timedelta
 
@@ -27,18 +10,18 @@ from app.core.followup import (
     needs_decision,
     needs_followup,
     awaiting_response,
-    FOLLOWUP_STALE_DAYS,
     DECISION_STALE_DAYS,
 )
 
 TODAY = date(2026, 4, 27)
 
 
-def make_app(status="Applied", followed_up_at=None, days_since_update=0):
+def make_app(status="Applied", followed_up_at=None, days_since_update=0, followup_flagged=True):
     last = TODAY - timedelta(days=days_since_update)
     return SimpleNamespace(
         status=status,
         followed_up_at=followed_up_at,
+        followup_flagged=followup_flagged,
         updated_at=datetime(last.year, last.month, last.day, 10, 0),
         applied_date=last,
     )
@@ -46,13 +29,13 @@ def make_app(status="Applied", followed_up_at=None, days_since_update=0):
 
 # --- needs_followup ---
 
-def test_stale_app_with_no_followup_needs_followup():
-    app = make_app(status="Applied", days_since_update=FOLLOWUP_STALE_DAYS)
+def test_flagged_app_needs_followup_immediately():
+    app = make_app(status="Applied", days_since_update=0)
     assert needs_followup(app, TODAY) is True
 
 
-def test_almost_stale_app_does_not_need_followup():
-    app = make_app(status="Applied", days_since_update=FOLLOWUP_STALE_DAYS - 1)
+def test_unflagged_app_never_needs_followup_however_stale():
+    app = make_app(status="Applied", days_since_update=30, followup_flagged=False)
     assert needs_followup(app, TODAY) is False
 
 
@@ -75,8 +58,8 @@ def test_ghosted_app_never_needs_followup():
     "Shortlisted", "Applied", "Replied", "Phone Screen",
     "Technical Round 1", "Technical Round 2", "Final Round", "Offer",
 ])
-def test_all_non_terminal_statuses_are_eligible(status):
-    app = make_app(status=status, days_since_update=FOLLOWUP_STALE_DAYS)
+def test_all_non_terminal_statuses_are_eligible_when_flagged(status):
+    app = make_app(status=status)
     assert needs_followup(app, TODAY) is True
 
 
@@ -102,6 +85,11 @@ def test_no_followup_is_not_awaiting():
     assert awaiting_response(app, TODAY) is False
 
 
+def test_unflagged_app_is_not_awaiting():
+    app = make_app(followed_up_at=TODAY, followup_flagged=False)
+    assert awaiting_response(app, TODAY) is False
+
+
 def test_terminal_status_is_not_awaiting():
     app = make_app(status="Rejected", followed_up_at=TODAY - timedelta(days=1))
     assert awaiting_response(app, TODAY) is False
@@ -124,6 +112,11 @@ def test_no_followup_does_not_need_decision():
     assert needs_decision(app, TODAY) is False
 
 
+def test_unflagged_app_does_not_need_decision():
+    app = make_app(followed_up_at=TODAY - timedelta(days=5), followup_flagged=False)
+    assert needs_decision(app, TODAY) is False
+
+
 def test_terminal_status_does_not_need_decision():
     app = make_app(status="Ghosted", followed_up_at=TODAY - timedelta(days=5))
     assert needs_decision(app, TODAY) is False
@@ -131,13 +124,13 @@ def test_terminal_status_does_not_need_decision():
 
 # --- classify ---
 
-def test_classify_ok_for_fresh_app():
-    app = make_app(days_since_update=0)
+def test_classify_ok_for_unflagged_app():
+    app = make_app(days_since_update=30, followup_flagged=False)
     assert classify(app, TODAY) == "ok"
 
 
-def test_classify_needs_followup_for_stale_app():
-    app = make_app(days_since_update=FOLLOWUP_STALE_DAYS)
+def test_classify_needs_followup_for_flagged_app():
+    app = make_app(days_since_update=0)
     assert classify(app, TODAY) == "needs_followup"
 
 
@@ -151,51 +144,9 @@ def test_classify_needs_decision_after_stale_followup():
     assert classify(app, TODAY) == "needs_decision"
 
 
-def test_classify_ok_for_terminal_even_if_stale():
+def test_classify_ok_for_terminal_even_if_flagged():
     app = make_app(status="Rejected", days_since_update=30)
     assert classify(app, TODAY) == "ok"
-
-
-# --- notify_followup_digest email content ---
-
-def test_notify_followup_digest_sends_email_to_user():
-    from app.core.email import notify_followup_digest
-
-    with patch("app.core.email._send") as mock_send, \
-         patch("app.core.email.settings") as mock_settings:
-        mock_settings.RESEND_API_KEY = "test-key"
-        mock_settings.USER_EMAIL = "user@example.com"
-
-        notify_followup_digest(
-            "Alice",
-            needs_followup=[{"company": "Acme", "position": "SWE", "status": "Applied", "days_stale": 8}],
-            needs_decision=[],
-        )
-
-        mock_send.assert_called_once()
-        to, subject, html = mock_send.call_args[0]
-        assert "user@example.com" in to
-        assert "Acme" in html
-        assert "Needs Followup" in html
-
-
-def test_notify_followup_digest_includes_decision_section():
-    from app.core.email import notify_followup_digest
-
-    with patch("app.core.email._send") as mock_send, \
-         patch("app.core.email.settings") as mock_settings:
-        mock_settings.RESEND_API_KEY = "test-key"
-        mock_settings.USER_EMAIL = "user@example.com"
-
-        notify_followup_digest(
-            "Alice",
-            needs_followup=[],
-            needs_decision=[{"company": "Beta", "position": "Dev", "followed_up_days_ago": 4}],
-        )
-
-        _, _, html = mock_send.call_args[0]
-        assert "Beta" in html
-        assert "Needs Decision" in html
 
 
 # --- notify_weekly_summary includes followup counts ---

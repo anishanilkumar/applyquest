@@ -36,6 +36,20 @@ const FollowupPage: React.FC = () => {
     });
   };
 
+  const handleUnflag = async (id: string) => {
+    if (isMentorView) return;
+    setLoading(id, true);
+    try {
+      const updated = await applicationService.setFollowupFlag(id, false);
+      setApplications(prev => prev.map(a => a.id === id ? updated : a));
+      toast.success('Removed from followup queue');
+    } catch {
+      toast.error('Failed to remove from queue');
+    } finally {
+      setLoading(id, false);
+    }
+  };
+
   const handleMarkFollowedUp = async (id: string) => {
     if (isMentorView) return;
     setLoading(id, true);
@@ -80,14 +94,14 @@ const FollowupPage: React.FC = () => {
             </span>
           )}
         </div>
-        <p className="text-gray-500 ml-10">Applications stuck in the pipeline that need your attention</p>
+        <p className="text-gray-500 ml-10">Applications you flagged to chase up</p>
       </div>
 
       {totalActionable === 0 && awaitingResponse.length === 0 && (
         <div className="bg-white rounded-xl p-12 shadow-md text-center border-2 border-green-100">
           <CheckCircle2 className="w-16 h-16 text-green-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-700 mb-2">All caught up!</h2>
-          <p className="text-gray-500">No applications need followup right now.</p>
+          <p className="text-gray-500">Nothing is flagged for followup right now.</p>
         </div>
       )}
 
@@ -159,12 +173,13 @@ const FollowupPage: React.FC = () => {
           <div className="flex items-center gap-2 mb-3">
             <Clock className="w-5 h-5 text-amber-500" />
             <h2 className="text-lg font-bold text-amber-700">Needs Followup ({needsFollowup.length})</h2>
-            <span className="text-sm text-gray-500">— no activity for 7+ days</span>
+            <span className="text-sm text-gray-500">— flagged, not yet followed up</span>
           </div>
           <div className="space-y-3">
             {needsFollowup.map(app => {
               const busy = loadingIds.has(app.id);
-              const staleDays = daysSince(app.updatedAt);
+              // Days since applying — updatedAt is bumped by flagging itself, so it says nothing useful here.
+              const appliedDays = daysSince(app.appliedDate);
               return (
                 <div key={app.id} className="bg-white rounded-xl p-5 shadow-md border-l-4 border-amber-400">
                   <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -175,17 +190,28 @@ const FollowupPage: React.FC = () => {
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_COLORS[app.status] || 'bg-gray-100 text-gray-600'}`}>
                           {app.status}
                         </span>
-                        <span className="text-xs text-amber-600">{staleDays} days with no update</span>
+                        <span className="text-xs text-amber-600">
+                          {appliedDays === 0 ? 'Applied today' : `Applied ${appliedDays} day${appliedDays > 1 ? 's' : ''} ago`}
+                        </span>
                       </div>
                     </div>
                     {!isMentorView && (
-                      <button
-                        onClick={() => handleMarkFollowedUp(app.id)}
-                        disabled={busy}
-                        className="px-4 py-2 text-sm font-medium rounded-lg bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50 transition-colors whitespace-nowrap"
-                      >
-                        {busy ? 'Saving…' : 'Mark Followed Up'}
-                      </button>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                          onClick={() => handleUnflag(app.id)}
+                          disabled={busy}
+                          className="px-3 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 transition-colors whitespace-nowrap"
+                        >
+                          Not chasing
+                        </button>
+                        <button
+                          onClick={() => handleMarkFollowedUp(app.id)}
+                          disabled={busy}
+                          className="px-4 py-2 text-sm font-medium rounded-lg bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50 transition-colors whitespace-nowrap"
+                        >
+                          {busy ? 'Saving…' : 'Mark Followed Up'}
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>

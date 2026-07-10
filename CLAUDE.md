@@ -55,11 +55,11 @@ This app is built for a single user (configured via `USER_EMAIL` in settings). T
 Key data flows:
 - Every mutating application action goes through `core/gamification.add_points()` which creates a `PointHistory` record and recalculates `user.level` and `user.current_streak` atomically before the caller commits.
 - Streak logic uses Berlin timezone (`Europe/Berlin`) and skips weekends/holidays defined in `backend/data/` JSON files (`german_holidays.json`, `kerala_holidays.json`, `leaves.json`). The `core/working_days.py` module handles this.
-- Scheduled jobs (APScheduler `BackgroundScheduler`) run in `core/scheduler.py`: daily reminder at 20:00, streak check at 00:05, weekly summary on Sunday 19:00, and a follow-up digest at 09:00 — all Berlin time.
+- Scheduled jobs (APScheduler `BackgroundScheduler`) run in `core/scheduler.py`: daily reminder at 20:00, streak check at 00:05, and a weekly summary on Sunday 19:00 — all Berlin time. There is deliberately no follow-up email.
 
 Models: `User`, `Application` + `ApplicationHistory`, `NetworkContact`, `PointHistory` (in `app/models/`).
 
-**Follow-up logic** (`core/followup.py`): applications are classified as `needs_followup` (≥7 days stale, no follow-up sent), `awaiting_response` (<3 days since follow-up), or `needs_decision` (≥3 days since follow-up).
+**Follow-up logic** (`core/followup.py`): follow-up is opt-in. Only applications the user explicitly flags (`Application.followup_flagged`) enter the queue — there is no staleness heuristic, so an application that never gets a reply stays out of the queue unless flagged. A flagged application is `needs_followup` immediately; once `POST /{id}/followup` records `followed_up_at` it becomes `awaiting_response` (<3 days), then `needs_decision` (≥3 days). Terminal statuses (`Rejected`, `Ghosted`) are always `ok`. Toggle the flag via `POST /{id}/followup-flag` (awards no points); any status change clears both the flag and `followed_up_at`.
 
 ### Frontend (`frontend/src/`)
 
