@@ -153,7 +153,7 @@ def update_application_status(
         ApplicationStatus.FINAL_ROUND: [ApplicationStatus.OFFER, ApplicationStatus.REJECTED, ApplicationStatus.GHOSTED],
         ApplicationStatus.OFFER: [ApplicationStatus.REJECTED, ApplicationStatus.GHOSTED], # Can reject an offer too
         ApplicationStatus.REJECTED: [], # Terminal state
-        ApplicationStatus.GHOSTED: [],  # Terminal state
+        ApplicationStatus.GHOSTED: [ApplicationStatus.REJECTED],  # A late rejection can arrive after ghosting
     }
     
     # Always allow moving to Rejected or Ghosted from any non-terminal state

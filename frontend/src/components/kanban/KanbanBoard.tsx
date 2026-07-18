@@ -250,7 +250,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                           </button>
                         </div>
                       )}
-                      {!isMentorView && app.status !== 'Shortlisted' && app.status !== 'Rejected' && app.status !== 'Ghosted' && (
+                      {!isMentorView && app.status !== 'Shortlisted' && app.status !== 'Rejected' && (
                         <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
                           <button
                             onClick={() => handleQuickStatus(app.id, 'Rejected')}
@@ -258,12 +258,14 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                           >
                             Mark Rejected
                           </button>
-                          <button
-                            onClick={() => handleQuickStatus(app.id, 'Ghosted')}
-                            className="flex-1 bg-gray-50 text-gray-700 text-xs py-2 rounded-lg hover:bg-gray-100 transition-colors font-medium"
-                          >
-                            Mark Ghosted
-                          </button>
+                          {app.status !== 'Ghosted' && (
+                            <button
+                              onClick={() => handleQuickStatus(app.id, 'Ghosted')}
+                              className="flex-1 bg-gray-50 text-gray-700 text-xs py-2 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+                            >
+                              Mark Ghosted
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
