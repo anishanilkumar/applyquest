@@ -10,23 +10,36 @@ This is a thin client — it just calls the running backend with the static API 
 so all status-transition rules, history records, gamification and notification
 emails happen exactly as they do for the web UI.
 
-Run (stdio transport, launched by your MCP client):
+Two transports, chosen by APPLYQUEST_MCP_TRANSPORT:
 
-    APPLYQUEST_API_KEY=... backend/.venv/bin/python backend/mcp_server.py
+  stdio (default)   launched by a local MCP client via the repo's .mcp.json:
+                    APPLYQUEST_API_KEY=... backend/.venv/bin/python backend/mcp_server.py
+  streamable-http   long-running service on 127.0.0.1, fronted by nginx on a
+                    secret path, so claude.ai can add it as a Custom Connector.
+                    Deployed as systemd.services.applyquest-mcp in nixos-config.
 
 Environment:
-    APPLYQUEST_API_KEY   (required) must match settings.APPLYQUEST_API_KEY on the backend
-    APPLYQUEST_API_BASE  (optional) defaults to http://localhost:8000/api/v1
+    APPLYQUEST_API_KEY       (required) must match settings.APPLYQUEST_API_KEY on the backend
+    APPLYQUEST_API_BASE      (optional) defaults to http://localhost:8000/api/v1
+    APPLYQUEST_MCP_TRANSPORT (optional) "stdio" (default) or "streamable-http"
+    APPLYQUEST_MCP_HOST/_PORT/_PATH          listener, defaults 127.0.0.1:8766/mcp
+    APPLYQUEST_MCP_PUBLIC_HOST               Host header accepted from the proxy
 """
 import os
+import sys
 from datetime import date
 from typing import Any, Optional
 
 import httpx
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 API_BASE = os.environ.get("APPLYQUEST_API_BASE", "http://localhost:8000/api/v1").rstrip("/")
 API_KEY = os.environ.get("APPLYQUEST_API_KEY", "")
+
+TRANSPORT = os.environ.get("APPLYQUEST_MCP_TRANSPORT", "stdio")
+HOST = os.environ.get("APPLYQUEST_MCP_HOST", "127.0.0.1")
+PORT = int(os.environ.get("APPLYQUEST_MCP_PORT", "8766"))
 
 # The full set of statuses the backend accepts, in pipeline order. Only some
 # transitions are legal (see mark_status docstring).
@@ -36,7 +49,36 @@ VALID_STATUSES = [
     "Offer", "Rejected", "Ghosted",
 ]
 
-mcp = FastMCP("applyquest")
+# DNS-rebinding protection for the HTTP transport. The SDK leaves this off when
+# transport_security is unset and — the trap — rejects everything with 421 if it
+# is switched on with an empty allow-list, so name the hosts explicitly: the
+# public name nginx proxies under, plus loopback for curl on the box.
+SECURITY = TransportSecuritySettings(
+    enable_dns_rebinding_protection=True,
+    allowed_hosts=[
+        os.environ.get("APPLYQUEST_MCP_PUBLIC_HOST", "applyquest-mcp.anishsheela.com"),
+        f"{HOST}:{PORT}",
+        f"localhost:{PORT}",
+    ],
+)
+
+mcp = FastMCP(
+    "applyquest",
+    instructions=(
+        "Job-application tracker. Read tools return the live pipeline; write "
+        "tools go through the same REST API as the web UI, so status-transition "
+        "rules, history, points and notification emails all still apply. Match "
+        "an email to an application with find_applications before changing "
+        "anything — never guess an id."
+    ),
+    host=HOST,
+    port=PORT,
+    streamable_http_path=os.environ.get("APPLYQUEST_MCP_PATH", "/mcp"),
+    # Stateless: every HTTP request is self-contained, so a restart or a proxy
+    # hiccup never strands a client holding a dead session id.
+    stateless_http=True,
+    transport_security=SECURITY,
+)
 
 
 def _client() -> httpx.Client:
@@ -217,4 +259,10 @@ def update_application(
 
 
 if __name__ == "__main__":
-    mcp.run()
+    if TRANSPORT not in ("stdio", "streamable-http"):
+        sys.exit(f"APPLYQUEST_MCP_TRANSPORT must be stdio or streamable-http, got {TRANSPORT!r}")
+    # Fail loudly at startup rather than on the first tool call: under systemd a
+    # missing key would otherwise look like a healthy service that errors forever.
+    if TRANSPORT == "streamable-http" and not API_KEY:
+        sys.exit("APPLYQUEST_API_KEY is not set; refusing to start the HTTP server.")
+    sys.exit(mcp.run(transport=TRANSPORT))

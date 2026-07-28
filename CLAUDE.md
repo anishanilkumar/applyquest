@@ -72,11 +72,14 @@ Models: `User`, `Application` + `ApplicationHistory`, `NetworkContact`, `PointHi
 
 ### MCP server (`backend/mcp_server.py`)
 
-A stdio MCP server that lets an AI agent (e.g. Claude with the Gmail connector) reconcile the inbox with tracked applications — find a job, mark it Applied/Rejected, or create it from an email's job details. It is a **thin client over the REST API** (via `httpx`), so all status-transition rules, history, gamification, and notification emails run exactly as in the web UI. Tools: `list_applications`, `find_applications`, `get_application`, `mark_status`, `create_application`, `update_application`.
+An MCP server that lets an AI agent (e.g. Claude with the Gmail connector) reconcile the inbox with tracked applications — find a job, mark it Applied/Rejected, or create it from an email's job details. It is a **thin client over the REST API** (via `httpx`), so all status-transition rules, history, gamification, and notification emails run exactly as in the web UI. Tools: `list_applications`, `find_applications`, `get_application`, `mark_status`, `create_application`, `update_application`.
 
 - **Auth:** the server sends `X-API-Key: $APPLYQUEST_API_KEY`. `api/deps.py:get_current_user` accepts this header as an alternative to JWT and resolves it to the single `USER_EMAIL` user (`reusable_oauth2` is `auto_error=False` so a missing token falls through to the key check). An empty `APPLYQUEST_API_KEY` disables key auth entirely.
 - **Run:** `APPLYQUEST_API_KEY=… backend/.venv/bin/python backend/mcp_server.py` (reads `APPLYQUEST_API_BASE`, default `http://localhost:8000/api/v1`). Requires the backend to be running.
-- **Wire into Claude:** project-scoped `.mcp.json` at the repo root launches it; set `APPLYQUEST_API_KEY` in the environment. Enable the Gmail connector alongside it, then ask Claude to reconcile applications against recent mail.
+- **Two transports**, selected by `APPLYQUEST_MCP_TRANSPORT`:
+  - `stdio` (default) — a local MCP client spawns the process. The project-scoped `.mcp.json` at the repo root does this; set `APPLYQUEST_API_KEY` in the environment.
+  - `streamable-http` — a long-running service on `127.0.0.1:8766` (override with `APPLYQUEST_MCP_HOST`/`_PORT`/`_PATH`), so claude.ai can reach it as a **Custom Connector**. Runs `stateless_http` so a restart never strands a client on a dead session id, and enables DNS-rebinding protection with an explicit allow-list — an empty allow-list would 421 every request, so `APPLYQUEST_MCP_PUBLIC_HOST` must name whatever host nginx proxies under. Deployed on the VPS as `systemd.services.applyquest-mcp` in the `nixos-config` repo, behind a secret nginx path; that repo owns the unit, vhost and URL.
+- **Wire into Claude:** locally via `.mcp.json`; on claude.ai via the connector URL in `nixos-config`. Enable the Gmail connector alongside it, then ask Claude to reconcile applications against recent mail.
 
 ### Firefox Extension (`extension/`)
 
