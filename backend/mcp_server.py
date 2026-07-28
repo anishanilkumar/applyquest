@@ -14,9 +14,17 @@ Two transports, chosen by APPLYQUEST_MCP_TRANSPORT:
 
   stdio (default)   launched by a local MCP client via the repo's .mcp.json:
                     APPLYQUEST_API_KEY=... backend/.venv/bin/python backend/mcp_server.py
-  streamable-http   long-running service on 127.0.0.1, fronted by nginx on a
-                    secret path, so claude.ai can add it as a Custom Connector.
+  streamable-http   long-running service on 127.0.0.1, fronted by nginx, so
+                    claude.ai can add it as a Custom Connector. Callers must
+                    present an OAuth 2.1 bearer token issued by Kanidm; this
+                    replaced a secret URL path, which was a credential living in
+                    a URL and so leaked through history and screenshots, never
+                    expired, and was shared rather than per-person.
                     Deployed as systemd.services.applyquest-mcp in nixos-config.
+
+Note the two transports have different trust models. stdio is spawned by a local
+client that already has the machine, so it is unauthenticated by design; only
+the HTTP transport, which is reachable from the internet, requires a token.
 
 Environment:
     APPLYQUEST_API_KEY       (required) must match settings.APPLYQUEST_API_KEY on the backend
@@ -24,15 +32,24 @@ Environment:
     APPLYQUEST_MCP_TRANSPORT (optional) "stdio" (default) or "streamable-http"
     APPLYQUEST_MCP_HOST/_PORT/_PATH          listener, defaults 127.0.0.1:8766/mcp
     APPLYQUEST_MCP_PUBLIC_HOST               Host header accepted from the proxy
+    APPLYQUEST_MCP_OIDC_*                    token validation (see mcp_auth.verifier_from_env)
 """
+import logging
 import os
 import sys
 from datetime import date
 from typing import Any, Optional
 
 import httpx
+from mcp.server.auth.settings import AuthSettings
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
+
+from mcp_auth import verifier_from_env
+
+# The auth layer logs why a token was rejected; without this those warnings go
+# nowhere and a failed handshake is invisible from both ends.
+logging.basicConfig(level=logging.INFO)
 
 API_BASE = os.environ.get("APPLYQUEST_API_BASE", "http://localhost:8000/api/v1").rstrip("/")
 API_KEY = os.environ.get("APPLYQUEST_API_KEY", "")
@@ -40,6 +57,18 @@ API_KEY = os.environ.get("APPLYQUEST_API_KEY", "")
 TRANSPORT = os.environ.get("APPLYQUEST_MCP_TRANSPORT", "stdio")
 HOST = os.environ.get("APPLYQUEST_MCP_HOST", "127.0.0.1")
 PORT = int(os.environ.get("APPLYQUEST_MCP_PORT", "8766"))
+PUBLIC_HOST = os.environ.get("APPLYQUEST_MCP_PUBLIC_HOST", "applyquest-mcp.anishsheela.com")
+MCP_PATH = os.environ.get("APPLYQUEST_MCP_PATH", "/mcp")
+
+# The identity this server trusts, and the name it calls itself by. PUBLIC_URL
+# has to match what gets typed into Claude exactly, path and all.
+OIDC_ISSUER = os.environ.get(
+    "APPLYQUEST_MCP_OIDC_ISSUER",
+    "https://auth.anishsheela.com/oauth2/openid/claude-applyquest",
+).rstrip("/")
+PUBLIC_URL = os.environ.get(
+    "APPLYQUEST_MCP_PUBLIC_URL", f"https://{PUBLIC_HOST}{MCP_PATH}"
+)
 
 # The full set of statuses the backend accepts, in pipeline order. Only some
 # transitions are legal (see mark_status docstring).
@@ -56,11 +85,35 @@ VALID_STATUSES = [
 SECURITY = TransportSecuritySettings(
     enable_dns_rebinding_protection=True,
     allowed_hosts=[
-        os.environ.get("APPLYQUEST_MCP_PUBLIC_HOST", "applyquest-mcp.anishsheela.com"),
+        PUBLIC_HOST,
         f"{HOST}:{PORT}",
         f"localhost:{PORT}",
     ],
 )
+
+# Only the HTTP transport is reachable from the internet and so only it requires
+# a token. Under stdio the client already has the machine, and attaching an
+# authorization server there would mean a local run could not start without
+# Kanidm being up.
+if TRANSPORT == "streamable-http":
+    AUTH_KWARGS = {
+        "token_verifier": verifier_from_env(
+            "APPLYQUEST_MCP", default_client_id="claude-applyquest"
+        ),
+        # Makes the SDK serve /.well-known/oauth-protected-resource and answer
+        # an unauthenticated call with 401 + WWW-Authenticate pointing at it.
+        # That handshake is how Claude discovers where to send the user to log
+        # in; without it the connector cannot find the authorization server.
+        "auth": AuthSettings(
+            issuer_url=OIDC_ISSUER,
+            # Must equal the URL as typed into Claude, path included, or the
+            # metadata is rejected as not describing this resource.
+            resource_server_url=PUBLIC_URL,
+            required_scopes=["mcp"],
+        ),
+    }
+else:
+    AUTH_KWARGS = {}
 
 mcp = FastMCP(
     "applyquest",
@@ -73,11 +126,12 @@ mcp = FastMCP(
     ),
     host=HOST,
     port=PORT,
-    streamable_http_path=os.environ.get("APPLYQUEST_MCP_PATH", "/mcp"),
+    streamable_http_path=MCP_PATH,
     # Stateless: every HTTP request is self-contained, so a restart or a proxy
     # hiccup never strands a client holding a dead session id.
     stateless_http=True,
     transport_security=SECURITY,
+    **AUTH_KWARGS,
 )
 
 
