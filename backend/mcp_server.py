@@ -254,10 +254,12 @@ def create_application(
     notes: Optional[str] = None,
     applied_date: Optional[str] = None,
 ) -> Any:
-    """Create a new application, e.g. when an email references a job you haven't tracked yet.
+    """Create a new application record when no existing one matches.
 
-    `status` defaults to "Applied" (typical when the email is an application
-    confirmation). `applied_date` is an ISO date (YYYY-MM-DD); defaults to today.
+    Use after find_applications turns up nothing for a job referenced in an email.
+    Defaults status to "Applied" (typical when the email is an application
+    confirmation) and applied_date (ISO YYYY-MM-DD) to today. Returns the full
+    created record, including its new id.
     """
     if status not in VALID_STATUSES:
         return {"error": "invalid_status", "detail": f"status must be one of {VALID_STATUSES}"}
