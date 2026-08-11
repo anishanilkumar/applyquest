@@ -111,4 +111,5 @@ jobs:
             set -a; source /home/$SERVER_USER/applyquest/.env.prod; set +a
             /home/$SERVER_USER/.venv/applyquest/bin/alembic upgrade head
             sudo systemctl restart applyquest-backend
+            sudo systemctl restart applyquest-demo-backend
           "
