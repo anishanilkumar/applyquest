@@ -27,8 +27,11 @@ def get_share_data(
     if body.password != settings.SHARE_PASSWORD:
         raise HTTPException(status_code=401, detail="Invalid password")
 
-    # Single-user app — always load the owner's account by email
-    user = db.query(user_model.User).filter(user_model.User.email == "aneesh.nl@gmail.com").first()
+    # Single-user app — always load the owner's account by email. USER_EMAIL,
+    # not a literal: api/deps.py and core/scheduler.py already resolve the owner
+    # that way, and a second instance of this app (the public demo) has a
+    # different owner, for which a hardcoded address 404s the whole mentor view.
+    user = db.query(user_model.User).filter(user_model.User.email == settings.USER_EMAIL).first()
     if not user:
         raise HTTPException(status_code=404, detail="No user found")
 
