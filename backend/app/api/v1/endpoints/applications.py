@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
@@ -13,14 +13,22 @@ router = APIRouter()
 @router.get("/", response_model=List[application_schema.Application])
 def read_applications(
     skip: int = 0,
-    limit: int = 100,
+    limit: Optional[int] = None,
     db: Session = Depends(deps.get_db),
     current_user: user_model.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Retrieve applications.
     """
-    applications = db.query(application_model.Application).filter(application_model.Application.user_id == current_user.id).offset(skip).limit(limit).all()
+    query = (
+        db.query(application_model.Application)
+        .filter(application_model.Application.user_id == current_user.id)
+        .order_by(application_model.Application.created_at.desc(), application_model.Application.id)
+        .offset(skip)
+    )
+    if limit is not None:
+        query = query.limit(limit)
+    applications = query.all()
     return applications
 
 @router.post("/", response_model=application_schema.Application)
