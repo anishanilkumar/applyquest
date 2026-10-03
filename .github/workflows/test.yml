@@ -112,4 +112,5 @@ jobs:
             /home/$SERVER_USER/.venv/applyquest/bin/alembic upgrade head
             sudo systemctl restart applyquest-backend
             sudo systemctl restart applyquest-demo-backend
+            sudo systemctl restart applyquest-mcp
           "

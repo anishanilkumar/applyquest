@@ -170,20 +170,22 @@ def _trim(app: dict) -> dict:
 
 @mcp.tool()
 def list_applications(status: Optional[str] = None, limit: int = 200) -> Any:
-    """List tracked applications (compact view).
+    """List tracked applications (compact view), newest first.
 
     Args:
         status: optional exact status filter, e.g. "Applied" or "Rejected".
         limit: max number to return.
     """
+    if status and status not in VALID_STATUSES:
+        return {"error": "invalid_status", "detail": f"status must be one of {VALID_STATUSES}"}
+    params: dict = {"limit": limit}
+    if status:
+        params["status"] = status
     with _client() as c:
-        resp = c.get("/applications/", params={"limit": limit})
+        resp = c.get("/applications/", params=params)
     if resp.status_code != 200:
         return _err(resp)
-    apps = resp.json()
-    if status:
-        apps = [a for a in apps if a.get("status") == status]
-    return [_trim(a) for a in apps]
+    return [_trim(a) for a in resp.json()]
 
 
 @mcp.tool()
@@ -193,17 +195,14 @@ def find_applications(query: str) -> Any:
     Use this to match an email (e.g. from "Acme Corp Recruiting") to a tracked
     application before changing its status.
     """
-    q = query.lower().strip()
+    q = query.strip()
+    if not q:
+        return {"error": "empty_query", "detail": "query must not be blank"}
     with _client() as c:
-        resp = c.get("/applications/", params={"limit": 500})
+        resp = c.get("/applications/", params={"q": q})
     if resp.status_code != 200:
         return _err(resp)
-    matches = [
-        a for a in resp.json()
-        if q in (a.get("company_name") or "").lower()
-        or q in (a.get("position_title") or "").lower()
-    ]
-    return [_trim(a) for a in matches]
+    return [_trim(a) for a in resp.json()]
 
 
 @mcp.tool()

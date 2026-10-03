@@ -1,6 +1,7 @@
 from typing import Any, List, Optional
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Body
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from app.api import deps
 from app.models import application as application_model
@@ -14,18 +15,29 @@ router = APIRouter()
 def read_applications(
     skip: int = 0,
     limit: Optional[int] = None,
+    status: Optional[ApplicationStatus] = None,
+    q: Optional[str] = None,
     db: Session = Depends(deps.get_db),
     current_user: user_model.User = Depends(deps.get_current_user),
 ) -> Any:
     """
-    Retrieve applications.
+    Retrieve applications, newest first.
+
+    `status` filters exactly; `q` matches company or position, case-insensitively.
+    Both run in SQL so callers never page through the whole table to search it.
     """
-    query = (
-        db.query(application_model.Application)
-        .filter(application_model.Application.user_id == current_user.id)
-        .order_by(application_model.Application.created_at.desc(), application_model.Application.id)
-        .offset(skip)
-    )
+    Application = application_model.Application
+    query = db.query(Application).filter(Application.user_id == current_user.id)
+    if status is not None:
+        query = query.filter(Application.status == status)
+    if q and q.strip():
+        escaped = q.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = f"%{escaped}%"
+        query = query.filter(or_(
+            Application.company_name.ilike(pattern, escape="\\"),
+            Application.position_title.ilike(pattern, escape="\\"),
+        ))
+    query = query.order_by(Application.created_at.desc(), Application.id).offset(skip)
     if limit is not None:
         query = query.limit(limit)
     applications = query.all()
