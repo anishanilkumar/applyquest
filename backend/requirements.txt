@@ -15,5 +15,5 @@ resend
 APScheduler>=3.10,<4
 pytz
 httpx
-mcp[cli]
+mcp[cli]>=1.28,<2  # 2.x renamed FastMCP; the server needs porting before upgrading
 
