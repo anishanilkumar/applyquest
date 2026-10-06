@@ -163,6 +163,17 @@ def update_application_status(
     
     # Define allowed transitions
     # Map current_status -> allowed_next_statuses
+    # A rejected or ghosted application can come back to life (a late reply, a
+    # recruiter reopening the role), so either can be reopened at any active stage.
+    reopen_statuses = [
+        ApplicationStatus.APPLIED,
+        ApplicationStatus.REPLIED,
+        ApplicationStatus.PHONE_SCREEN,
+        ApplicationStatus.TECHNICAL_ROUND_1,
+        ApplicationStatus.TECHNICAL_ROUND_2,
+        ApplicationStatus.FINAL_ROUND,
+        ApplicationStatus.OFFER,
+    ]
     valid_transitions = {
         ApplicationStatus.SHORTLISTED: [ApplicationStatus.APPLIED, ApplicationStatus.REJECTED],
         ApplicationStatus.APPLIED: [ApplicationStatus.REPLIED, ApplicationStatus.REJECTED, ApplicationStatus.GHOSTED],
@@ -172,12 +183,9 @@ def update_application_status(
         ApplicationStatus.TECHNICAL_ROUND_2: [ApplicationStatus.FINAL_ROUND, ApplicationStatus.REJECTED, ApplicationStatus.GHOSTED],
         ApplicationStatus.FINAL_ROUND: [ApplicationStatus.OFFER, ApplicationStatus.REJECTED, ApplicationStatus.GHOSTED],
         ApplicationStatus.OFFER: [ApplicationStatus.REJECTED, ApplicationStatus.GHOSTED], # Can reject an offer too
-        ApplicationStatus.REJECTED: [], # Terminal state
-        ApplicationStatus.GHOSTED: [ApplicationStatus.REJECTED, ApplicationStatus.REPLIED],  # A late reply or rejection can arrive after ghosting
+        ApplicationStatus.REJECTED: reopen_statuses,
+        ApplicationStatus.GHOSTED: [ApplicationStatus.REJECTED, *reopen_statuses],
     }
-    
-    # Always allow moving to Rejected or Ghosted from any non-terminal state
-    # (Already covered in map above, but good logic to keep in mind)
     
     if new_status not in valid_transitions.get(current_status, []):
          raise HTTPException(
