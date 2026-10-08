@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { ResponsiveContainer, Sankey, Tooltip, Layer, Rectangle } from 'recharts';
 import { JobApplication } from '../../types';
+import { effectiveHistory } from '../../utils/stages';
 
 interface ApplicationProcessSankeyProps {
     applications: JobApplication[];
@@ -82,11 +83,7 @@ const ApplicationProcessSankey: React.FC<ApplicationProcessSankeyProps> = ({ app
                 return;
             }
 
-            const sortedHistory = [...app.history].sort(
-                (a, b) => new Date(a.changedAt).getTime() - new Date(b.changedAt).getTime()
-            );
-
-            sortedHistory.forEach((record) => {
+            effectiveHistory(app).forEach((record) => {
                 const source = record.oldStatus || 'Applied';
                 const target = record.newStatus;
 

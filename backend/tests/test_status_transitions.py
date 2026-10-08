@@ -72,3 +72,42 @@ def test_rejected_cannot_go_back_to_shortlisted_or_itself(target):
         update_application_status(db=make_db(app), id="app-1", new_status=target, current_user=make_user())
 
     assert exc.value.status_code == 400
+
+
+# --- step back one stage ---
+
+STEP_BACKS = [
+    (ApplicationStatus.APPLIED, ApplicationStatus.SHORTLISTED),
+    (ApplicationStatus.REPLIED, ApplicationStatus.APPLIED),
+    (ApplicationStatus.PHONE_SCREEN, ApplicationStatus.REPLIED),
+    (ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.PHONE_SCREEN),
+    (ApplicationStatus.TECHNICAL_ROUND_2, ApplicationStatus.TECHNICAL_ROUND_1),
+    (ApplicationStatus.FINAL_ROUND, ApplicationStatus.TECHNICAL_ROUND_2),
+    (ApplicationStatus.OFFER, ApplicationStatus.FINAL_ROUND),
+]
+
+
+@pytest.mark.parametrize("current,previous", STEP_BACKS)
+@patch("app.core.email.notify_offer")
+@patch("app.core.email.notify_interview")
+def test_any_active_stage_can_step_back_one_stage_silently(interview, offer, current, previous):
+    app = make_application(current)
+
+    update_application_status(db=make_db(app), id="app-1", new_status=previous, current_user=make_user())
+
+    assert app.status == previous
+    interview.assert_not_called()
+    offer.assert_not_called()
+
+
+@pytest.mark.parametrize("current,target", [
+    (ApplicationStatus.TECHNICAL_ROUND_2, ApplicationStatus.PHONE_SCREEN),
+    (ApplicationStatus.OFFER, ApplicationStatus.APPLIED),
+])
+def test_cannot_jump_back_more_than_one_stage(current, target):
+    app = make_application(current)
+
+    with pytest.raises(HTTPException) as exc:
+        update_application_status(db=make_db(app), id="app-1", new_status=target, current_user=make_user())
+
+    assert exc.value.status_code == 400

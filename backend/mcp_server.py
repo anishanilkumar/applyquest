@@ -229,6 +229,8 @@ def mark_status(application_id: str, new_status: str, notes: Optional[str] = Non
       Rejected    -> Applied | Replied | Phone Screen | Tech Round 1/2 | Final Round | Offer
       Ghosted     -> Rejected | any of the stages Rejected can reopen to
     Rejected/Ghosted can be reopened because an application sometimes comes back.
+    Any stage from Applied to Offer can also step back exactly one stage, to correct
+    an application advanced too far; a step back sends no notification email.
     On an illegal transition the backend returns an error describing it — read it and
     adjust (e.g. you may need to advance through an intermediate status first).
     """

@@ -1,4 +1,53 @@
-import { JobApplication, ApplicationStatus } from '../types';
+import { JobApplication, ApplicationStatus, ApplicationHistory } from '../types';
+
+// The forward pipeline, in order. Rejected and Ghosted sit outside it.
+const PIPELINE: ApplicationStatus[] = [
+  'Shortlisted',
+  'Applied',
+  'Replied',
+  'Phone Screen',
+  'Technical Round 1',
+  'Technical Round 2',
+  'Final Round',
+  'Offer',
+];
+
+const CLOSED: ApplicationStatus[] = ['Rejected', 'Ghosted'];
+
+// True for a move that rewrites where the application stands rather than
+// advancing it: a step back to an earlier stage (correcting an application
+// moved too far) or reopening a rejected/ghosted one.
+function isRewind(h: ApplicationHistory): boolean {
+  const from = h.oldStatus as ApplicationStatus | undefined;
+  if (!from) return false;
+  if (CLOSED.includes(from)) return PIPELINE.includes(h.newStatus);
+  const fromIdx = PIPELINE.indexOf(from);
+  const toIdx = PIPELINE.indexOf(h.newStatus);
+  return fromIdx >= 0 && toIdx >= 0 && toIdx < fromIdx;
+}
+
+// The application's history with rewinds collapsed: the step a rewind undoes
+// is dropped, so an application corrected back from Technical Round 2 never
+// counts as having reached it, and a reopened one shows its live path without
+// looping back on itself. Returned in chronological order.
+export function effectiveHistory(app: JobApplication): ApplicationHistory[] {
+  const sorted = [...(app.history ?? [])].sort(
+    (a, b) => new Date(a.changedAt).getTime() - new Date(b.changedAt).getTime()
+  );
+  const path: ApplicationHistory[] = [];
+  for (const h of sorted) {
+    if (!isRewind(h)) {
+      path.push(h);
+      continue;
+    }
+    const undone = path[path.length - 1]?.newStatus === h.oldStatus ? path.pop() : undefined;
+    const from = path[path.length - 1]?.newStatus ?? undone?.oldStatus;
+    if (from !== h.newStatus) {
+      path.push({ ...h, oldStatus: from });
+    }
+  }
+  return path;
+}
 
 // Statuses that represent an actual interview taking place.
 export const INTERVIEW_STATUSES: ApplicationStatus[] = [
@@ -13,10 +62,11 @@ export const INTERVIEW_STATUSES: ApplicationStatus[] = [
 const REACHED_INTERVIEW: ApplicationStatus[] = [...INTERVIEW_STATUSES, 'Offer'];
 
 // Returns every status an application has held — its current status plus
-// every status recorded in its history (old and new).
+// every status on its effective history (old and new), so stages a correction
+// undid don't count.
 function statusesHeld(app: JobApplication): ApplicationStatus[] {
   const held: ApplicationStatus[] = [app.status];
-  for (const h of app.history ?? []) {
+  for (const h of effectiveHistory(app)) {
     if (h.newStatus) held.push(h.newStatus as ApplicationStatus);
     if (h.oldStatus) held.push(h.oldStatus as ApplicationStatus);
   }

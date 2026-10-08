@@ -140,6 +140,18 @@ def update_application(
     db.refresh(application)
     return application
 
+# The forward pipeline, in order. Rejected and Ghosted sit outside it.
+PIPELINE = [
+    ApplicationStatus.SHORTLISTED,
+    ApplicationStatus.APPLIED,
+    ApplicationStatus.REPLIED,
+    ApplicationStatus.PHONE_SCREEN,
+    ApplicationStatus.TECHNICAL_ROUND_1,
+    ApplicationStatus.TECHNICAL_ROUND_2,
+    ApplicationStatus.FINAL_ROUND,
+    ApplicationStatus.OFFER,
+]
+
 @router.patch("/{id}/status", response_model=application_schema.Application)
 def update_application_status(
     *,
@@ -165,15 +177,7 @@ def update_application_status(
     # Map current_status -> allowed_next_statuses
     # A rejected or ghosted application can come back to life (a late reply, a
     # recruiter reopening the role), so either can be reopened at any active stage.
-    reopen_statuses = [
-        ApplicationStatus.APPLIED,
-        ApplicationStatus.REPLIED,
-        ApplicationStatus.PHONE_SCREEN,
-        ApplicationStatus.TECHNICAL_ROUND_1,
-        ApplicationStatus.TECHNICAL_ROUND_2,
-        ApplicationStatus.FINAL_ROUND,
-        ApplicationStatus.OFFER,
-    ]
+    reopen_statuses = PIPELINE[1:]
     valid_transitions = {
         ApplicationStatus.SHORTLISTED: [ApplicationStatus.APPLIED, ApplicationStatus.REJECTED],
         ApplicationStatus.APPLIED: [ApplicationStatus.REPLIED, ApplicationStatus.REJECTED, ApplicationStatus.GHOSTED],
@@ -187,13 +191,20 @@ def update_application_status(
         ApplicationStatus.GHOSTED: [ApplicationStatus.REJECTED, *reopen_statuses],
     }
     
-    if new_status not in valid_transitions.get(current_status, []):
+    # Any active stage can also step back one stage, to correct an application
+    # that was advanced too far (e.g. a coding test logged as an interview round).
+    is_step_back = (
+        current_status in PIPELINE[1:]
+        and new_status == PIPELINE[PIPELINE.index(current_status) - 1]
+    )
+
+    if not is_step_back and new_status not in valid_transitions.get(current_status, []):
          raise HTTPException(
             status_code=400, 
             detail=f"Invalid status transition from {current_status} to {new_status}"
         )
 
-    # Perform update — clear any pending followup since status is advancing
+    # Perform update — clear any pending followup since status is changing
     application.status = new_status
     application.followed_up_at = None
     application.followup_flagged = False
@@ -210,6 +221,10 @@ def update_application_status(
     
     db.commit()
     db.refresh(application)
+
+    # A step back is a correction, not news — don't announce it.
+    if is_step_back:
+        return application
 
     interview_statuses = {
         ApplicationStatus.PHONE_SCREEN,
