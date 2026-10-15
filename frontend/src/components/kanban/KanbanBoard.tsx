@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Star, Calendar, ExternalLink, Edit, Trash2, Users } from 'lucide-react';
+import { MapPin, Star, Calendar, ExternalLink, Edit, Trash2, Users, FileText } from 'lucide-react';
 import { JobApplication, ApplicationStatus } from '../../types';
 import { EFFORT_BADGE, EFFORT_DESCRIPTION } from '../../utils/effort';
 import { useAppContext } from '../../context/AppContext';
@@ -10,6 +10,12 @@ interface KanbanBoardProps {
   onEdit: (application: JobApplication) => void;
   onDelete: (applicationId: string) => void;
 }
+
+// Stages where the employer is engaged, so the drafted documents are worth
+// having to hand.
+const PREP_STAGES: ApplicationStatus[] = [
+  'Replied', 'Phone Screen', 'Technical Round 1', 'Technical Round 2', 'Final Round', 'Offer',
+];
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({
   applications,
@@ -154,6 +160,11 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                 {app.effort}
                               </span>
                             )}
+                            {app.fitScore !== undefined && (
+                              <span className="inline-flex shrink-0 px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap bg-emerald-50 text-emerald-700" title="Fit score from ai-job-search">
+                                Fit {app.fitScore}
+                              </span>
+                            )}
                           </div>
                           <p className="text-sm text-gray-600">{app.positionTitle}</p>
                         </div>
@@ -188,6 +199,23 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                           </span>
                         )}
                       </div>
+
+                      {/* Prep files: the documents drafted for this application, once
+                          the employer is talking — names only, the files stay local */}
+                      {PREP_STAGES.includes(app.status) && (app.cvFile || app.coverLetterFile || app.researchFile) && (
+                        <div className="mb-3 bg-amber-50 border border-amber-100 rounded-lg p-2">
+                          <p className="text-xs font-medium text-amber-800 mb-1">Prep files</p>
+                          {[['CV', app.cvFile], ['Cover letter', app.coverLetterFile], ['Research', app.researchFile]]
+                            .filter(([, file]) => file)
+                            .map(([label, file]) => (
+                              <div key={label} className="flex items-center gap-1 text-xs text-gray-700 min-w-0" title={file}>
+                                <FileText className="w-3 h-3 flex-shrink-0 text-amber-600" />
+                                <span className="text-gray-500 flex-shrink-0">{label}:</span>
+                                <span className="font-mono truncate">{file!.split('/').pop()}</span>
+                              </div>
+                            ))}
+                        </div>
+                      )}
 
                       {/* Tech Stack */}
                       {app.techStack && (

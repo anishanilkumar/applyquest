@@ -96,3 +96,8 @@ def test_blank_search_is_ignored():
 
 def test_results_are_newest_first():
     assert "ORDER BY application.created_at DESC" in compiled_sql()
+
+
+def test_job_url_filter_matches_exactly_in_sql():
+    sql = compiled_sql(job_url=" https://jobs.example/1 ")
+    assert "application.job_url = 'https://jobs.example/1'" in sql

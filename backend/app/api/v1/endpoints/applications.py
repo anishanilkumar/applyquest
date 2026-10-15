@@ -11,25 +11,34 @@ from app.models.application import ApplicationStatus
 
 router = APIRouter()
 
+# Fields the ai-job-search workflow keeps in sync. Writing only these is
+# bookkeeping rather than the user working on an application, so it earns no
+# points — otherwise a backfill would inflate the level by one point a row.
+SYNC_FIELDS = {"effort", "fit_score", "role_type", "cv_file", "cover_letter_file", "research_file"}
+
 @router.get("/", response_model=List[application_schema.Application])
 def read_applications(
     skip: int = 0,
     limit: Optional[int] = None,
     status: Optional[ApplicationStatus] = None,
     q: Optional[str] = None,
+    job_url: Optional[str] = None,
     db: Session = Depends(deps.get_db),
     current_user: user_model.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Retrieve applications, newest first.
 
-    `status` filters exactly; `q` matches company or position, case-insensitively.
-    Both run in SQL so callers never page through the whole table to search it.
+    `status` and `job_url` filter exactly; `q` matches company or position,
+    case-insensitively. All run in SQL so callers never page through the whole
+    table to search it.
     """
     Application = application_model.Application
     query = db.query(Application).filter(Application.user_id == current_user.id)
     if status is not None:
         query = query.filter(Application.status == status)
+    if job_url and job_url.strip():
+        query = query.filter(Application.job_url == job_url.strip())
     if q and q.strip():
         escaped = q.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         pattern = f"%{escaped}%"
@@ -124,17 +133,18 @@ def update_application(
         setattr(application, field, value)
     
     db.add(application)
-    
+
     # Update gamification stats (1 point for update)
-    from app.core import gamification
-    gamification.add_points(
-        db=db,
-        user=current_user,
-        points=1,
-        reason="Updated application",
-        reference_type="application",
-        reference_id=application.id
-    )
+    if not set(update_data) <= SYNC_FIELDS:
+        from app.core import gamification
+        gamification.add_points(
+            db=db,
+            user=current_user,
+            points=1,
+            reason="Updated application",
+            reference_type="application",
+            reference_id=application.id
+        )
     
     db.commit()
     db.refresh(application)
@@ -206,6 +216,10 @@ def update_application_status(
 
     # Perform update — clear any pending followup since status is changing
     application.status = new_status
+    # A shortlisted application's date is when it was drafted; it counts as
+    # applied from the day it is actually submitted.
+    if current_status == ApplicationStatus.SHORTLISTED and new_status == ApplicationStatus.APPLIED:
+        application.applied_date = date.today()
     application.followed_up_at = None
     application.followup_flagged = False
     db.add(application)

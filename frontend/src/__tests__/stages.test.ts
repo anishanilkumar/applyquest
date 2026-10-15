@@ -1,4 +1,4 @@
-import { effectiveHistory, hasReachedInterview } from '../utils/stages';
+import { effectiveHistory, hasReachedInterview, isSubmitted } from '../utils/stages';
 import { ApplicationStatus, JobApplication } from '../types';
 
 let day = 0;
@@ -71,5 +71,23 @@ describe('hasReachedInterview', () => {
       move('Phone Screen', 'Rejected'),
     ]);
     expect(hasReachedInterview(a)).toBe(true);
+  });
+});
+
+describe('isSubmitted', () => {
+  it('excludes a draft still in Shortlisted', () => {
+    expect(isSubmitted(app('Shortlisted', []))).toBe(false);
+  });
+
+  it('excludes a draft skipped straight to Rejected', () => {
+    expect(isSubmitted(app('Rejected', [move('Shortlisted', 'Rejected')]))).toBe(false);
+  });
+
+  it('counts a draft that was sent and then rejected', () => {
+    expect(isSubmitted(app('Rejected', [move('Shortlisted', 'Applied'), move('Applied', 'Rejected')]))).toBe(true);
+  });
+
+  it('counts an application logged as applied with no history', () => {
+    expect(isSubmitted(app('Applied', []))).toBe(true);
   });
 });

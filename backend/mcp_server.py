@@ -170,6 +170,8 @@ def _trim(app: dict) -> dict:
         "applied_date": app.get("applied_date"),
         "job_url": app.get("job_url"),
         "job_board_source": app.get("job_board_source"),
+        "fit_score": app.get("fit_score"),
+        "role_type": app.get("role_type"),
     }
 
 
@@ -194,17 +196,25 @@ def list_applications(status: Optional[str] = None, limit: int = 200) -> Any:
 
 
 @mcp.tool()
-def find_applications(query: str) -> Any:
-    """Find applications whose company or position contains `query` (case-insensitive).
+def find_applications(query: str = "", job_url: Optional[str] = None) -> Any:
+    """Find applications whose company or position contains `query` (case-insensitive),
+    or whose job_url is exactly `job_url`.
 
     Use this to match an email (e.g. from "Acme Corp Recruiting") to a tracked
-    application before changing its status.
+    application before changing its status. Pass job_url when you hold the
+    posting URL — it is the most reliable match.
     """
     q = query.strip()
-    if not q:
-        return {"error": "empty_query", "detail": "query must not be blank"}
+    url = (job_url or "").strip()
+    if not q and not url:
+        return {"error": "empty_query", "detail": "provide query or job_url"}
+    params = {}
+    if q:
+        params["q"] = q
+    if url:
+        params["job_url"] = url
     with _client() as c:
-        resp = c.get("/applications/", params={"q": q})
+        resp = c.get("/applications/", params=params)
     if resp.status_code != 200:
         return _err(resp)
     return [_trim(a) for a in resp.json()]
@@ -262,6 +272,11 @@ def create_application(
     notes: Optional[str] = None,
     applied_date: Optional[str] = None,
     effort: str = "Unknown",
+    fit_score: Optional[int] = None,
+    role_type: Optional[str] = None,
+    cv_file: Optional[str] = None,
+    cover_letter_file: Optional[str] = None,
+    research_file: Optional[str] = None,
 ) -> Any:
     """Create a new application record when no existing one matches.
 
@@ -269,6 +284,15 @@ def create_application(
     Defaults status to "Applied" (typical when the email is an application
     confirmation), applied_date (ISO YYYY-MM-DD) to today and effort to "Unknown".
     Returns the full created record, including its new id.
+
+    Use status "Shortlisted" for an application whose documents are drafted but
+    not yet submitted; mark_status moves it to "Applied" once it is sent, which
+    also sets applied_date to that day.
+
+    Fields written by the ai-job-search workflow: fit_score (its 0-100 fit
+    score), role_type (e.g. "Fullstack", "AI/ML", "Backend"), and the file names
+    of the documents prepared for the application — cv_file, cover_letter_file,
+    research_file. Store names/paths only, never document contents.
 
     effort is how much went into the application: "Full" (tailored CV and cover
     letter, screening questions answered), "Light" (some tailoring), "Generic"
@@ -278,6 +302,8 @@ def create_application(
         return {"error": "invalid_status", "detail": f"status must be one of {VALID_STATUSES}"}
     if effort not in VALID_EFFORTS:
         return {"error": "invalid_effort", "detail": f"effort must be one of {VALID_EFFORTS}"}
+    if fit_score is not None and not 0 <= fit_score <= 100:
+        return {"error": "invalid_fit_score", "detail": "fit_score must be 0-100"}
     body = {
         "company_name": company_name,
         "position_title": position_title,
@@ -290,6 +316,11 @@ def create_application(
         "notes": notes,
         "applied_date": applied_date or date.today().isoformat(),
         "effort": effort,
+        "fit_score": fit_score,
+        "role_type": role_type,
+        "cv_file": cv_file,
+        "cover_letter_file": cover_letter_file,
+        "research_file": research_file,
     }
     body = {k: v for k, v in body.items() if v is not None}
     with _client() as c:
@@ -308,11 +339,21 @@ def update_application(
     notes: Optional[str] = None,
     followup_flagged: Optional[bool] = None,
     effort: Optional[str] = None,
+    fit_score: Optional[int] = None,
+    role_type: Optional[str] = None,
+    cv_file: Optional[str] = None,
+    cover_letter_file: Optional[str] = None,
+    research_file: Optional[str] = None,
 ) -> Any:
     """Enrich an existing application with job details discovered from an email.
 
     Only the provided fields are changed. Does NOT change status — use mark_status
     for that. Set followup_flagged to put the application in the followup queue.
+
+    Fields written by the ai-job-search workflow: fit_score (its 0-100 fit
+    score), role_type (e.g. "Fullstack", "AI/ML", "Backend"), and the file names
+    of the documents prepared for the application — cv_file, cover_letter_file,
+    research_file. Store names/paths only, never document contents.
 
     effort is how much went into the application: "Full" (tailored CV and cover
     letter, screening questions answered), "Light" (some tailoring), "Generic"
@@ -320,6 +361,8 @@ def update_application(
     """
     if effort is not None and effort not in VALID_EFFORTS:
         return {"error": "invalid_effort", "detail": f"effort must be one of {VALID_EFFORTS}"}
+    if fit_score is not None and not 0 <= fit_score <= 100:
+        return {"error": "invalid_fit_score", "detail": "fit_score must be 0-100"}
     body = {
         "location": location,
         "job_url": job_url,
@@ -329,6 +372,11 @@ def update_application(
         "notes": notes,
         "followup_flagged": followup_flagged,
         "effort": effort,
+        "fit_score": fit_score,
+        "role_type": role_type,
+        "cv_file": cv_file,
+        "cover_letter_file": cover_letter_file,
+        "research_file": research_file,
     }
     body = {k: v for k, v in body.items() if v is not None}
     if not body:
@@ -336,6 +384,94 @@ def update_application(
     with _client() as c:
         resp = c.put(f"/applications/{application_id}", json=body)
     return resp.json() if resp.status_code == 200 else _err(resp)
+
+
+# Outcome grouping for outcome_stats. Positive mirrors the frontend's
+# utils/stages.ts: a reply or any later stage, never a rejection or ghosting.
+POSITIVE_STATUSES = {
+    "Replied", "Phone Screen", "Technical Round 1", "Technical Round 2", "Final Round", "Offer",
+}
+INTERVIEW_STATUSES = POSITIVE_STATUSES - {"Replied"}
+
+
+def _fit_band(score: Optional[int]) -> str:
+    # The verdict bands of ai-job-search's 04-job-evaluation.md.
+    if score is None:
+        return "Unscored"
+    if score >= 75:
+        return "Strong (75+)"
+    if score >= 60:
+        return "Good (60-74)"
+    if score >= 45:
+        return "Moderate (45-59)"
+    return "Weak (<45)"
+
+
+def _was_submitted(app: dict) -> bool:
+    # A draft still in Shortlisted, or one skipped from there straight to
+    # Rejected, never went out. Mirrors isSubmitted in the frontend.
+    if app.get("status") == "Shortlisted":
+        return False
+    moves = {(h.get("old_status"), h.get("new_status")) for h in app.get("history") or []}
+    skipped = ("Shortlisted", "Rejected") in moves and not any(new == "Applied" for _, new in moves)
+    return not skipped
+
+
+def _outcome_stats(apps: list[dict]) -> dict:
+    dimensions = {
+        "role_type": lambda a: a.get("role_type") or "Unknown",
+        "job_board_source": lambda a: a.get("job_board_source") or "Unknown",
+        "effort": lambda a: a.get("effort") or "Unknown",
+        "fit_band": lambda a: _fit_band(a.get("fit_score")),
+        "cover_letter": lambda a: "Yes" if a.get("cover_letter_file") else "No",
+    }
+    submitted = [a for a in apps if _was_submitted(a)]
+
+    def reached(app: dict) -> set:
+        held = {app.get("status")}
+        for h in app.get("history") or []:
+            held.update({h.get("old_status"), h.get("new_status")})
+        return held
+
+    def summarise(group: list[dict]) -> dict:
+        held = [reached(a) for a in group]
+        return {
+            "submitted": len(group),
+            "positive": sum(1 for h in held if h & POSITIVE_STATUSES),
+            "interview": sum(1 for h in held if h & INTERVIEW_STATUSES),
+            "rejected": sum(1 for a in group if a.get("status") == "Rejected"),
+            "ghosted": sum(1 for a in group if a.get("status") == "Ghosted"),
+        }
+
+    result: dict = {"overall": summarise(submitted)}
+    for name, key in dimensions.items():
+        groups: dict[str, list] = {}
+        for app in submitted:
+            groups.setdefault(key(app), []).append(app)
+        result[name] = {
+            value: summarise(group)
+            for value, group in sorted(groups.items(), key=lambda kv: -len(kv[1]))
+        }
+    return result
+
+
+@mcp.tool()
+def outcome_stats() -> Any:
+    """Track record of submitted applications, for deciding where to spend effort.
+
+    Counts submitted applications (not drafts still Shortlisted or skipped from
+    there) overall and grouped by
+    role_type, job_board_source, effort, fit_band (Strong 75+ / Good 60-74 /
+    Moderate 45-59 / Weak <45 / Unscored) and cover_letter (Yes/No). Each group
+    reports submitted, positive (a reply or any later stage), interview,
+    rejected and ghosted. Compact: one call instead of listing every application.
+    Small groups are noisy — weigh a rate by its submitted count.
+    """
+    with _client() as c:
+        resp = c.get("/applications/")
+    if resp.status_code != 200:
+        return _err(resp)
+    return _outcome_stats(resp.json())
 
 
 if __name__ == "__main__":

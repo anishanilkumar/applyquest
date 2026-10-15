@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, date
 from uuid import UUID
@@ -23,6 +23,11 @@ class ApplicationBase(BaseModel):
     followed_up_at: Optional[date] = None
     followup_flagged: bool = False
     referral_contact_id: Optional[UUID] = None
+    fit_score: Optional[int] = Field(default=None, ge=0, le=100)
+    role_type: Optional[str] = None
+    cv_file: Optional[str] = None
+    cover_letter_file: Optional[str] = None
+    research_file: Optional[str] = None
 
 class ApplicationCreate(ApplicationBase):
     pass
@@ -45,6 +50,11 @@ class ApplicationUpdate(BaseModel):
     followed_up_at: Optional[date] = None
     followup_flagged: Optional[bool] = None
     referral_contact_id: Optional[UUID] = None
+    fit_score: Optional[int] = Field(default=None, ge=0, le=100)
+    role_type: Optional[str] = None
+    cv_file: Optional[str] = None
+    cover_letter_file: Optional[str] = None
+    research_file: Optional[str] = None
 
 class ApplicationHistoryBase(BaseModel):
     old_status: Optional[ApplicationStatus]

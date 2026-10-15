@@ -80,6 +80,11 @@ def get_share_data(
             "created_at": app.created_at.isoformat() if app.created_at else None,
             "updated_at": app.updated_at.isoformat() if app.updated_at else None,
             "referral_contact_id": app.referral_contact_id,
+            "fit_score": app.fit_score,
+            "role_type": app.role_type,
+            "cv_file": app.cv_file,
+            "cover_letter_file": app.cover_letter_file,
+            "research_file": app.research_file,
             "history": history,
         }
 

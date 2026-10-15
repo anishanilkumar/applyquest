@@ -65,3 +65,57 @@ def test_effort_is_validated_before_any_request(requests):
     assert mcp_server.create_application("Acme", "SWE", "Berlin", effort="full")["error"] == "invalid_effort"
     assert mcp_server.update_application("a1", effort="Easy")["error"] == "invalid_effort"
     assert requests == []
+
+
+def test_find_by_job_url_filters_exactly(requests):
+    mcp_server.find_applications(job_url=" https://jobs.example/1 ")
+
+    (req,) = requests
+    assert dict(req.url.params) == {"job_url": "https://jobs.example/1"}
+
+
+def test_create_sends_ai_job_search_fields(requests):
+    mcp_server.create_application(
+        "Acme", "SWE", "Berlin", status="Shortlisted", effort="Full",
+        fit_score=72, role_type="Fullstack", cv_file="cv/main_acme_swe.tex",
+    )
+
+    (req,) = requests
+    body = json.loads(req.content)
+    assert body["status"] == "Shortlisted"
+    assert body["fit_score"] == 72
+    assert body["role_type"] == "Fullstack"
+    assert body["cv_file"] == "cv/main_acme_swe.tex"
+    assert "cover_letter_file" not in body
+
+
+def test_fit_score_is_validated_before_any_request(requests):
+    assert mcp_server.update_application("a1", fit_score=150)["error"] == "invalid_fit_score"
+    assert requests == []
+
+
+def test_outcome_stats_groups_submitted_applications():
+    apps = [
+        {"status": "Shortlisted", "role_type": "AI/ML", "fit_score": 90},
+        {"status": "Rejected", "role_type": "AI/ML", "fit_score": 80, "cover_letter_file": "c.tex",
+         "history": [{"old_status": "Applied", "new_status": "Phone Screen"},
+                     {"old_status": "Phone Screen", "new_status": "Rejected"}]},
+        {"status": "Ghosted", "role_type": "Fullstack", "fit_score": 62},
+        {"status": "Applied", "role_type": None, "fit_score": None},
+    ]
+    stats = mcp_server._outcome_stats(apps)
+
+    assert stats["overall"] == {"submitted": 3, "positive": 1, "interview": 1, "rejected": 1, "ghosted": 1}
+    assert stats["role_type"]["AI/ML"]["submitted"] == 1  # the shortlisted one is not submitted
+    assert stats["fit_band"]["Strong (75+)"]["interview"] == 1
+    assert stats["fit_band"]["Unscored"]["submitted"] == 1
+    assert stats["cover_letter"]["Yes"]["positive"] == 1
+
+
+def test_outcome_stats_leaves_out_skipped_drafts():
+    apps = [
+        {"status": "Rejected", "history": [{"old_status": "Shortlisted", "new_status": "Rejected"}]},
+        {"status": "Rejected", "history": [{"old_status": "Shortlisted", "new_status": "Applied"},
+                                           {"old_status": "Applied", "new_status": "Rejected"}]},
+    ]
+    assert mcp_server._outcome_stats(apps)["overall"]["submitted"] == 1

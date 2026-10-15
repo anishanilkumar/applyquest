@@ -60,6 +60,11 @@ const transformApplication = (data: any): JobApplication => ({
     createdAt: data.created_at,
     updatedAt: data.updated_at,
     referralContactId: data.referral_contact_id,
+    fitScore: data.fit_score ?? undefined,
+    roleType: data.role_type ?? undefined,
+    cvFile: data.cv_file ?? undefined,
+    coverLetterFile: data.cover_letter_file ?? undefined,
+    researchFile: data.research_file ?? undefined,
     history: data.history ? data.history.map((h: any) => ({
         id: h.id,
         applicationId: h.application_id,

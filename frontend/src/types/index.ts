@@ -37,6 +37,12 @@ export interface JobApplication {
   updatedAt: string;
   history?: ApplicationHistory[];
   referralContactId?: string;
+  // Synced from the ai-job-search workflow that drafts the documents.
+  fitScore?: number;
+  roleType?: string;
+  cvFile?: string;
+  coverLetterFile?: string;
+  researchFile?: string;
 }
 
 export interface ApplicationHistory {

@@ -49,6 +49,17 @@ export function effectiveHistory(app: JobApplication): ApplicationHistory[] {
   return path;
 }
 
+// True once the application was actually sent. A shortlisted one is only
+// drafted, and one skipped straight from Shortlisted to Rejected never went
+// out — counting either would skew every rate on the Analytics page.
+export function isSubmitted(app: JobApplication): boolean {
+  if (app.status === 'Shortlisted') return false;
+  const path = effectiveHistory(app);
+  const skipped = path.some(h => h.oldStatus === 'Shortlisted' && h.newStatus === 'Rejected')
+    && !path.some(h => h.newStatus === 'Applied');
+  return !skipped;
+}
+
 // Statuses that represent an actual interview taking place.
 export const INTERVIEW_STATUSES: ApplicationStatus[] = [
   'Phone Screen',

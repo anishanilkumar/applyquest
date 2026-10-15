@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ApplicationStatus } from '../types';
 import { useAppContext } from '../context/AppContext';
-import { hasReachedInterview, hasReachedOffer, hasPositiveResponse } from '../utils/stages';
+import { hasReachedInterview, hasReachedOffer, hasPositiveResponse, isSubmitted } from '../utils/stages';
 import { Filter, Download } from 'lucide-react';
 import KeyMetricsCards from '../components/analytics/KeyMetricsCards';
 import InsightsStrip from '../components/analytics/InsightsStrip';
@@ -9,6 +9,7 @@ import StatusDistributionChart from '../components/analytics/StatusDistributionC
 import ApplicationsTimelineChart from '../components/analytics/ApplicationsTimelineChart';
 import SourceEffectiveness from '../components/analytics/SourceEffectiveness';
 import EffortComparison from '../components/analytics/EffortComparison';
+import ReplyDrivers from '../components/analytics/ReplyDrivers';
 import TechStackAnalysis from '../components/analytics/TechStackAnalysis';
 import GermanyMap from '../components/analytics/GermanyMap';
 import ApplicationProcessSankey from '../components/analytics/ApplicationProcessSankey';
@@ -26,8 +27,11 @@ const Analytics: React.FC = () => {
   const [dateRange, setDateRange] = useState<'30d' | '90d' | '6m' | 'all'>('all');
 
   // Filter applications by date range
+  // Analytics measures what was sent: drafts still in Shortlisted, and ones
+  // skipped from there, are left out of every chart and rate.
   const filteredApplications = useMemo(() => {
-    if (dateRange === 'all') return applications;
+    const submitted = applications.filter(isSubmitted);
+    if (dateRange === 'all') return submitted;
     const now = new Date();
     const cutoffDate = new Date();
     switch (dateRange) {
@@ -35,7 +39,7 @@ const Analytics: React.FC = () => {
       case '90d': cutoffDate.setDate(now.getDate() - 90); break;
       case '6m': cutoffDate.setMonth(now.getMonth() - 6); break;
     }
-    return applications.filter(app => new Date(app.createdAt) >= cutoffDate);
+    return submitted.filter(app => new Date(app.createdAt) >= cutoffDate);
   }, [applications, dateRange]);
 
   // Honest key metrics. "Positive response" excludes rejections and ghosting —
@@ -248,6 +252,8 @@ const Analytics: React.FC = () => {
             <EffortComparison applications={filteredApplications} />
             <StatusDistributionChart statusData={statusData} />
           </div>
+
+          <ReplyDrivers applications={filteredApplications} />
 
           {/* Sparse breakdowns — only rendered when the data supports them */}
           {(showTechStack || showMap) && (

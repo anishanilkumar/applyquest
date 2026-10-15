@@ -52,6 +52,14 @@ class Application(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     referral_contact_id = Column(UUID(as_uuid=True), ForeignKey("networkcontact.id", ondelete="SET NULL"), nullable=True)
+    # Written by the ai-job-search workflow that drafts the CV and cover letter:
+    # its 0-100 fit score, role category, and the file names of the documents
+    # prepared for the application (names only — the documents stay local).
+    fit_score = Column(Integer, nullable=True)
+    role_type = Column(String, nullable=True)
+    cv_file = Column(String, nullable=True)
+    cover_letter_file = Column(String, nullable=True)
+    research_file = Column(String, nullable=True)
 
     user = relationship("User", back_populates="applications")
     history = relationship("ApplicationHistory", back_populates="application", cascade="all, delete-orphan")
