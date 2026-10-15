@@ -66,11 +66,13 @@ const CustomNode = (props: any) => {
                 fontWeight="600"
                 fill="#1F2937"
                 dominantBaseline="middle"
+                stroke="#FFFFFF"
+                strokeWidth={3}
+                strokeLinejoin="round"
+                paintOrder="stroke"
             >
                 {payload.name}
-                {payload.value !== undefined && (
-                    <tspan fontWeight="400" fill="#6B7280">{` · ${payload.value}`}</tspan>
-                )}
+                <tspan fontWeight="400" fill="#4B5563">{` · ${payload.count}`}</tspan>
             </text>
         </Layer>
     );
@@ -141,16 +143,17 @@ const ApplicationProcessSankey: React.FC<ApplicationProcessSankeyProps> = ({ app
     const data = useMemo(() => {
         const nodesSet = new Set<string>();
         const linksMap = new Map<string, number>();
+        // How many applications reached each stage, each counted once. The
+        // Sankey's own node value only measures flow, so it misses applications
+        // still sitting in Applied and double-counts any that loop back.
+        const reached = new Map<string, number>();
 
         applications.forEach(app => {
             // Shortlisted is no longer part of the flow: a job only enters the
             // chart once it has actually been applied to.
             if (app.status === 'Shortlisted') return;
 
-            if (!app.history || app.history.length === 0) {
-                nodesSet.add('Applied');
-                return;
-            }
+            const stages = new Set<string>(['Applied']);
 
             // Ghosted -> Rejected only means the rejection arrived late, so the
             // application is drawn as rejected straight from where it stood.
@@ -179,10 +182,20 @@ const ApplicationProcessSankey: React.FC<ApplicationProcessSankeyProps> = ({ app
 
                 nodesSet.add(source);
                 nodesSet.add(target);
+                stages.add(source);
+                stages.add(target);
 
                 const key = `${source}|${target}`;
                 linksMap.set(key, (linksMap.get(key) || 0) + 1);
             });
+
+            // A job dropped straight from Shortlisted was never applied to.
+            const neverApplied = path.length > 0 && path.every(h => h.oldStatus === 'Shortlisted' || h.newStatus === 'Shortlisted')
+                && !path.some(h => h.newStatus === 'Applied');
+            if (neverApplied) return;
+
+            nodesSet.add('Applied');
+            stages.forEach(stage => reached.set(stage, (reached.get(stage) || 0) + 1));
         });
 
         const statusOrder: Record<string, number> = {
@@ -197,7 +210,7 @@ const ApplicationProcessSankey: React.FC<ApplicationProcessSankeyProps> = ({ app
             'Ghosted': 7
         };
 
-        const nodes = Array.from(nodesSet).map(name => ({ name }));
+        const nodes = Array.from(nodesSet).map(name => ({ name, count: reached.get(name) ?? 0 }));
         nodes.sort((a, b) => (statusOrder[a.name] ?? 99) - (statusOrder[b.name] ?? 99));
 
         // Color mapping for different transition types
