@@ -67,6 +67,7 @@ body {
 }
 
 .field input,
+.field select,
 .field textarea {
   width: 100%;
   border: 1px solid #d1d5db;
@@ -80,6 +81,7 @@ body {
 }
 
 .field input:focus,
+.field select:focus,
 .field textarea:focus { border-color: #4f46e5; }
 
 .field textarea {

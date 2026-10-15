@@ -28,7 +28,7 @@ const Applications: React.FC = () => {
         visaSponsorship: formData.visaSponsorship,
         germanRequirement: formData.germanRequirement,
         relocationSupport: formData.relocationSupport,
-        easyApply: formData.easyApply,
+        effort: formData.effort,
         jobBoardSource: formData.jobBoardSource,
         priorityStars: formData.priorityStars,
         notes: formData.notes,
@@ -68,7 +68,7 @@ const Applications: React.FC = () => {
           visaSponsorship: formData.visaSponsorship,
           germanRequirement: formData.germanRequirement,
           relocationSupport: formData.relocationSupport,
-          easyApply: formData.easyApply,
+          effort: formData.effort,
           jobBoardSource: formData.jobBoardSource,
           priorityStars: formData.priorityStars,
           notes: formData.notes,
@@ -173,7 +173,7 @@ const Applications: React.FC = () => {
     interviews: applications.filter(app =>
       ['Phone Screen', 'Technical Round 1', 'Technical Round 2', 'Final Round'].includes(app.status)
     ).length,
-    easyApplied: applications.filter(app => app.easyApply).length
+    fullEffort: applications.filter(app => app.effort === 'Full').length
   };
 
   if (loading) {
@@ -236,11 +236,11 @@ const Applications: React.FC = () => {
           <div className="bg-green-50 rounded-lg p-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">{stats.easyApplied}</span>
+                <span className="text-white font-bold text-sm">{stats.fullEffort}</span>
               </div>
               <div>
-                <div className="text-2xl font-bold text-green-600">{stats.easyApplied}</div>
-                <div className="text-sm text-green-800">Easy Applied</div>
+                <div className="text-2xl font-bold text-green-600">{stats.fullEffort}</div>
+                <div className="text-sm text-green-800">Full Applications</div>
               </div>
             </div>
           </div>
@@ -311,7 +311,7 @@ const Applications: React.FC = () => {
             visaSponsorship: editingApplication.visaSponsorship,
             germanRequirement: editingApplication.germanRequirement,
             relocationSupport: editingApplication.relocationSupport,
-            easyApply: editingApplication.easyApply,
+            effort: editingApplication.effort,
             jobBoardSource: editingApplication.jobBoardSource,
             priorityStars: editingApplication.priorityStars,
             notes: editingApplication.notes,

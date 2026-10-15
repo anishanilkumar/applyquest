@@ -90,11 +90,11 @@ const GOAL_POOL: GoalDef[] = [
   },
   {
     id: 5,
-    label: "Apply to 3 easy-apply jobs",
+    label: "Send 1 full application",
     icon: Zap,
-    target: 3,
+    target: 1,
     measure: (apps, _, today) =>
-      apps.filter(a => toLocalDate(a.createdAt) === today && a.easyApply).length,
+      apps.filter(a => toLocalDate(a.createdAt) === today && a.effort === 'Full').length,
   },
   {
     id: 6,

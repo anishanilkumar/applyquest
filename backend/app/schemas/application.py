@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, date
 from uuid import UUID
-from app.models.application import ApplicationStatus, GermanLevel
+from app.models.application import ApplicationEffort, ApplicationStatus, GermanLevel
 
 class ApplicationBase(BaseModel):
     company_name: str
@@ -15,7 +15,7 @@ class ApplicationBase(BaseModel):
     visa_sponsorship: bool = False
     german_requirement: GermanLevel = GermanLevel.NONE
     relocation_support: bool = False
-    easy_apply: bool = False
+    effort: ApplicationEffort = ApplicationEffort.UNKNOWN
     job_board_source: Optional[str] = None
     priority_stars: int = 0
     notes: Optional[str] = None
@@ -37,7 +37,7 @@ class ApplicationUpdate(BaseModel):
     visa_sponsorship: Optional[bool] = None
     german_requirement: Optional[GermanLevel] = None
     relocation_support: Optional[bool] = None
-    easy_apply: Optional[bool] = None
+    effort: Optional[ApplicationEffort] = None
     job_board_source: Optional[str] = None
     priority_stars: Optional[int] = None
     notes: Optional[str] = None

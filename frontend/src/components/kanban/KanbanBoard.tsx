@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MapPin, Star, Calendar, ExternalLink, Edit, Trash2, Users } from 'lucide-react';
 import { JobApplication, ApplicationStatus } from '../../types';
+import { EFFORT_BADGE, EFFORT_DESCRIPTION } from '../../utils/effort';
 import { useAppContext } from '../../context/AppContext';
 
 interface KanbanBoardProps {
@@ -148,9 +149,9 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                 <Users className="w-3 h-3" />
                               </span>
                             )}
-                            {app.easyApply && (
-                              <span className="inline-flex shrink-0 items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700 border border-green-200 whitespace-nowrap" title="Applied via Easy Apply">
-                                ⚡ Easy Apply
+                            {app.effort !== 'Unknown' && (
+                              <span className={`inline-flex shrink-0 items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap ${EFFORT_BADGE[app.effort]}`} title={EFFORT_DESCRIPTION[app.effort]}>
+                                {app.effort}
                               </span>
                             )}
                           </div>

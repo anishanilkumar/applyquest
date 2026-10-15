@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Briefcase, MapPin, DollarSign, Code, Star, Link2, Globe, Building, Users } from 'lucide-react';
 import { api } from '../../services/api';
-import type { NetworkContact } from '../../types';
+import type { ApplicationEffort, NetworkContact } from '../../types';
+import { EFFORTS, EFFORT_DESCRIPTION } from '../../utils/effort';
 
 interface ApplicationFormData {
   companyName: string;
@@ -13,7 +14,7 @@ interface ApplicationFormData {
   visaSponsorship: boolean;
   germanRequirement: string;
   relocationSupport: boolean;
-  easyApply: boolean;
+  effort: ApplicationEffort;
   followupFlagged: boolean;
   jobBoardSource: string;
   priorityStars: number;
@@ -43,7 +44,7 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
     visaSponsorship: initialData?.visaSponsorship || false,
     germanRequirement: initialData?.germanRequirement || 'None',
     relocationSupport: initialData?.relocationSupport || false,
-    easyApply: initialData?.easyApply || false,
+    effort: initialData?.effort || 'Unknown',
     followupFlagged: initialData?.followupFlagged || false,
     jobBoardSource: initialData?.jobBoardSource || '',
     priorityStars: initialData?.priorityStars || 3,
@@ -225,18 +226,19 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
-                  <input
-                    type="checkbox"
-                    name="easyApply"
-                    checked={formData.easyApply}
+                <div className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Effort</label>
+                  <select
+                    name="effort"
+                    value={formData.effort}
                     onChange={handleChange}
-                    className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 cursor-pointer">Easy Apply</label>
-                    <p className="text-xs text-gray-500">Applied via LinkedIn or similar with standard resume, minimal effort</p>
-                  </div>
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {EFFORTS.map(effort => (
+                      <option key={effort} value={effort}>{effort}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">{EFFORT_DESCRIPTION[formData.effort]}</p>
                 </div>
 
                 <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:border-amber-300 transition-colors">

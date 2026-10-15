@@ -54,7 +54,7 @@ async function handleSaveJob(payload) {
     visa_sponsorship: false,
     german_requirement: 'None',
     relocation_support: false,
-    easy_apply: payload.easyApply || false,
+    effort: payload.effort || 'Unknown',
     job_board_source: payload.jobBoardSource || null,
     priority_stars: payload.priorityStars || 0,
     notes: payload.notes || null,

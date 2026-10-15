@@ -1,3 +1,5 @@
+import json
+
 import httpx
 import pytest
 
@@ -42,4 +44,24 @@ def test_list_filters_status_before_limiting(requests):
 
 def test_list_rejects_an_unknown_status(requests):
     assert mcp_server.list_applications(status="applied")["error"] == "invalid_status"
+    assert requests == []
+
+
+def test_create_sends_effort_defaulting_to_unknown(requests):
+    mcp_server.create_application("Acme", "SWE", "Berlin")
+
+    (req,) = requests
+    assert json.loads(req.content)["effort"] == "Unknown"
+
+
+def test_update_can_set_effort_alone(requests):
+    mcp_server.update_application("a1", effort="Full")
+
+    (req,) = requests
+    assert json.loads(req.content) == {"effort": "Full"}
+
+
+def test_effort_is_validated_before_any_request(requests):
+    assert mcp_server.create_application("Acme", "SWE", "Berlin", effort="full")["error"] == "invalid_effort"
+    assert mcp_server.update_application("a1", effort="Easy")["error"] == "invalid_effort"
     assert requests == []

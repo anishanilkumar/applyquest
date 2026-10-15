@@ -47,7 +47,6 @@ function populateForm(data) {
   $('companyName').value = data.companyName || '';
   $('location').value = data.location || '';
   $('jobBoardSource').value = data.jobBoardSource || '';
-  $('easyApply').checked = !!data.easyApply;
 }
 
 // --- Settings / nav ---
@@ -70,7 +69,7 @@ $('jobForm').addEventListener('submit', async (e) => {
     companyName: $('companyName').value.trim(),
     location: $('location').value.trim(),
     jobBoardSource: $('jobBoardSource').value.trim() || null,
-    easyApply: $('easyApply').checked,
+    effort: $('effort').value,
     priorityStars: parseInt($('priorityStars').value, 10) || 0,
     notes: $('notes').value.trim() || null,
     jobUrl: savedJobUrl,

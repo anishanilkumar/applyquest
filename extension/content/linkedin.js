@@ -13,7 +13,6 @@ function extractLinkedIn() {
     companyName,
     location: '',
     jobUrl: window.location.href.split('?')[0],
-    easyApply: false,
     jobBoardSource: 'LinkedIn',
   };
 }

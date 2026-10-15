@@ -23,6 +23,12 @@ class GermanLevel(str, enum.Enum):
     BASIC = "Basic"
     FLUENT = "Fluent"
 
+class ApplicationEffort(str, enum.Enum):
+    FULL = "Full"
+    LIGHT = "Light"
+    GENERIC = "Generic"
+    UNKNOWN = "Unknown"
+
 class Application(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
@@ -36,7 +42,7 @@ class Application(Base):
     visa_sponsorship = Column(Boolean, default=False)
     german_requirement = Column(Enum(GermanLevel), default=GermanLevel.NONE)
     relocation_support = Column(Boolean, default=False)
-    easy_apply = Column(Boolean, default=False)
+    effort = Column(Enum(ApplicationEffort), default=ApplicationEffort.UNKNOWN, nullable=False, server_default=ApplicationEffort.UNKNOWN.name)
     job_board_source = Column(String, nullable=True)
     priority_stars = Column(Integer, default=0)
     notes = Column(Text, nullable=True)

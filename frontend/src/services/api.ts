@@ -50,7 +50,7 @@ const transformApplication = (data: any): JobApplication => ({
     visaSponsorship: data.visa_sponsorship,
     germanRequirement: data.german_requirement,
     relocationSupport: data.relocation_support,
-    easyApply: data.easy_apply,
+    effort: data.effort ?? 'Unknown',
     jobBoardSource: data.job_board_source,
     priorityStars: data.priority_stars,
     notes: data.notes,

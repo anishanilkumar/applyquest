@@ -1,15 +1,21 @@
 import React, { useMemo } from 'react';
 import { Zap } from 'lucide-react';
-import { JobApplication } from '../../types';
+import { ApplicationEffort, JobApplication } from '../../types';
 import { hasPositiveResponse, hasReachedInterview } from '../../utils/stages';
 
-interface EasyApplyComparisonProps {
+interface EffortComparisonProps {
   applications: JobApplication[];
 }
 
-// Does spending time on a tailored ("manual") application pay off versus
-// one-click easy-apply? Both buckets come straight from the easyApply flag.
-const EasyApplyComparison: React.FC<EasyApplyComparisonProps> = ({ applications }) => {
+// Does the effort put into an application pay off? One column per effort
+// level; Unknown is left out of the comparison and only counted.
+const COMPARED: { effort: ApplicationEffort; accent: string }[] = [
+  { effort: 'Full', accent: 'text-indigo-600' },
+  { effort: 'Light', accent: 'text-sky-600' },
+  { effort: 'Generic', accent: 'text-gray-600' },
+];
+
+const EffortComparison: React.FC<EffortComparisonProps> = ({ applications }) => {
   const groups = useMemo(() => {
     const build = (apps: JobApplication[]) => {
       const total = apps.length;
@@ -23,11 +29,11 @@ const EasyApplyComparison: React.FC<EasyApplyComparisonProps> = ({ applications 
         ghostRate: total > 0 ? Math.round((ghosted / total) * 100) : 0,
       };
     };
-    return {
-      manual: build(applications.filter(a => !a.easyApply)),
-      easy: build(applications.filter(a => a.easyApply)),
-    };
+    return Object.fromEntries(
+      COMPARED.map(({ effort }) => [effort, build(applications.filter(a => a.effort === effort))])
+    ) as Record<ApplicationEffort, ReturnType<typeof build>>;
   }, [applications]);
+  const unknown = applications.filter(a => a.effort === 'Unknown').length;
 
   const metrics: { key: 'positiveRate' | 'interviewRate' | 'ghostRate'; label: string; good: 'high' | 'low' }[] = [
     { key: 'positiveRate', label: 'Positive response', good: 'high' },
@@ -35,7 +41,7 @@ const EasyApplyComparison: React.FC<EasyApplyComparisonProps> = ({ applications 
     { key: 'ghostRate', label: 'Ghosted', good: 'low' },
   ];
 
-  const Column: React.FC<{ title: string; data: typeof groups.manual; accent: string }> = ({ title, data, accent }) => (
+  const Column: React.FC<{ title: string; data: typeof groups.Full; accent: string }> = ({ title, data, accent }) => (
     <div className="flex-1">
       <div className="text-center mb-3">
         <div className={`text-sm font-semibold ${accent}`}>{title}</div>
@@ -67,22 +73,27 @@ const EasyApplyComparison: React.FC<EasyApplyComparisonProps> = ({ applications 
           <Zap className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-800">Easy-Apply vs Manual</h2>
-          <p className="text-xs text-gray-500">Is tailoring worth the effort?</p>
+          <h2 className="text-xl font-bold text-gray-800">Effort vs Outcome</h2>
+          <p className="text-xs text-gray-500">
+            Is tailoring worth the effort?{unknown > 0 && ` ${unknown} not yet classified.`}
+          </p>
         </div>
       </div>
 
-      {groups.manual.total === 0 && groups.easy.total === 0 ? (
-        <div className="text-center py-8 text-gray-500">No applications yet</div>
+      {COMPARED.every(({ effort }) => groups[effort].total === 0) ? (
+        <div className="text-center py-8 text-gray-500">No classified applications yet</div>
       ) : (
         <div className="flex gap-6">
-          <Column title="Manual" data={groups.manual} accent="text-orange-600" />
-          <div className="w-px bg-gray-200" />
-          <Column title="Easy Apply" data={groups.easy} accent="text-blue-600" />
+          {COMPARED.map(({ effort, accent }, i) => (
+            <React.Fragment key={effort}>
+              {i > 0 && <div className="w-px bg-gray-200" />}
+              <Column title={effort} data={groups[effort]} accent={accent} />
+            </React.Fragment>
+          ))}
         </div>
       )}
     </div>
   );
 };
 
-export default EasyApplyComparison;
+export default EffortComparison;

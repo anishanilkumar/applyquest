@@ -26,7 +26,7 @@ export interface JobApplication {
   visaSponsorship: boolean;
   germanRequirement: GermanLevel;
   relocationSupport: boolean;
-  easyApply: boolean;
+  effort: ApplicationEffort;
   jobBoardSource?: string;
   priorityStars: number;
   notes?: string;
@@ -47,6 +47,8 @@ export interface ApplicationHistory {
   notes?: string;
   changedAt: string;
 }
+
+export type ApplicationEffort = 'Full' | 'Light' | 'Generic' | 'Unknown';
 
 export type ApplicationStatus =
   | 'Shortlisted'

@@ -78,6 +78,10 @@ VALID_STATUSES = [
     "Offer", "Rejected", "Ghosted",
 ]
 
+# How much effort went into an application. Unknown is the default for anything
+# not yet classified.
+VALID_EFFORTS = ["Full", "Light", "Generic", "Unknown"]
+
 # DNS-rebinding protection for the HTTP transport. The SDK leaves this off when
 # transport_security is unset and — the trap — rejects everything with 421 if it
 # is switched on with an empty allow-list, so name the hosts explicitly: the
@@ -162,6 +166,7 @@ def _trim(app: dict) -> dict:
         "position_title": app.get("position_title"),
         "location": app.get("location"),
         "status": app.get("status"),
+        "effort": app.get("effort"),
         "applied_date": app.get("applied_date"),
         "job_url": app.get("job_url"),
         "job_board_source": app.get("job_board_source"),
@@ -256,16 +261,23 @@ def create_application(
     job_board_source: Optional[str] = None,
     notes: Optional[str] = None,
     applied_date: Optional[str] = None,
+    effort: str = "Unknown",
 ) -> Any:
     """Create a new application record when no existing one matches.
 
     Use after find_applications turns up nothing for a job referenced in an email.
     Defaults status to "Applied" (typical when the email is an application
-    confirmation) and applied_date (ISO YYYY-MM-DD) to today. Returns the full
-    created record, including its new id.
+    confirmation), applied_date (ISO YYYY-MM-DD) to today and effort to "Unknown".
+    Returns the full created record, including its new id.
+
+    effort is how much went into the application: "Full" (tailored CV and cover
+    letter, screening questions answered), "Light" (some tailoring), "Generic"
+    (standard CV, no tailoring, e.g. a one-click Easy Apply) or "Unknown".
     """
     if status not in VALID_STATUSES:
         return {"error": "invalid_status", "detail": f"status must be one of {VALID_STATUSES}"}
+    if effort not in VALID_EFFORTS:
+        return {"error": "invalid_effort", "detail": f"effort must be one of {VALID_EFFORTS}"}
     body = {
         "company_name": company_name,
         "position_title": position_title,
@@ -277,6 +289,7 @@ def create_application(
         "job_board_source": job_board_source,
         "notes": notes,
         "applied_date": applied_date or date.today().isoformat(),
+        "effort": effort,
     }
     body = {k: v for k, v in body.items() if v is not None}
     with _client() as c:
@@ -294,12 +307,19 @@ def update_application(
     job_board_source: Optional[str] = None,
     notes: Optional[str] = None,
     followup_flagged: Optional[bool] = None,
+    effort: Optional[str] = None,
 ) -> Any:
     """Enrich an existing application with job details discovered from an email.
 
     Only the provided fields are changed. Does NOT change status — use mark_status
     for that. Set followup_flagged to put the application in the followup queue.
+
+    effort is how much went into the application: "Full" (tailored CV and cover
+    letter, screening questions answered), "Light" (some tailoring), "Generic"
+    (standard CV, no tailoring, e.g. a one-click Easy Apply) or "Unknown".
     """
+    if effort is not None and effort not in VALID_EFFORTS:
+        return {"error": "invalid_effort", "detail": f"effort must be one of {VALID_EFFORTS}"}
     body = {
         "location": location,
         "job_url": job_url,
@@ -308,6 +328,7 @@ def update_application(
         "job_board_source": job_board_source,
         "notes": notes,
         "followup_flagged": followup_flagged,
+        "effort": effort,
     }
     body = {k: v for k, v in body.items() if v is not None}
     if not body:

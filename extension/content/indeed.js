@@ -27,7 +27,6 @@ function extractIndeed() {
     companyName: company || '',
     location: location || '',
     jobUrl: window.location.href,
-    easyApply: false,
     jobBoardSource: 'Indeed',
   };
 }

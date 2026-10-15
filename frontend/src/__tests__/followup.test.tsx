@@ -31,7 +31,7 @@ function makeApp(overrides: Partial<JobApplication> = {}): JobApplication {
     visaSponsorship: false,
     germanRequirement: 'None',
     relocationSupport: false,
-    easyApply: false,
+    effort: 'Unknown',
     priorityStars: 0,
     appliedDate: dateAgo(0),
     followupFlagged: false,

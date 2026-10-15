@@ -72,6 +72,7 @@ def get_share_data(
             "visa_sponsorship": app.visa_sponsorship,
             "german_requirement": app.german_requirement,
             "relocation_support": app.relocation_support,
+            "effort": app.effort,
             "job_board_source": app.job_board_source,
             "priority_stars": app.priority_stars,
             "notes": app.notes,

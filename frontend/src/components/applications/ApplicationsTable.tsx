@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { JobApplication, ApplicationStatus, GermanLevel } from '../../types';
+import { JobApplication, ApplicationStatus, GermanLevel, ApplicationEffort } from '../../types';
+import { EFFORTS, EFFORT_BADGE, EFFORT_DESCRIPTION } from '../../utils/effort';
 import { useAppContext } from '../../context/AppContext';
 import {
   Search,
@@ -41,7 +42,7 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
   const [locationFilter, setLocationFilter] = useState<string>('all');
   const [visaFilter, setVisaFilter] = useState<'all' | 'true' | 'false'>('all');
   const [germanFilter, setGermanFilter] = useState<GermanLevel | 'all'>('all');
-  const [easyApplyFilter, setEasyApplyFilter] = useState<'all' | 'true' | 'false'>('all');
+  const [effortFilter, setEffortFilter] = useState<ApplicationEffort | 'all'>('all');
   const [sortField, setSortField] = useState<SortField>('appliedDate');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [selectedApps, setSelectedApps] = useState<Set<string>>(new Set());
@@ -72,9 +73,9 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
       const matchesLocation = locationFilter === 'all' || app.location === locationFilter;
       const matchesVisa = visaFilter === 'all' || app.visaSponsorship.toString() === visaFilter;
       const matchesGerman = germanFilter === 'all' || app.germanRequirement === germanFilter;
-      const matchesEasyApply = easyApplyFilter === 'all' || app.easyApply.toString() === easyApplyFilter;
+      const matchesEffort = effortFilter === 'all' || app.effort === effortFilter;
 
-      return matchesSearch && matchesStatus && matchesLocation && matchesVisa && matchesGerman && matchesEasyApply;
+      return matchesSearch && matchesStatus && matchesLocation && matchesVisa && matchesGerman && matchesEffort;
     });
 
     // Sort
@@ -98,7 +99,7 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
     });
 
     return filtered;
-  }, [applications, searchTerm, statusFilter, locationFilter, visaFilter, germanFilter, easyApplyFilter, sortField, sortDirection]);
+  }, [applications, searchTerm, statusFilter, locationFilter, visaFilter, germanFilter, effortFilter, sortField, sortDirection]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -234,13 +235,14 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
             </select>
 
             <select
-              value={easyApplyFilter}
-              onChange={(e) => setEasyApplyFilter(e.target.value as 'all' | 'true' | 'false')}
+              value={effortFilter}
+              onChange={(e) => setEffortFilter(e.target.value as ApplicationEffort | 'all')}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
-              <option value="all">Easy Apply</option>
-              <option value="true">Yes</option>
-              <option value="false">No</option>
+              <option value="all">Effort</option>
+              {EFFORTS.map(effort => (
+                <option key={effort} value={effort}>{effort}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -376,9 +378,9 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
                               Referral
                             </span>
                           )}
-                          {app.easyApply && (
-                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800" title="Applied via Easy Apply">
-                              Easy Apply
+                          {app.effort !== 'Unknown' && (
+                            <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${EFFORT_BADGE[app.effort]}`} title={EFFORT_DESCRIPTION[app.effort]}>
+                              {app.effort}
                             </span>
                           )}
                         </div>

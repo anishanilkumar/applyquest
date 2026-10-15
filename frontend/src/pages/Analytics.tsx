@@ -8,7 +8,7 @@ import InsightsStrip from '../components/analytics/InsightsStrip';
 import StatusDistributionChart from '../components/analytics/StatusDistributionChart';
 import ApplicationsTimelineChart from '../components/analytics/ApplicationsTimelineChart';
 import SourceEffectiveness from '../components/analytics/SourceEffectiveness';
-import EasyApplyComparison from '../components/analytics/EasyApplyComparison';
+import EffortComparison from '../components/analytics/EffortComparison';
 import TechStackAnalysis from '../components/analytics/TechStackAnalysis';
 import GermanyMap from '../components/analytics/GermanyMap';
 import ApplicationProcessSankey from '../components/analytics/ApplicationProcessSankey';
@@ -148,14 +148,14 @@ const Analytics: React.FC = () => {
     out.push(`Only ${positiveResponded} of ${total} applications (${positiveResponseRate}%) drew a genuine response — the rest were rejected or ghosted.`);
     if (ghosted > 0) out.push(`${ghostRate}% of applications were ghosted (${ghosted}) — your single biggest drop-off.`);
 
-    const manual = filteredApplications.filter(a => !a.easyApply);
-    const easy = filteredApplications.filter(a => a.easyApply);
-    if (manual.length >= 5 && easy.length >= 5) {
-      const mr = Math.round(manual.filter(hasPositiveResponse).length / manual.length * 100);
-      const er = Math.round(easy.filter(hasPositiveResponse).length / easy.length * 100);
-      if (mr !== er) {
-        const tailoringWins = mr > er;
-        out.push(`${tailoringWins ? 'Manual' : 'Easy-apply'} applications respond at ${Math.max(mr, er)}% vs ${Math.min(mr, er)}% — ${tailoringWins ? 'tailoring is paying off' : 'one-click is doing just as well'}.`);
+    const full = filteredApplications.filter(a => a.effort === 'Full');
+    const generic = filteredApplications.filter(a => a.effort === 'Generic');
+    if (full.length >= 5 && generic.length >= 5) {
+      const fr = Math.round(full.filter(hasPositiveResponse).length / full.length * 100);
+      const gr = Math.round(generic.filter(hasPositiveResponse).length / generic.length * 100);
+      if (fr !== gr) {
+        const tailoringWins = fr > gr;
+        out.push(`${tailoringWins ? 'Full' : 'Generic'} applications respond at ${Math.max(fr, gr)}% vs ${Math.min(fr, gr)}% — ${tailoringWins ? 'tailoring is paying off' : 'a standard CV is doing just as well'}.`);
       }
     }
     if (avgDaysToOutcome != null) out.push(`Applications take about ${avgDaysToOutcome} days on average to reach an outcome.`);
@@ -170,10 +170,10 @@ const Analytics: React.FC = () => {
   const offers = filteredApplications.filter(hasReachedOffer).length;
 
   const handleExport = () => {
-    const headers = ['Company', 'Position', 'Location', 'Status', 'Source', 'Easy Apply', 'Created', 'Applied'];
+    const headers = ['Company', 'Position', 'Location', 'Status', 'Source', 'Effort', 'Created', 'Applied'];
     const rows = filteredApplications.map(a => [
       a.companyName, a.positionTitle, a.location, a.status, a.jobBoardSource || '',
-      a.easyApply ? 'yes' : 'no', (a.createdAt || '').split('T')[0], (a.appliedDate || '').split('T')[0],
+      a.effort, (a.createdAt || '').split('T')[0], (a.appliedDate || '').split('T')[0],
     ]);
     const csv = [headers, ...rows]
       .map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))
@@ -245,7 +245,7 @@ const Analytics: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <EasyApplyComparison applications={filteredApplications} />
+            <EffortComparison applications={filteredApplications} />
             <StatusDistributionChart statusData={statusData} />
           </div>
 
