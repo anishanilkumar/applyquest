@@ -144,6 +144,7 @@ def notify_weekly_summary(
     response_rate: int,
     interview_rate: int,
     active_apps: int,
+    drafts: int = 0,
 ) -> None:
     def row(label, value):
         return f"<tr><td style='padding:8px;border:1px solid #ddd'><strong>{label}</strong></td><td style='padding:8px;border:1px solid #ddd'>{value}</td></tr>"
@@ -151,11 +152,12 @@ def notify_weekly_summary(
     html = f"""
     <h2>Weekly Summary — {user_name} 📊</h2>
     <table style="border-collapse:collapse;width:100%;font-family:sans-serif">
-        {row("Applications this week", apps_this_week)}
-        {row("Total applications", total_apps)}
-        {row("Active applications", active_apps)}
-        {row("Response rate", f"{response_rate}%")}
+        {row("Sent this week", apps_this_week)}
+        {row("Applications sent", total_apps)}
+        {row("Awaiting an outcome", active_apps)}
+        {row("Positive response", f"{response_rate}% (a reply or later; rejections don't count)")}
         {row("Interview rate", f"{interview_rate}%")}
+        {row("Drafts not yet sent", drafts) if drafts else ""}
         {row("Current streak", f"{current_streak} days")}
         {row("Longest streak", f"{longest_streak} days")}
         {row("Level", f"Level {level}: {level_name}")}

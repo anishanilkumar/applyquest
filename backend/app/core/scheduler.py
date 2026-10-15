@@ -92,20 +92,24 @@ def job_weekly_summary():
         if user is None:
             return
 
+        from app.core.stages import has_positive_response, has_reached_interview, is_submitted
+        from app.models.application import ApplicationStatus
+
         applications = db.query(Application).filter(Application.user_id == user.id).all()
-        total = len(applications)
+        # Same definitions as the Dashboard and Analytics (core/stages.py):
+        # only applications actually sent count, and a rejection is no response.
+        sent = [a for a in applications if is_submitted(a)]
+        total = len(sent)
+        drafts = sum(1 for a in applications if a.status == ApplicationStatus.SHORTLISTED)
 
         week_start = datetime.now(BERLIN).date() - timedelta(days=7)
-        apps_this_week = sum(
-            1 for a in applications
-            if a.created_at and a.created_at.date() >= week_start
+        apps_this_week = sum(1 for a in sent if a.applied_date and a.applied_date >= week_start)
+        responded = sum(1 for a in sent if has_positive_response(a))
+        interviewed = sum(1 for a in sent if has_reached_interview(a))
+        active = sum(
+            1 for a in sent
+            if a.status not in (ApplicationStatus.REJECTED, ApplicationStatus.GHOSTED, ApplicationStatus.OFFER)
         )
-        responded = sum(1 for a in applications if a.status not in ("Applied", "Ghosted"))
-        interviewed = sum(
-            1 for a in applications
-            if a.status in ("Phone Screen", "Technical Round 1", "Technical Round 2", "Final Round")
-        )
-        active = sum(1 for a in applications if a.status not in ("Rejected", "Ghosted", "Offer"))
 
         notify_weekly_summary(
             user_name=user.name,
@@ -119,6 +123,7 @@ def job_weekly_summary():
             response_rate=round((responded / total) * 100) if total else 0,
             interview_rate=round((interviewed / total) * 100) if total else 0,
             active_apps=active,
+            drafts=drafts,
         )
     except Exception:
         logger.exception("Error in weekly summary job")
