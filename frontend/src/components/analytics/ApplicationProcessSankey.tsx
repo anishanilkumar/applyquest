@@ -1,7 +1,7 @@
 import React, { useMemo, useRef } from 'react';
 import { Download } from 'lucide-react';
 import { ResponsiveContainer, Sankey, Tooltip, Layer, Rectangle } from 'recharts';
-import { JobApplication } from '../../types';
+import { JobApplication, ApplicationHistory } from '../../types';
 import { effectiveHistory } from '../../utils/stages';
 
 interface ApplicationProcessSankeyProps {
@@ -149,7 +149,19 @@ const ApplicationProcessSankey: React.FC<ApplicationProcessSankeyProps> = ({ app
                 return;
             }
 
-            effectiveHistory(app).forEach((record) => {
+            // Ghosted -> Rejected only means the rejection arrived late, so the
+            // application is drawn as rejected straight from where it stood.
+            const path: ApplicationHistory[] = [];
+            for (const h of effectiveHistory(app)) {
+                const prev = path[path.length - 1];
+                if (h.oldStatus === 'Ghosted' && h.newStatus === 'Rejected' && prev?.newStatus === 'Ghosted') {
+                    path[path.length - 1] = { ...prev, newStatus: 'Rejected' };
+                } else {
+                    path.push(h);
+                }
+            }
+
+            path.forEach((record) => {
                 let source = record.oldStatus || 'Applied';
                 const target = record.newStatus;
 
