@@ -25,7 +25,7 @@ const fitBand = (app: JobApplication): string =>
 const roleGroup = (app: JobApplication): string => {
   const raw = (app.roleType ?? '').toLowerCase().replace(/[\s-]/g, '');
   if (!raw) return 'Unknown';
-  if (/(ai|ml)/.test(raw) && /fullstack/.test(raw)) return 'AI + Fullstack';
+  if (/(ai|ml)/.test(raw) && /fullstack/.test(raw)) return 'AI/Fullstack';
   if (/(^|\/)(ai|ml)|machinelearning/.test(raw)) return 'AI/ML';
   if (raw.includes('fullstack')) return 'Fullstack';
   if (raw.includes('backend')) return 'Backend';
