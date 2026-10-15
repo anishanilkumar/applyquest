@@ -68,6 +68,9 @@ const CustomNode = (props: any) => {
                 dominantBaseline="middle"
             >
                 {payload.name}
+                {payload.value !== undefined && (
+                    <tspan fontWeight="400" fill="#6B7280">{` · ${payload.value}`}</tspan>
+                )}
             </text>
         </Layer>
     );
