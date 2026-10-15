@@ -110,6 +110,11 @@ jobs:
             cd /home/$SERVER_USER/applyquest/backend
             set -a; source /home/$SERVER_USER/applyquest/.env.prod; set +a
             /home/$SERVER_USER/.venv/applyquest/bin/alembic upgrade head
+            # The demo backend runs the same code against its own database
+            # (applyquestDemoEnv in nixos-config), so migrate that too before
+            # restarting it. The explicit URI overrides anything .env.prod set.
+            SQLALCHEMY_DATABASE_URI=postgresql://applyquest_demo:demo@localhost/applyquest_demo \
+              /home/$SERVER_USER/.venv/applyquest/bin/alembic upgrade head
             sudo systemctl restart applyquest-backend
             sudo systemctl restart applyquest-demo-backend
             sudo systemctl restart applyquest-mcp
