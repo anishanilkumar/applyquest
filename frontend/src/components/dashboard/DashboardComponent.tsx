@@ -5,6 +5,7 @@ import { useAppContext } from '../../context/AppContext';
 import { JobApplication, NetworkContact } from '../../types';
 import { userService } from '../../services/api';
 import RunwayCard from './RunwayCard';
+import NextInterviewsCard from './NextInterviewsCard';
 import { hasPositiveResponse, hasReachedInterview, isSubmitted } from '../../utils/stages';
 
 const motivationalMessages = [
@@ -194,6 +195,8 @@ const ApplyQuestDashboard: React.FC = () => {
       <div className="bg-gradient-to-r from-green-400 to-blue-500 rounded-xl p-6 mb-6 shadow-lg">
         <p className="text-white text-xl font-medium text-center">{motivationalMessage}</p>
       </div>
+
+      <NextInterviewsCard />
 
       <RunwayCard />
 

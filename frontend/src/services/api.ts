@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, JobApplication, NetworkContact, ApplicationStatus } from '../types';
+import { User, JobApplication, NetworkContact, ApplicationStatus, Interview } from '../types';
 
 const API_URL = '/api/v1';
 
@@ -75,6 +75,19 @@ const transformApplication = (data: any): JobApplication => ({
         notes: h.notes,
         changedAt: h.changed_at,
     })) : [],
+});
+
+const transformInterview = (data: any): Interview => ({
+    id: data.id,
+    applicationId: data.application_id,
+    startsAt: data.starts_at,
+    endsAt: data.ends_at ?? undefined,
+    stage: data.stage ?? undefined,
+    title: data.title ?? undefined,
+    meetingUrl: data.meeting_url ?? undefined,
+    interviewers: data.interviewers ?? undefined,
+    notes: data.notes ?? undefined,
+    calendarEventId: data.calendar_event_id ?? undefined,
 });
 
 const transformNetworkContact = (data: any): NetworkContact => ({
@@ -179,13 +192,32 @@ export const networkService = {
 };
 
 
+export const interviewService = {
+    getAll: async (): Promise<Interview[]> => {
+        const response = await apiClient.get('/interviews/');
+        return response.data.map(transformInterview);
+    },
+    create: async (interview: Omit<Interview, 'id'>): Promise<Interview> => {
+        const response = await apiClient.post('/interviews/', toSnakeCase(interview));
+        return transformInterview(response.data);
+    },
+    update: async (id: string, interview: Partial<Omit<Interview, 'id' | 'applicationId'>>): Promise<Interview> => {
+        const response = await apiClient.put(`/interviews/${id}`, toSnakeCase(interview));
+        return transformInterview(response.data);
+    },
+    delete: async (id: string): Promise<void> => {
+        await apiClient.delete(`/interviews/${id}`);
+    },
+};
+
 export const shareService = {
-    getData: async (password: string): Promise<{ user: User; applications: any[]; contacts: any[] }> => {
+    getData: async (password: string): Promise<{ user: User; applications: any[]; contacts: any[]; interviews: Interview[] }> => {
         const response = await apiClient.post('/share/data', { password });
         return {
             user: transformUser(response.data.user),
             applications: response.data.applications.map(transformApplication),
             contacts: response.data.contacts.map(transformNetworkContact),
+            interviews: (response.data.interviews ?? []).map(transformInterview),
         };
     },
 };

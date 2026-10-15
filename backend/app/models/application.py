@@ -64,6 +64,7 @@ class Application(Base):
 
     user = relationship("User", back_populates="applications")
     history = relationship("ApplicationHistory", back_populates="application", cascade="all, delete-orphan")
+    interviews = relationship("Interview", back_populates="application", cascade="all, delete-orphan", passive_deletes=True)
     network_contacts = relationship("NetworkContact", foreign_keys="NetworkContact.application_id", back_populates="application")
     referral_contact = relationship("NetworkContact", primaryjoin="Application.referral_contact_id==NetworkContact.id", post_update=True, uselist=False)
 
@@ -76,3 +77,8 @@ class ApplicationHistory(Base):
     notes = Column(Text, nullable=True)
 
     application = relationship("Application", back_populates="history")
+
+
+# Registered here so any process that loads Application (the scheduler, the
+# demo seed) can resolve the Application.interviews relationship.
+from app.models.interview import Interview  # noqa: E402,F401

@@ -47,6 +47,23 @@ def get_share_data(
         .all()
     )
 
+    interviews = sorted((i for a in applications for i in a.interviews), key=lambda i: i.starts_at)
+
+    def serialize_interview(i):
+        return {
+            "id": i.id,
+            "application_id": i.application_id,
+            "starts_at": i.starts_at.isoformat(),
+            "ends_at": i.ends_at.isoformat() if i.ends_at else None,
+            "stage": i.stage,
+            "title": i.title,
+            "meeting_url": i.meeting_url,
+            "interviewers": i.interviewers,
+            "notes": i.notes,
+            "calendar_event_id": i.calendar_event_id,
+            "created_at": i.created_at.isoformat() if i.created_at else None,
+        }
+
     def serialize_app(app):
         history = [
             {
@@ -124,4 +141,5 @@ def get_share_data(
         },
         "applications": [serialize_app(a) for a in applications],
         "contacts": [serialize_contact(c) for c in contacts],
+        "interviews": [serialize_interview(i) for i in interviews],
     }

@@ -119,3 +119,21 @@ def test_outcome_stats_leaves_out_skipped_drafts():
                                            {"old_status": "Applied", "new_status": "Rejected"}]},
     ]
     assert mcp_server._outcome_stats(apps)["overall"]["submitted"] == 1
+
+
+def test_record_interview_posts_only_what_was_given(requests):
+    mcp_server.record_interview("a1", "2026-10-16T16:00:00+02:00", stage="Phone Screen", calendar_event_id="evt-1")
+
+    (req,) = requests
+    assert req.url.path == "/interviews/"
+    assert json.loads(req.content) == {
+        "application_id": "a1", "starts_at": "2026-10-16T16:00:00+02:00",
+        "stage": "Phone Screen", "calendar_event_id": "evt-1",
+    }
+
+
+def test_list_interviews_bounds_to_upcoming(requests):
+    mcp_server.list_interviews()
+
+    (req,) = requests
+    assert "after" in dict(req.url.params)

@@ -37,7 +37,7 @@ Environment:
 import logging
 import os
 import sys
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Any, Optional
 
 import httpx
@@ -390,6 +390,50 @@ def update_application(
         return {"error": "no_fields", "detail": "Provide at least one field to update."}
     with _client() as c:
         resp = c.put(f"/applications/{application_id}", json=body)
+    return resp.json() if resp.status_code == 200 else _err(resp)
+
+
+@mcp.tool()
+def record_interview(
+    application_id: str,
+    starts_at: str,
+    ends_at: Optional[str] = None,
+    stage: Optional[str] = None,
+    title: Optional[str] = None,
+    meeting_url: Optional[str] = None,
+    interviewers: Optional[str] = None,
+    notes: Optional[str] = None,
+    calendar_event_id: Optional[str] = None,
+) -> Any:
+    """Record a scheduled interview so it shows on the Dashboard and the calendar.
+
+    starts_at/ends_at are ISO 8601 with a UTC offset, e.g. "2026-10-16T16:00:00+02:00"
+    — take them from the calendar invite, never estimate. Pass the invite's
+    calendar_event_id: recording the same invite again updates it (a reschedule)
+    instead of adding a duplicate. stage is the ApplyQuest status the interview
+    belongs to ("Phone Screen", "Technical Round 1", ...); interviewers is free
+    text, e.g. "Jane Doe (Engineering Manager)". Does not change the
+    application's status — use mark_status for that.
+    """
+    body = {
+        "application_id": application_id, "starts_at": starts_at, "ends_at": ends_at,
+        "stage": stage, "title": title, "meeting_url": meeting_url,
+        "interviewers": interviewers, "notes": notes, "calendar_event_id": calendar_event_id,
+    }
+    body = {k: v for k, v in body.items() if v is not None}
+    with _client() as c:
+        resp = c.post("/interviews/", json=body)
+    return resp.json() if resp.status_code == 200 else _err(resp)
+
+
+@mcp.tool()
+def list_interviews(upcoming_only: bool = True) -> Any:
+    """Recorded interviews in time order, by default only those not yet started."""
+    params = {}
+    if upcoming_only:
+        params["after"] = datetime.now(timezone.utc).isoformat()
+    with _client() as c:
+        resp = c.get("/interviews/", params=params)
     return resp.json() if resp.status_code == 200 else _err(resp)
 
 

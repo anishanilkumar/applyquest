@@ -1,6 +1,7 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, BarChart3, Users, User, LogOut, Eye } from 'lucide-react';
+import { LayoutDashboard, Briefcase, BarChart3, Users, User, LogOut, Eye, CalendarDays } from 'lucide-react';
+import { upcomingInterviews } from '../../utils/interviews';
 import { useAppContext } from '../../context/AppContext';
 
 interface LayoutProps {
@@ -10,11 +11,18 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, isMentorView } = useAppContext();
+  const { user, logout, isMentorView, interviews } = useAppContext();
+
+  // Interviews in the next seven days, so a booked call is visible from any page.
+  const interviewBadge = useMemo(() => {
+    const week = Date.now() + 7 * 86_400_000;
+    return upcomingInterviews(interviews).filter(i => new Date(i.startsAt).getTime() < week).length;
+  }, [interviews]);
 
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', badge: 0 },
     { path: '/applications', icon: Briefcase, label: 'Applications', badge: 0 },
+    { path: '/interviews', icon: CalendarDays, label: 'Interviews', badge: interviewBadge },
     { path: '/analytics', icon: BarChart3, label: 'Analytics', badge: 0 },
     { path: '/network', icon: Users, label: 'Network', badge: 0 },
     { path: '/profile', icon: User, label: 'Profile', badge: 0 },

@@ -49,6 +49,20 @@ export interface JobApplication {
   archiveDir?: string;
 }
 
+// A scheduled conversation with an employer (backend: models/interview.py).
+export interface Interview {
+  id: string;
+  applicationId: string;
+  startsAt: string;   // ISO 8601 with offset
+  endsAt?: string;
+  stage?: string;
+  title?: string;
+  meetingUrl?: string;
+  interviewers?: string;
+  notes?: string;
+  calendarEventId?: string;
+}
+
 export interface ApplicationHistory {
   id: string;
   applicationId: string;

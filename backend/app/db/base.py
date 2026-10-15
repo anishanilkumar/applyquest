@@ -5,3 +5,4 @@ from app.models.user import User  # noqa
 from app.models.application import Application, ApplicationHistory  # noqa
 from app.models.network import NetworkContact  # noqa
 from app.models.point_history import PointHistory  # noqa
+from app.models.interview import Interview  # noqa

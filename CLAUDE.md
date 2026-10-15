@@ -72,7 +72,7 @@ Models: `User`, `Application` + `ApplicationHistory`, `NetworkContact`, `PointHi
 
 ### MCP server (`backend/mcp_server.py`)
 
-An MCP server that lets an AI agent (e.g. Claude with the Gmail connector) reconcile the inbox with tracked applications — find a job, mark it Applied/Rejected, or create it from an email's job details. It is a **thin client over the REST API** (via `httpx`), so all status-transition rules, history, gamification, and notification emails run exactly as in the web UI. Tools: `list_applications`, `find_applications`, `get_application`, `mark_status`, `create_application`, `update_application`, `outcome_stats`. Filtering happens in SQL: `find_applications` passes `q`/`job_url` and `list_applications` passes `status` to `GET /applications/`, so the tools never page through the whole table. `outcome_stats` returns compact reply/interview counts grouped by role type, source, effort, fit band and cover letter.
+An MCP server that lets an AI agent (e.g. Claude with the Gmail connector) reconcile the inbox with tracked applications — find a job, mark it Applied/Rejected, or create it from an email's job details. It is a **thin client over the REST API** (via `httpx`), so all status-transition rules, history, gamification, and notification emails run exactly as in the web UI. Tools: `list_applications`, `find_applications`, `get_application`, `mark_status`, `create_application`, `update_application`, `outcome_stats`, `record_interview`, `list_interviews`. Filtering happens in SQL: `find_applications` passes `q`/`job_url` and `list_applications` passes `status` to `GET /applications/`, so the tools never page through the whole table. `outcome_stats` returns compact reply/interview counts grouped by role type, source, effort, fit band and cover letter.
 
 - **Auth:** the server sends `X-API-Key: $APPLYQUEST_API_KEY`. `api/deps.py:get_current_user` accepts this header as an alternative to JWT and resolves it to the single `USER_EMAIL` user (`reusable_oauth2` is `auto_error=False` so a missing token falls through to the key check). An empty `APPLYQUEST_API_KEY` disables key auth entirely.
 - **Run:** `APPLYQUEST_API_KEY=… backend/.venv/bin/python backend/mcp_server.py` (reads `APPLYQUEST_API_BASE`, default `http://localhost:8000/api/v1`). Requires the backend to be running.
@@ -90,6 +90,10 @@ Applications are drafted in the separate `../ai-job-search` workspace (`/apply` 
 - A `PUT` that writes only these sync fields (`SYNC_FIELDS` in `endpoints/applications.py`) awards no points, so backfills don't inflate the level.
 - `/rank` in ai-job-search reads `outcome_stats` to weigh new postings by the track record of similar ones.
 - `/gmail-sync` in ai-job-search mirrors approved status changes here, then runs `/interview-watch`, which writes a prep pack (locally, into `archive_dir`) for every application at Replied or an interview stage that has none yet.
+
+### Interviews (`models/interview.py`, `pages/Interviews.tsx`)
+
+`Interview` rows (application, `starts_at`/`ends_at` as timezone-aware timestamps, stage, title, meeting link, interviewers, notes) feed the `/interviews` month calendar, the Dashboard's **Next interviews** card and the nav badge (interviews in the next 7 days). Times always carry an offset — the schema rejects naive datetimes — and the frontend shows them in the viewer's timezone. `POST /interviews/` upserts on `calendar_event_id`, so ai-job-search's `/interview-watch` can re-record the same Google Calendar invite after a reschedule without duplicating it (`record_interview` MCP tool). Interviews award no points and never change an application's status.
 
 ### Runway (`utils/runway.ts`, `components/dashboard/RunwayCard.tsx`)
 

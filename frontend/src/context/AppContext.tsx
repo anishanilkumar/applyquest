@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
-import { User, JobApplication, NetworkContact, DailyGoal } from '../types';
-import { userService, applicationService, networkService, shareService } from '../services/api';
+import { User, JobApplication, NetworkContact, DailyGoal, Interview } from '../types';
+import { userService, applicationService, networkService, shareService, interviewService } from '../services/api';
 
 interface AppContextType {
   user: User | null;
@@ -9,6 +9,8 @@ interface AppContextType {
   setApplications: React.Dispatch<React.SetStateAction<JobApplication[]>>;
   contacts: NetworkContact[];
   setContacts: React.Dispatch<React.SetStateAction<NetworkContact[]>>;
+  interviews: Interview[];
+  setInterviews: React.Dispatch<React.SetStateAction<Interview[]>>;
   dailyGoals: DailyGoal[];
   setDailyGoals: (goals: DailyGoal[]) => void;
   loading: boolean;
@@ -26,6 +28,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [user, setUser] = useState<User | null>(null);
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [contacts, setContacts] = useState<NetworkContact[]>([]);
+  const [interviews, setInterviews] = useState<Interview[]>([]);
   const [dailyGoals, setDailyGoals] = useState<DailyGoal[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!localStorage.getItem('token'));
@@ -38,20 +41,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setUser(null);
     setApplications([]);
     setContacts([]);
+    setInterviews([]);
   }, []);
 
   const fetchData = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
       setLoading(true);
-      const [userData, appsData, contactsData] = await Promise.all([
+      const [userData, appsData, contactsData, interviewsData] = await Promise.all([
         userService.getCurrentUser(),
         applicationService.getAll(),
         networkService.getAll(),
+        interviewService.getAll(),
       ]);
       setUser(userData);
       setApplications(appsData);
       setContacts(contactsData);
+      setInterviews(interviewsData);
     } catch (error) {
       console.error("Failed to fetch data:", error);
       if (localStorage.getItem('token')) {
@@ -75,6 +81,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setUser(data.user);
       setApplications(data.applications);
       setContacts(data.contacts);
+      setInterviews(data.interviews);
       setIsMentorView(true);
       setIsAuthenticated(true);
     } finally {
@@ -99,6 +106,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setApplications,
         contacts,
         setContacts,
+        interviews,
+        setInterviews,
         dailyGoals,
         setDailyGoals,
         loading,
