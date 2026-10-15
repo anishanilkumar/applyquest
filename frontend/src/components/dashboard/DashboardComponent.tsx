@@ -6,7 +6,7 @@ import { JobApplication, NetworkContact } from '../../types';
 import { userService } from '../../services/api';
 import { classifyApp } from '../../utils/followup';
 import RunwayCard from './RunwayCard';
-import { hasReachedInterview } from '../../utils/stages';
+import { hasPositiveResponse, hasReachedInterview, isSubmitted } from '../../utils/stages';
 
 const motivationalMessages = [
   "Every application is a step closer to your dream job! 🚀",
@@ -146,22 +146,19 @@ const ApplyQuestDashboard: React.FC = () => {
     }));
   }, [applications, contacts]);
 
-  // Calculate Quick Stats
+  // Calculate Quick Stats — same definitions as Analytics: only applications
+  // actually sent count, and a rejection is not a response (utils/stages.ts).
   const quickStats = useMemo(() => {
-    const total = applications.length;
-    if (total === 0) return { totalApplications: 0, responseRate: 0, interviewRate: 0, activeApplications: 0 };
-
-    const responded = applications.filter(app => !['Applied', 'Ghosted'].includes(app.status)).length;
-    const interviewed = applications.filter(hasReachedInterview).length;
-    const active = applications.filter(app =>
-      !['Rejected', 'Ghosted', 'Offer'].includes(app.status)
-    ).length;
-
+    const sent = applications.filter(isSubmitted);
+    const drafts = applications.filter(app => app.status === 'Shortlisted').length;
+    const total = sent.length;
+    const rate = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
     return {
       totalApplications: total,
-      responseRate: Math.round((responded / total) * 100),
-      interviewRate: Math.round((interviewed / total) * 100),
-      activeApplications: active
+      responseRate: rate(sent.filter(hasPositiveResponse).length),
+      interviewRate: rate(sent.filter(hasReachedInterview).length),
+      activeApplications: sent.filter(app => !['Rejected', 'Ghosted', 'Offer'].includes(app.status)).length,
+      drafts,
     };
   }, [applications]);
 
@@ -275,7 +272,7 @@ const ApplyQuestDashboard: React.FC = () => {
         <div className="bg-white rounded-xl p-6 shadow-md border-2 border-green-100">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-gray-600 text-sm">Total Applications</p>
+              <p className="text-gray-600 text-sm">Applications Sent</p>
               <h3 className="text-4xl font-bold text-green-600">{quickStats.totalApplications}</h3>
             </div>
             <div className="bg-green-100 rounded-full p-3">
@@ -284,7 +281,7 @@ const ApplyQuestDashboard: React.FC = () => {
           </div>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Response Rate</span>
+              <span className="text-gray-600" title="A reply or any later stage; rejections and ghosting don't count">Positive Response</span>
               <span className="font-semibold text-green-600">{quickStats.responseRate}%</span>
             </div>
             <div className="flex justify-between text-sm">
@@ -292,9 +289,15 @@ const ApplyQuestDashboard: React.FC = () => {
               <span className="font-semibold text-green-600">{quickStats.interviewRate}%</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Active</span>
+              <span className="text-gray-600">Awaiting an outcome</span>
               <span className="font-semibold text-green-600">{quickStats.activeApplications}</span>
             </div>
+            {quickStats.drafts > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Drafts not yet sent</span>
+                <span className="font-semibold text-gray-700">{quickStats.drafts}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
