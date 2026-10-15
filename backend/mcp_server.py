@@ -337,7 +337,6 @@ def update_application(
     tech_stack: Optional[str] = None,
     job_board_source: Optional[str] = None,
     notes: Optional[str] = None,
-    followup_flagged: Optional[bool] = None,
     effort: Optional[str] = None,
     fit_score: Optional[int] = None,
     role_type: Optional[str] = None,
@@ -348,7 +347,7 @@ def update_application(
     """Enrich an existing application with job details discovered from an email.
 
     Only the provided fields are changed. Does NOT change status — use mark_status
-    for that. Set followup_flagged to put the application in the followup queue.
+    for that.
 
     Fields written by the ai-job-search workflow: fit_score (its 0-100 fit
     score), role_type (e.g. "Fullstack", "AI/ML", "Backend"), and the file names
@@ -370,7 +369,6 @@ def update_application(
         "tech_stack": tech_stack,
         "job_board_source": job_board_source,
         "notes": notes,
-        "followup_flagged": followup_flagged,
         "effort": effort,
         "fit_score": fit_score,
         "role_type": role_type,

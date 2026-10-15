@@ -214,14 +214,11 @@ def update_application_status(
             detail=f"Invalid status transition from {current_status} to {new_status}"
         )
 
-    # Perform update — clear any pending followup since status is changing
     application.status = new_status
     # A shortlisted application's date is when it was drafted; it counts as
     # applied from the day it is actually submitted.
     if current_status == ApplicationStatus.SHORTLISTED and new_status == ApplicationStatus.APPLIED:
         application.applied_date = date.today()
-    application.followed_up_at = None
-    application.followup_flagged = False
     db.add(application)
     
     # Record history
@@ -254,69 +251,6 @@ def update_application_status(
         notify_offer(current_user.name, application.company_name, application.position_title, application.location, application.salary_range, notes)
 
     return application
-
-@router.post("/{id}/followup", response_model=application_schema.Application)
-def mark_followed_up(
-    *,
-    db: Session = Depends(deps.get_db),
-    id: str,
-    current_user: user_model.User = Depends(deps.get_current_user),
-) -> Any:
-    """
-    Record that the user followed up on this application today.
-    """
-    application = db.query(application_model.Application).filter(
-        application_model.Application.id == id,
-        application_model.Application.user_id == current_user.id
-    ).first()
-    if not application:
-        raise HTTPException(status_code=404, detail="Application not found")
-
-    application.followed_up_at = date.today()
-    db.add(application)
-
-    from app.core import gamification
-    gamification.add_points(
-        db=db,
-        user=current_user,
-        points=1,
-        reason="Followed up on application",
-        reference_type="application",
-        reference_id=application.id
-    )
-
-    db.commit()
-    db.refresh(application)
-    return application
-
-
-@router.post("/{id}/followup-flag", response_model=application_schema.Application)
-def set_followup_flag(
-    *,
-    db: Session = Depends(deps.get_db),
-    id: str,
-    flagged: bool = Body(..., embed=True),
-    current_user: user_model.User = Depends(deps.get_current_user),
-) -> Any:
-    """
-    Flag (or unflag) this application as one the user intends to follow up on.
-    Only flagged applications appear in the followup queue.
-    """
-    application = db.query(application_model.Application).filter(
-        application_model.Application.id == id,
-        application_model.Application.user_id == current_user.id
-    ).first()
-    if not application:
-        raise HTTPException(status_code=404, detail="Application not found")
-
-    application.followup_flagged = flagged
-    if not flagged:
-        application.followed_up_at = None
-    db.add(application)
-    db.commit()
-    db.refresh(application)
-    return application
-
 
 @router.delete("/{id}", response_model=application_schema.Application)
 def delete_application(

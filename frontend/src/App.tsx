@@ -6,7 +6,6 @@ import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Applications from './pages/Applications';
 import Analytics from './pages/Analytics';
-import Followup from './pages/Followup';
 import Network from './pages/Network';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
@@ -72,16 +71,6 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Analytics />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/followup"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Followup />
                 </Layout>
               </ProtectedRoute>
             }

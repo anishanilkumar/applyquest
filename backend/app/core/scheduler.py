@@ -107,13 +107,6 @@ def job_weekly_summary():
         )
         active = sum(1 for a in applications if a.status not in ("Rejected", "Ghosted", "Offer"))
 
-        from datetime import datetime as dt
-        from app.core.followup import needs_followup, needs_decision
-
-        today = dt.now(BERLIN).date()
-        followup_needed = sum(1 for a in applications if needs_followup(a, today))
-        decision_needed = sum(1 for a in applications if needs_decision(a, today))
-
         notify_weekly_summary(
             user_name=user.name,
             current_streak=user.current_streak,
@@ -126,8 +119,6 @@ def job_weekly_summary():
             response_rate=round((responded / total) * 100) if total else 0,
             interview_rate=round((interviewed / total) * 100) if total else 0,
             active_apps=active,
-            followup_needed=followup_needed,
-            decision_needed=decision_needed,
         )
     except Exception:
         logger.exception("Error in weekly summary job")

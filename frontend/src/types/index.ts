@@ -36,8 +36,6 @@ export interface JobApplication {
   priorityStars: number;
   notes?: string;
   appliedDate: string;
-  followedUpAt?: string;
-  followupFlagged: boolean;
   createdAt: string;
   updatedAt: string;
   history?: ApplicationHistory[];

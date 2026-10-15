@@ -59,7 +59,7 @@ Key data flows:
 
 Models: `User`, `Application` + `ApplicationHistory`, `NetworkContact`, `PointHistory` (in `app/models/`).
 
-**Follow-up logic** (`core/followup.py`): follow-up is opt-in. Only applications the user explicitly flags (`Application.followup_flagged`) enter the queue — there is no staleness heuristic, so an application that never gets a reply stays out of the queue unless flagged. A flagged application is `needs_followup` immediately; once `POST /{id}/followup` records `followed_up_at` it becomes `awaiting_response` (<3 days), then `needs_decision` (≥3 days). Terminal statuses (`Rejected`, `Ghosted`) are always `ok`. Toggle the flag via `POST /{id}/followup-flag` (awards no points); any status change clears both the flag and `followed_up_at`.
+**No follow-up tracking.** There was an opt-in follow-up queue; it was removed in October 2026 (columns dropped in migration `c9d0e1f2a3b4`) because it went unused. Don't reintroduce it without asking.
 
 ### Frontend (`frontend/src/`)
 

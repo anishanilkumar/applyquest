@@ -1,8 +1,7 @@
-import React, { ReactNode, useMemo } from 'react';
+import React, { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, BarChart3, Users, User, LogOut, Eye, Bell } from 'lucide-react';
+import { LayoutDashboard, Briefcase, BarChart3, Users, User, LogOut, Eye } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
-import { classifyApp } from '../../utils/followup';
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,20 +10,12 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, isMentorView, applications } = useAppContext();
-
-  const followupBadge = useMemo(() => {
-    return applications.filter(a => {
-      const c = classifyApp(a);
-      return c === 'needs_followup' || c === 'needs_decision';
-    }).length;
-  }, [applications]);
+  const { user, logout, isMentorView } = useAppContext();
 
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', badge: 0 },
     { path: '/applications', icon: Briefcase, label: 'Applications', badge: 0 },
     { path: '/analytics', icon: BarChart3, label: 'Analytics', badge: 0 },
-    { path: '/followup', icon: Bell, label: 'Followup', badge: followupBadge },
     { path: '/network', icon: Users, label: 'Network', badge: 0 },
     { path: '/profile', icon: User, label: 'Profile', badge: 0 },
   ];

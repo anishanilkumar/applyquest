@@ -18,8 +18,6 @@ def make_application(status=ApplicationStatus.SHORTLISTED, applied_date=None):
         id="app-1",
         status=status,
         applied_date=applied_date or date.today() - timedelta(days=5),
-        followup_flagged=False,
-        followed_up_at=None,
         company_name="Acme",
         position_title="SWE",
         location="Berlin",

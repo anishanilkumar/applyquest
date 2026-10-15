@@ -18,8 +18,6 @@ def make_application(status):
     return SimpleNamespace(
         id="app-1",
         status=status,
-        followup_flagged=False,
-        followed_up_at=None,
         company_name="Acme",
         position_title="SWE",
         location="Berlin",

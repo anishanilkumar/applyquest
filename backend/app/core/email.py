@@ -144,15 +144,9 @@ def notify_weekly_summary(
     response_rate: int,
     interview_rate: int,
     active_apps: int,
-    followup_needed: int = 0,
-    decision_needed: int = 0,
 ) -> None:
     def row(label, value):
         return f"<tr><td style='padding:8px;border:1px solid #ddd'><strong>{label}</strong></td><td style='padding:8px;border:1px solid #ddd'>{value}</td></tr>"
-
-    followup_row = ""
-    if followup_needed or decision_needed:
-        followup_row = row("Followup needed", f"{followup_needed} pending · {decision_needed} need a decision")
 
     html = f"""
     <h2>Weekly Summary — {user_name} 📊</h2>
@@ -162,7 +156,6 @@ def notify_weekly_summary(
         {row("Active applications", active_apps)}
         {row("Response rate", f"{response_rate}%")}
         {row("Interview rate", f"{interview_rate}%")}
-        {followup_row}
         {row("Current streak", f"{current_streak} days")}
         {row("Longest streak", f"{longest_streak} days")}
         {row("Level", f"Level {level}: {level_name}")}

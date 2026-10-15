@@ -20,8 +20,6 @@ class ApplicationBase(BaseModel):
     priority_stars: int = 0
     notes: Optional[str] = None
     applied_date: date
-    followed_up_at: Optional[date] = None
-    followup_flagged: bool = False
     referral_contact_id: Optional[UUID] = None
     fit_score: Optional[int] = Field(default=None, ge=0, le=100)
     role_type: Optional[str] = None
@@ -47,8 +45,6 @@ class ApplicationUpdate(BaseModel):
     priority_stars: Optional[int] = None
     notes: Optional[str] = None
     applied_date: Optional[date] = None
-    followed_up_at: Optional[date] = None
-    followup_flagged: Optional[bool] = None
     referral_contact_id: Optional[UUID] = None
     fit_score: Optional[int] = Field(default=None, ge=0, le=100)
     role_type: Optional[str] = None

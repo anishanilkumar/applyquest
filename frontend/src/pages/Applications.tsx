@@ -32,7 +32,6 @@ const Applications: React.FC = () => {
         jobBoardSource: formData.jobBoardSource,
         priorityStars: formData.priorityStars,
         notes: formData.notes,
-        followupFlagged: formData.followupFlagged,
         referralContactId: formData.referralContactId || undefined,
         appliedDate: new Date().toISOString().split('T')[0], // Backend expects Date or string YYYY-MM-DD
       });
@@ -72,7 +71,6 @@ const Applications: React.FC = () => {
           jobBoardSource: formData.jobBoardSource,
           priorityStars: formData.priorityStars,
           notes: formData.notes,
-          followupFlagged: formData.followupFlagged,
           referralContactId: formData.referralContactId || undefined,
         });
 
@@ -108,19 +106,6 @@ const Applications: React.FC = () => {
     }
   };
 
-  const handleToggleFollowupFlag = async (applicationId: string, flagged: boolean) => {
-    try {
-      const updatedApp = await applicationService.setFollowupFlag(applicationId, flagged);
-      setApplications(prev =>
-        prev.map(app => (app.id === applicationId ? updatedApp : app))
-      );
-      toast.success(flagged ? 'Flagged for followup' : 'Removed from followup queue');
-    } catch (error) {
-      console.error("Failed to update followup flag:", error);
-      toast.error("Failed to update followup flag.");
-    }
-  };
-
   const handleStatusUpdate = async (applicationId: string, newStatus: ApplicationStatus) => {
     try {
       const updatedApp = await applicationService.updateStatus(applicationId, newStatus);
@@ -129,22 +114,6 @@ const Applications: React.FC = () => {
           app.id === applicationId ? updatedApp : app
         )
       );
-      if (newStatus === 'Applied') {
-        toast((t) => (
-          <span className="flex items-center gap-3">
-            Track a followup for this one?
-            <button
-              onClick={() => {
-                toast.dismiss(t.id);
-                handleToggleFollowupFlag(applicationId, true);
-              }}
-              className="px-2 py-1 text-sm font-medium rounded-md bg-amber-500 text-white hover:bg-amber-600"
-            >
-              Track followup
-            </button>
-          </span>
-        ), { duration: 6000 });
-      }
     } catch (error) {
       console.error("Failed to update status:", error);
       toast.error("Failed to update status. Transition might be invalid.");
@@ -292,7 +261,6 @@ const Applications: React.FC = () => {
           onEdit={handleEditApplication}
           onDelete={handleDeleteApplication}
           onStatusUpdate={handleStatusUpdate}
-          onToggleFollowupFlag={handleToggleFollowupFlag}
         />
       )}
 

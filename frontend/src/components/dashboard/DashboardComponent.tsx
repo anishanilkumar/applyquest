@@ -1,10 +1,9 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import { Flame, Target, TrendingUp, Briefcase, Users, CheckCircle, Star, DollarSign, Zap, FileText, Bookmark, Bell } from 'lucide-react';
+import { Flame, Target, TrendingUp, Briefcase, Users, CheckCircle, Star, DollarSign, Zap, FileText, Bookmark } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import { JobApplication, NetworkContact } from '../../types';
 import { userService } from '../../services/api';
-import { classifyApp } from '../../utils/followup';
 import RunwayCard from './RunwayCard';
 import { hasPositiveResponse, hasReachedInterview, isSubmitted } from '../../utils/stages';
 
@@ -121,14 +120,6 @@ const GOAL_POOL: GoalDef[] = [
     measure: (apps, _, today) =>
       apps.filter(a => toLocalDate(a.createdAt) === today && a.status === 'Shortlisted').length,
   },
-  {
-    id: 9,
-    label: "Follow up on a pending application",
-    icon: Bell,
-    target: 1,
-    measure: (apps, _, today) =>
-      apps.filter(a => a.followedUpAt && toLocalDate(a.followedUpAt) === today).length,
-  },
 ];
 
 const ApplyQuestDashboard: React.FC = () => {
@@ -165,17 +156,6 @@ const ApplyQuestDashboard: React.FC = () => {
   const motivationalMessage = useMemo(() =>
     motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]
     , []);
-
-  const followupCounts = useMemo(() => {
-    let needsFollowup = 0;
-    let needsDecision = 0;
-    for (const app of applications) {
-      const c = classifyApp(app);
-      if (c === 'needs_followup') needsFollowup++;
-      else if (c === 'needs_decision') needsDecision++;
-    }
-    return { needsFollowup, needsDecision };
-  }, [applications]);
 
   const allGoalsComplete = dailyGoals.every(g => g.current >= g.target);
 
@@ -349,36 +329,6 @@ const ApplyQuestDashboard: React.FC = () => {
           })}
         </div>
       </div>
-
-      {/* Followup Queue Widget */}
-      {(followupCounts.needsFollowup > 0 || followupCounts.needsDecision > 0) && (
-        <div className={`bg-white rounded-xl p-5 shadow-md mb-6 border-2 ${followupCounts.needsDecision > 0 ? 'border-red-300' : 'border-amber-300'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 mb-3">
-              <Bell className={`w-5 h-5 ${followupCounts.needsDecision > 0 ? 'text-red-500' : 'text-amber-500'}`} />
-              <h2 className="text-lg font-bold text-gray-800">Followup Queue</h2>
-            </div>
-            <button
-              onClick={() => navigate('/followup')}
-              className="text-sm text-blue-600 hover:underline font-medium"
-            >
-              View all →
-            </button>
-          </div>
-          <div className="space-y-1">
-            {followupCounts.needsFollowup > 0 && (
-              <p className="text-sm text-amber-700">
-                <span className="font-semibold">{followupCounts.needsFollowup}</span> application{followupCounts.needsFollowup > 1 ? 's' : ''} need a followup
-              </p>
-            )}
-            {followupCounts.needsDecision > 0 && (
-              <p className="text-sm text-red-700">
-                <span className="font-semibold">{followupCounts.needsDecision}</span> application{followupCounts.needsDecision > 1 ? 's' : ''} need a decision
-              </p>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Action Buttons */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
