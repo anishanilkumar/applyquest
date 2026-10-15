@@ -58,6 +58,9 @@ class Application(Base):
     cv_file = Column(String, nullable=True)
     cover_letter_file = Column(String, nullable=True)
     research_file = Column(String, nullable=True)
+    # The application's folder under ai-job-search's documents/applications/
+    # (posting, submitted documents, interview prep packs). A folder name only.
+    archive_dir = Column(String, nullable=True)
 
     user = relationship("User", back_populates="applications")
     history = relationship("ApplicationHistory", back_populates="application", cascade="all, delete-orphan")

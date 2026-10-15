@@ -79,3 +79,17 @@ def test_runway_settings_are_bounded():
     assert UserUpdate(search_deadline="2027-03-31", hiring_weeks=6).search_deadline == date(2027, 3, 31)
     with pytest.raises(ValidationError):
         UserUpdate(hiring_weeks=0)
+
+
+@patch("app.core.gamification.add_points")
+def test_archive_dir_is_a_sync_field(add_points):
+    app = make_application()
+    update_application(db=make_db(app), id="app-1", application_in=ApplicationUpdate(archive_dir="acme_swe"), current_user=make_user())
+    add_points.assert_not_called()
+
+
+def test_archive_dir_must_be_a_single_folder_name():
+    import pytest
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError):
+        ApplicationUpdate(archive_dir="../etc")

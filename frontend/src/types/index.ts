@@ -46,6 +46,7 @@ export interface JobApplication {
   cvFile?: string;
   coverLetterFile?: string;
   researchFile?: string;
+  archiveDir?: string;
 }
 
 export interface ApplicationHistory {

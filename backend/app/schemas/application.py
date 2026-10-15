@@ -26,6 +26,7 @@ class ApplicationBase(BaseModel):
     cv_file: Optional[str] = None
     cover_letter_file: Optional[str] = None
     research_file: Optional[str] = None
+    archive_dir: Optional[str] = Field(default=None, pattern=r"^[a-z0-9_]+$")
 
 class ApplicationCreate(ApplicationBase):
     pass
@@ -51,6 +52,7 @@ class ApplicationUpdate(BaseModel):
     cv_file: Optional[str] = None
     cover_letter_file: Optional[str] = None
     research_file: Optional[str] = None
+    archive_dir: Optional[str] = Field(default=None, pattern=r"^[a-z0-9_]+$")
 
 class ApplicationHistoryBase(BaseModel):
     old_status: Optional[ApplicationStatus]

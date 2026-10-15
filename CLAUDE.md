@@ -84,11 +84,12 @@ An MCP server that lets an AI agent (e.g. Claude with the Gmail connector) recon
 
 ### ai-job-search integration
 
-Applications are drafted in the separate `../ai-job-search` workspace (`/apply` writes a tailored CV + cover letter, `/apply-light` retargets a generic CV, `/apply-generic` ships one unchanged). Each records the application here through the MCP connector as **Shortlisted**, with `effort` Full / Light / Generic, `fit_score` (0-100), `role_type` and the prepared file names (`cv_file`, `cover_letter_file`, `research_file` — names only, the documents stay local). It moves to Applied only when actually submitted; that transition resets `applied_date` to the submit day.
+Applications are drafted in the separate `../ai-job-search` workspace (`/apply` writes a tailored CV + cover letter, `/apply-light` retargets a generic CV, `/apply-generic` ships one unchanged). Each records the application here through the MCP connector as **Shortlisted**, with `effort` Full / Light / Generic, `fit_score` (0-100), `role_type` and the prepared file names (`cv_file`, `cover_letter_file`, `research_file` — names only, the documents stay local), plus `archive_dir`, the application's folder under ai-job-search's `documents/applications/` (validated as a bare folder name). It moves to Applied only when actually submitted; that transition resets `applied_date` to the submit day.
 
 - Analytics, the Sankey and `outcome_stats` count only **submitted** applications (`utils/stages.ts:isSubmitted`): drafts still Shortlisted, and drafts skipped straight to Rejected, are left out.
 - A `PUT` that writes only these sync fields (`SYNC_FIELDS` in `endpoints/applications.py`) awards no points, so backfills don't inflate the level.
 - `/rank` in ai-job-search reads `outcome_stats` to weigh new postings by the track record of similar ones.
+- `/gmail-sync` in ai-job-search mirrors approved status changes here, then runs `/interview-watch`, which writes a prep pack (locally, into `archive_dir`) for every application at Replied or an interview stage that has none yet.
 
 ### Runway (`utils/runway.ts`, `components/dashboard/RunwayCard.tsx`)
 

@@ -14,7 +14,7 @@ router = APIRouter()
 # Fields the ai-job-search workflow keeps in sync. Writing only these is
 # bookkeeping rather than the user working on an application, so it earns no
 # points — otherwise a backfill would inflate the level by one point a row.
-SYNC_FIELDS = {"effort", "fit_score", "role_type", "cv_file", "cover_letter_file", "research_file"}
+SYNC_FIELDS = {"effort", "fit_score", "role_type", "cv_file", "cover_letter_file", "research_file", "archive_dir"}
 
 @router.get("/", response_model=List[application_schema.Application])
 def read_applications(

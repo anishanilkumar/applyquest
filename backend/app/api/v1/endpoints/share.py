@@ -85,6 +85,7 @@ def get_share_data(
             "cv_file": app.cv_file,
             "cover_letter_file": app.cover_letter_file,
             "research_file": app.research_file,
+            "archive_dir": app.archive_dir,
             "history": history,
         }
 

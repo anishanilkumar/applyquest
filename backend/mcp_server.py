@@ -172,6 +172,7 @@ def _trim(app: dict) -> dict:
         "job_board_source": app.get("job_board_source"),
         "fit_score": app.get("fit_score"),
         "role_type": app.get("role_type"),
+        "archive_dir": app.get("archive_dir"),
     }
 
 
@@ -277,6 +278,7 @@ def create_application(
     cv_file: Optional[str] = None,
     cover_letter_file: Optional[str] = None,
     research_file: Optional[str] = None,
+    archive_dir: Optional[str] = None,
 ) -> Any:
     """Create a new application record when no existing one matches.
 
@@ -292,7 +294,9 @@ def create_application(
     Fields written by the ai-job-search workflow: fit_score (its 0-100 fit
     score), role_type (e.g. "Fullstack", "AI/ML", "Backend"), and the file names
     of the documents prepared for the application — cv_file, cover_letter_file,
-    research_file. Store names/paths only, never document contents.
+    research_file — and archive_dir, the application's folder name under
+    documents/applications/ (e.g. "acme_backend_engineer"). Store names/paths
+    only, never document contents.
 
     effort is how much went into the application: "Full" (tailored CV and cover
     letter, screening questions answered), "Light" (some tailoring), "Generic"
@@ -321,6 +325,7 @@ def create_application(
         "cv_file": cv_file,
         "cover_letter_file": cover_letter_file,
         "research_file": research_file,
+        "archive_dir": archive_dir,
     }
     body = {k: v for k, v in body.items() if v is not None}
     with _client() as c:
@@ -343,6 +348,7 @@ def update_application(
     cv_file: Optional[str] = None,
     cover_letter_file: Optional[str] = None,
     research_file: Optional[str] = None,
+    archive_dir: Optional[str] = None,
 ) -> Any:
     """Enrich an existing application with job details discovered from an email.
 
@@ -352,7 +358,9 @@ def update_application(
     Fields written by the ai-job-search workflow: fit_score (its 0-100 fit
     score), role_type (e.g. "Fullstack", "AI/ML", "Backend"), and the file names
     of the documents prepared for the application — cv_file, cover_letter_file,
-    research_file. Store names/paths only, never document contents.
+    research_file — and archive_dir, the application's folder name under
+    documents/applications/ (e.g. "acme_backend_engineer"). Store names/paths
+    only, never document contents.
 
     effort is how much went into the application: "Full" (tailored CV and cover
     letter, screening questions answered), "Light" (some tailoring), "Generic"
@@ -375,6 +383,7 @@ def update_application(
         "cv_file": cv_file,
         "cover_letter_file": cover_letter_file,
         "research_file": research_file,
+        "archive_dir": archive_dir,
     }
     body = {k: v for k, v in body.items() if v is not None}
     if not body:
