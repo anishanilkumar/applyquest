@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
+import { Download } from 'lucide-react';
 import { ResponsiveContainer, Sankey, Tooltip, Layer, Rectangle } from 'recharts';
 import { JobApplication } from '../../types';
 import { effectiveHistory } from '../../utils/stages';
@@ -72,20 +73,94 @@ const CustomNode = (props: any) => {
     );
 };
 
+const LEGEND = [
+    { color: '#3B82F6', label: 'Early Stage' },
+    { color: '#8B5CF6', label: 'Interview' },
+    { color: '#F59E0B', label: 'Advanced' },
+    { color: '#22C55E', label: 'Success' },
+    { color: '#EF4444', label: 'Rejected' },
+];
+
+const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+// Renders the chart's SVG onto a canvas with a title and legend, then saves it
+// as a PNG. The SVG is serialized standalone, so the font is set explicitly.
+const downloadChart = (container: HTMLElement | null) => {
+    const svg = container?.querySelector('svg.recharts-surface') as SVGSVGElement | null;
+    if (!svg) return;
+
+    const { width, height } = svg.getBoundingClientRect();
+    const clone = svg.cloneNode(true) as SVGSVGElement;
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('width', String(width));
+    clone.setAttribute('height', String(height));
+    clone.setAttribute('font-family', FONT);
+
+    const header = 70;
+    const scale = 2;
+    const img = new Image();
+    img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width * scale;
+        canvas.height = (height + header) * scale;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.scale(scale, scale);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height + header);
+
+        ctx.fillStyle = '#1F2937';
+        ctx.font = `bold 20px ${FONT}`;
+        ctx.textBaseline = 'top';
+        ctx.fillText('Application Flow', 24, 20);
+
+        ctx.font = `12px ${FONT}`;
+        let x = 24;
+        LEGEND.forEach(({ color, label }) => {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, 50, 10, 10);
+            ctx.fillStyle = '#4B5563';
+            ctx.fillText(label, x + 14, 49);
+            x += 14 + ctx.measureText(label).width + 16;
+        });
+
+        ctx.drawImage(img, 0, header, width, height);
+        const link = document.createElement('a');
+        link.download = `application-flow-${new Date().toISOString().slice(0, 10)}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(clone));
+};
+
 const ApplicationProcessSankey: React.FC<ApplicationProcessSankeyProps> = ({ applications }) => {
+    const chartRef = useRef<HTMLDivElement>(null);
     const data = useMemo(() => {
         const nodesSet = new Set<string>();
         const linksMap = new Map<string, number>();
 
         applications.forEach(app => {
+            // Shortlisted is no longer part of the flow: a job only enters the
+            // chart once it has actually been applied to.
+            if (app.status === 'Shortlisted') return;
+
             if (!app.history || app.history.length === 0) {
                 nodesSet.add('Applied');
                 return;
             }
 
             effectiveHistory(app).forEach((record) => {
-                const source = record.oldStatus || 'Applied';
+                let source = record.oldStatus || 'Applied';
                 const target = record.newStatus;
+
+                // Shortlisted -> Applied is the entry point, not a transition;
+                // a jump straight from Shortlisted to a later stage counts as
+                // starting from Applied. Dropping a shortlisted job is skipped.
+                if (target === 'Shortlisted') return;
+                if (source === 'Shortlisted') {
+                    if (target === 'Applied' || target === 'Rejected' || target === 'Ghosted') return;
+                    source = 'Applied';
+                }
 
                 nodesSet.add(source);
                 nodesSet.add(target);
@@ -170,30 +245,27 @@ const ApplicationProcessSankey: React.FC<ApplicationProcessSankeyProps> = ({ app
                         Visualizing how applications progress through different stages
                     </p>
                 </div>
-                <div className="flex flex-wrap gap-3 text-xs">
-                    <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded" style={{ backgroundColor: '#3B82F6' }}></div>
-                        <span className="text-gray-600">Early Stage</span>
+                <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap gap-3 text-xs">
+                        {LEGEND.map(({ color, label }) => (
+                            <div key={label} className="flex items-center gap-1">
+                                <div className="w-3 h-3 rounded" style={{ backgroundColor: color }}></div>
+                                <span className="text-gray-600">{label}</span>
+                            </div>
+                        ))}
                     </div>
-                    <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded" style={{ backgroundColor: '#8B5CF6' }}></div>
-                        <span className="text-gray-600">Interview</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded" style={{ backgroundColor: '#F59E0B' }}></div>
-                        <span className="text-gray-600">Advanced</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded" style={{ backgroundColor: '#22C55E' }}></div>
-                        <span className="text-gray-600">Success</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded" style={{ backgroundColor: '#EF4444' }}></div>
-                        <span className="text-gray-600">Rejected</span>
-                    </div>
+                    <button
+                        type="button"
+                        onClick={() => downloadChart(chartRef.current)}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                        title="Download as PNG"
+                    >
+                        <Download className="w-4 h-4" />
+                        Download
+                    </button>
                 </div>
             </div>
-            <div className="h-[500px] w-full">
+            <div ref={chartRef} className="h-[500px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <Sankey
                         data={data}
