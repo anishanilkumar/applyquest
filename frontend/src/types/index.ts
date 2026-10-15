@@ -10,6 +10,11 @@ export interface User {
   levelName: string;
   currentStreak: number;
   longestStreak: number;
+  // Runway settings (utils/runway.ts): the date the search must end by, how
+  // long hiring takes, and how long the paperwork after an offer needs.
+  searchDeadline?: string;
+  hiringWeeks: number;
+  paperworkWeeks: number;
   createdAt: string;
 }
 

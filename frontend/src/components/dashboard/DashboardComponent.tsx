@@ -5,6 +5,7 @@ import { useAppContext } from '../../context/AppContext';
 import { JobApplication, NetworkContact } from '../../types';
 import { userService } from '../../services/api';
 import { classifyApp } from '../../utils/followup';
+import RunwayCard from './RunwayCard';
 import { hasReachedInterview } from '../../utils/stages';
 
 const motivationalMessages = [
@@ -216,6 +217,8 @@ const ApplyQuestDashboard: React.FC = () => {
       <div className="bg-gradient-to-r from-green-400 to-blue-500 rounded-xl p-6 mb-6 shadow-lg">
         <p className="text-white text-xl font-medium text-center">{motivationalMessage}</p>
       </div>
+
+      <RunwayCard />
 
       {/* Gamification Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

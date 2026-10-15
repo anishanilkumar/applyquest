@@ -90,6 +90,10 @@ Applications are drafted in the separate `../ai-job-search` workspace (`/apply` 
 - A `PUT` that writes only these sync fields (`SYNC_FIELDS` in `endpoints/applications.py`) awards no points, so backfills don't inflate the level.
 - `/rank` in ai-job-search reads `outcome_stats` to weigh new postings by the track record of similar ones.
 
+### Runway (`utils/runway.ts`, `components/dashboard/RunwayCard.tsx`)
+
+The Dashboard's Runway card works back from `User.search_deadline` (the Chancenkarte window): offer-by = deadline − `paperwork_weeks`, last useful application = offer-by − `hiring_weeks`. It multiplies three stage rates (reply, interview, offer) from submitted applications, each smoothed toward a stated prior (`PRIORS`) so a stage with no successes yet — offers — reads as an assumption rather than zero. Pace is submissions over the last 28 days; live applications add their own chance by stage. Chance of ≥1 offer = 1 − (1 − in-flight)·(1 − p)^n, treating applications as independent; the card says so.
+
 ### Firefox Extension (`extension/`)
 
 Plain HTML/CSS/JS, no build step. Manifest V3, Firefox-only (`browser.*` APIs).

@@ -19,6 +19,12 @@ class User(Base):
     current_streak = Column(Integer, default=0)
     longest_streak = Column(Integer, default=0)
     last_goal_bonus_date = Column(Date, nullable=True)
+    # Runway: the date the search must end by (e.g. a visa window), how long
+    # hiring takes from application to offer, and how much of the window the
+    # paperwork after an offer needs. See frontend utils/runway.ts.
+    search_deadline = Column(Date, nullable=True)
+    hiring_weeks = Column(Integer, nullable=False, default=6, server_default='6')
+    paperwork_weeks = Column(Integer, nullable=False, default=4, server_default='4')
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 

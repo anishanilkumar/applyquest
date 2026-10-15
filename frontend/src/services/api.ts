@@ -34,6 +34,9 @@ const transformUser = (data: any): User => ({
     levelName: data.level_name,
     currentStreak: data.current_streak,
     longestStreak: data.longest_streak,
+    searchDeadline: data.search_deadline ?? undefined,
+    hiringWeeks: data.hiring_weeks ?? 6,
+    paperworkWeeks: data.paperwork_weeks ?? 4,
     createdAt: data.created_at,
 });
 

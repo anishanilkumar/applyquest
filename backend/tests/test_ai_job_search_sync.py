@@ -72,3 +72,12 @@ def test_fit_score_is_bounded():
     from pydantic import ValidationError
     with pytest.raises(ValidationError):
         ApplicationUpdate(fit_score=120)
+
+
+def test_runway_settings_are_bounded():
+    import pytest
+    from pydantic import ValidationError
+    from app.schemas.user import UserUpdate
+    assert UserUpdate(search_deadline="2027-03-31", hiring_weeks=6).search_deadline == date(2027, 3, 31)
+    with pytest.raises(ValidationError):
+        UserUpdate(hiring_weeks=0)
