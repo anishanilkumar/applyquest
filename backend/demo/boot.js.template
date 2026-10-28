@@ -1,0 +1,127 @@
+/* ApplyQuest demo — auto-login and demo banner.
+ *
+ * nginx injects a <script src="/__demo/boot.js"> tag immediately before
+ * <div id="root"></div> on the demo vhost only (see configuration.nix). The
+ * tag is not deferred and the app bundle is, so this runs to completion before
+ * React reads localStorage on its first render.
+ *
+ * seed.py renders this template on every reset, substituting a freshly minted
+ * token for the newly created demo user. Placeholders: __TOKEN__, __EMAIL__,
+ * __PASSWORD__, __MENTOR__, __RESET_AT__.
+ *
+ * Nothing here is a secret. The account is shared, its password is printed on
+ * the page below, and the database is wiped every two days.
+ */
+(function () {
+  'use strict';
+
+  var TOKEN = '__TOKEN__';
+  var EMAIL = '__EMAIL__';
+  var PASSWORD = '__PASSWORD__';
+  var MENTOR = '__MENTOR__';
+  var RESET_AT = '__RESET_AT__';
+  var GEOCODE = "__GEOCODE__";
+
+  // Drop a visitor straight into a populated dashboard — but not on /login,
+  // so that anyone who deliberately signs out gets a working login page
+  // instead of being bounced back in on every reload.
+  //
+  // Replace a token that merely *differs*, not only a missing one. Every reset
+  // creates a new user row and mints a new token against it, so a visitor
+  // returning with the previous one gets 404 "User not found" on every call —
+  // and the app has no way out of that, since it treats 404 as a real answer
+  // rather than a dead session. Overwriting makes a stale session self-heal on
+  // the next page load.
+  try {
+    if (window.location.pathname !== '/login' && localStorage.getItem('token') !== TOKEN) {
+      localStorage.setItem('token', TOKEN);
+    }
+  } catch (e) {
+    /* private mode with storage disabled — fall through to the login form */
+  }
+
+  // Pre-fill the analytics map's geocode cache.
+  //
+  // GermanyMap.tsx resolves every distinct location through Nominatim on first
+  // render and caches it in localStorage as geocode_<lowercased name>. One user
+  // with a warm cache never notices; a public demo gets cold browsers all day
+  // and the component fires all ~20 locations at once, which Nominatim's usage
+  // policy forbids and answers with 429 — so the map came up empty. Writing the
+  // same cache entries here means the map draws immediately and the demo makes
+  // no request to the service at all. Its own lookup is left intact for
+  // anything a visitor adds themselves.
+  try {
+    for (var key in GEOCODE) {
+      if (Object.prototype.hasOwnProperty.call(GEOCODE, key)) {
+        localStorage.setItem('geocode_' + key, JSON.stringify(GEOCODE[key]));
+      }
+    }
+  } catch (e) {
+    /* storage unavailable — the component falls back to its own lookup */
+  }
+
+  var CSS = [
+    '#aq-demo-banner{position:fixed;left:0;right:0;bottom:0;z-index:9999;',
+    'font:13px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;',
+    'background:#0f172a;color:#e2e8f0;border-top:1px solid #1e293b;',
+    'padding:10px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;',
+    'box-shadow:0 -2px 12px rgba(0,0,0,.25)}',
+    '#aq-demo-banner strong{color:#fff;font-weight:600}',
+    '#aq-demo-banner code{background:#1e293b;color:#93c5fd;padding:1px 6px;border-radius:4px;',
+    'font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace}',
+    '#aq-demo-banner .aq-tag{background:#2563eb;color:#fff;font-weight:600;text-transform:uppercase;',
+    'letter-spacing:.06em;font-size:11px;padding:3px 8px;border-radius:4px}',
+    '#aq-demo-banner .aq-sep{flex:1 1 auto}',
+    '#aq-demo-banner .aq-muted{color:#94a3b8}',
+    '#aq-demo-banner button{background:none;border:1px solid #334155;color:#cbd5e1;',
+    'border-radius:4px;padding:3px 9px;font-size:12px;cursor:pointer}',
+    '#aq-demo-banner button:hover{border-color:#475569;color:#fff}',
+    '@media (max-width:720px){#aq-demo-banner{font-size:12px;padding:8px 12px}}',
+  ].join('');
+
+  function render() {
+    if (document.getElementById('aq-demo-banner')) return;
+
+    var style = document.createElement('style');
+    style.textContent = CSS;
+    document.head.appendChild(style);
+
+    // Built outside #root so React never sees it and never reconciles it away.
+    var bar = document.createElement('div');
+    bar.id = 'aq-demo-banner';
+    bar.innerHTML = [
+      '<span class="aq-tag">Demo</span>',
+      '<span>Sample data. Change anything you like.</span>',
+      '<span class="aq-muted">Sign-in <code>' + EMAIL + '</code> / <code>' + PASSWORD + '</code>',
+      ' &middot; mentor view <code>' + MENTOR + '</code></span>',
+      '<span class="aq-sep"></span>',
+      '<span class="aq-muted">Reset ' + RESET_AT + ', and every 2 days</span>',
+      '<button type="button" id="aq-demo-hide">Hide</button>',
+    ].join('');
+    document.body.appendChild(bar);
+
+    // Keep the bottom of the page clear by *measuring* the banner rather than
+    // guessing with breakpoints. It is a flex row that wraps, so its height is
+    // a function of width and of how long the credentials are — fixed padding
+    // values were short by 16-42px everywhere between phone and desktop, and
+    // silently covered whatever sat at the bottom of the page.
+    function reserveSpace() {
+      document.body.style.paddingBottom = bar.getBoundingClientRect().height + 'px';
+    }
+    reserveSpace();
+    window.addEventListener('resize', reserveSpace);
+
+    document.getElementById('aq-demo-hide').addEventListener('click', function () {
+      window.removeEventListener('resize', reserveSpace);
+      document.body.style.paddingBottom = '';
+      bar.remove();
+      style.remove();
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', render);
+  } else {
+    render();
+  }
+})();

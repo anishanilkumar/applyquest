@@ -1,0 +1,578 @@
+# Source pools for the ApplyQuest demo dataset.
+#
+# Read by seed.py, which draws from these to build ~55 applications, their
+# status histories, network contacts and point history every two days.
+#
+# Company names are deliberately fictional. Everything else — cities, job
+# titles, tech stacks, job boards — is real, because the analytics page
+# geocodes `location` against OpenStreetMap and groups by tech stack and
+# source, so those fields have to be plausible for the charts to look like
+# anything. Inventing a rejection and attributing it to a real named company
+# on a public page is the one thing worth avoiding here.
+
+# ---------------------------------------------------------------------------
+# Role titles, weighted loosely toward backend/platform work so the tech-stack
+# chart has a recognisable centre of gravity rather than one of everything.
+#
+# Must stay above the first table header: a bare key after one would be parsed
+# as belonging to that table rather than to the document.
+# ---------------------------------------------------------------------------
+
+titles = [
+  "Senior Backend Engineer",
+  "Backend Engineer",
+  "Senior Software Engineer",
+  "Software Engineer (m/f/d)",
+  "Platform Engineer",
+  "Senior Platform Engineer",
+  "Site Reliability Engineer",
+  "DevOps Engineer",
+  "Full Stack Engineer",
+  "Senior Full Stack Engineer",
+  "Data Engineer",
+  "Senior Data Engineer",
+  "Machine Learning Engineer",
+  "Cloud Engineer",
+  "Infrastructure Engineer",
+  "Python Engineer",
+  "Go Engineer",
+  "Staff Engineer",
+  "Engineering Lead",
+  "Frontend Engineer",
+]
+
+# ---------------------------------------------------------------------------
+# Companies
+#
+# `stack` is picked from at seeding time (2-4 entries joined with ", ") and
+# `band` is the salary range shown on the card. `remote` marks companies that
+# also advertise remote roles, which lets some applications carry a
+# "Remote (Germany)" location without every city being represented twice.
+# ---------------------------------------------------------------------------
+
+[[companies]]
+name = "Nordkern Systems"
+industry = "Cloud infrastructure"
+city = "Berlin"
+stack = ["Go", "Kubernetes", "PostgreSQL", "Terraform", "gRPC"]
+band = "€75,000 - €95,000"
+remote = true
+
+[[companies]]
+name = "Helios Robotics"
+industry = "Industrial automation"
+city = "Munich"
+stack = ["C++", "ROS", "Python", "Docker"]
+band = "€68,000 - €88,000"
+remote = false
+
+[[companies]]
+name = "Kellner Analytics"
+industry = "Business intelligence"
+city = "Hamburg"
+stack = ["Python", "dbt", "Snowflake", "Airflow"]
+band = "€65,000 - €82,000"
+remote = true
+
+[[companies]]
+name = "Bruecke Payments"
+industry = "Fintech"
+city = "Frankfurt am Main"
+stack = ["Java", "Spring Boot", "Kafka", "PostgreSQL"]
+band = "€80,000 - €100,000"
+remote = false
+
+[[companies]]
+name = "Lumenbahn"
+industry = "Mobility"
+city = "Cologne"
+stack = ["TypeScript", "React", "Node.js", "GraphQL"]
+band = "€62,000 - €78,000"
+remote = true
+
+[[companies]]
+name = "Sonnenweg Health"
+industry = "Digital health"
+city = "Leipzig"
+stack = ["Python", "Django", "PostgreSQL", "AWS"]
+band = "€58,000 - €72,000"
+remote = true
+
+[[companies]]
+name = "Astwerk Labs"
+industry = "Developer tools"
+city = "Karlsruhe"
+stack = ["Rust", "WebAssembly", "TypeScript"]
+band = "€70,000 - €90,000"
+remote = true
+
+[[companies]]
+name = "Gruenfeld Energy"
+industry = "Renewables"
+city = "Stuttgart"
+stack = ["Python", "FastAPI", "TimescaleDB", "Grafana"]
+band = "€66,000 - €84,000"
+remote = false
+
+[[companies]]
+name = "Vierklang Media"
+industry = "Streaming"
+city = "Berlin"
+stack = ["Go", "Redis", "Elasticsearch", "React"]
+band = "€72,000 - €90,000"
+remote = true
+
+[[companies]]
+name = "Radwerk Logistics"
+industry = "Supply chain"
+city = "Düsseldorf"
+stack = ["Java", "Kotlin", "Kafka", "Kubernetes"]
+band = "€64,000 - €80,000"
+remote = false
+
+[[companies]]
+name = "Silberpfad Insurance"
+industry = "Insurtech"
+city = "Munich"
+stack = ["C#", ".NET", "Azure", "SQL Server"]
+band = "€70,000 - €86,000"
+remote = false
+
+[[companies]]
+name = "Klarsicht Vision"
+industry = "Computer vision"
+city = "Dresden"
+stack = ["Python", "PyTorch", "CUDA", "OpenCV"]
+band = "€72,000 - €92,000"
+remote = false
+
+[[companies]]
+name = "Hafenblick Commerce"
+industry = "E-commerce"
+city = "Hamburg"
+stack = ["PHP", "Symfony", "MySQL", "Vue.js"]
+band = "€58,000 - €74,000"
+remote = true
+
+[[companies]]
+name = "Tannenbach Software"
+industry = "ERP"
+city = "Nuremberg"
+stack = ["Java", "Spring", "Oracle", "Angular"]
+band = "€63,000 - €79,000"
+remote = false
+
+[[companies]]
+name = "Ostwind Mobility"
+industry = "Micromobility"
+city = "Berlin"
+stack = ["TypeScript", "Node.js", "PostgreSQL", "AWS"]
+band = "€68,000 - €85,000"
+remote = true
+
+[[companies]]
+name = "Weissbach Security"
+industry = "Cybersecurity"
+city = "Bochum"
+stack = ["Go", "eBPF", "Rust", "Kubernetes"]
+band = "€78,000 - €98,000"
+remote = true
+
+[[companies]]
+name = "Feldbach Agritech"
+industry = "Agritech"
+city = "Hannover"
+stack = ["Python", "Django", "PostGIS", "React"]
+band = "€60,000 - €75,000"
+remote = false
+
+[[companies]]
+name = "Morgenlicht AI"
+industry = "Machine learning"
+city = "Berlin"
+stack = ["Python", "PyTorch", "Ray", "Kubernetes"]
+band = "€85,000 - €110,000"
+remote = true
+
+[[companies]]
+name = "Zederhof Travel"
+industry = "Travel tech"
+city = "Vienna"
+stack = ["TypeScript", "Next.js", "PostgreSQL", "Redis"]
+band = "€60,000 - €76,000"
+remote = true
+
+[[companies]]
+name = "Amstelbrug Data"
+industry = "Data platform"
+city = "Amsterdam"
+stack = ["Scala", "Spark", "Kafka", "Kubernetes"]
+band = "€78,000 - €96,000"
+remote = true
+
+[[companies]]
+name = "Rheinquell Banking"
+industry = "Banking"
+city = "Frankfurt am Main"
+stack = ["Java", "Quarkus", "Kafka", "PostgreSQL"]
+band = "€76,000 - €94,000"
+remote = false
+
+[[companies]]
+name = "Steinweg Manufacturing"
+industry = "Manufacturing"
+city = "Stuttgart"
+stack = ["C++", "Qt", "Python", "OPC UA"]
+band = "€65,000 - €82,000"
+remote = false
+
+[[companies]]
+name = "Talwind Telecom"
+industry = "Telecommunications"
+city = "Bonn"
+stack = ["Go", "gRPC", "Kubernetes", "Prometheus"]
+band = "€70,000 - €88,000"
+remote = true
+
+[[companies]]
+name = "Birkenau Learning"
+industry = "Edtech"
+city = "Leipzig"
+stack = ["Ruby", "Rails", "PostgreSQL", "React"]
+band = "€55,000 - €70,000"
+remote = true
+
+[[companies]]
+name = "Glockenturm Retail"
+industry = "Retail tech"
+city = "Essen"
+stack = ["Java", "Spring Boot", "MongoDB", "React"]
+band = "€60,000 - €76,000"
+remote = false
+
+[[companies]]
+name = "Seewald Gaming"
+industry = "Games"
+city = "Hamburg"
+stack = ["C++", "Unreal Engine", "Python"]
+band = "€58,000 - €78,000"
+remote = false
+
+[[companies]]
+name = "Perlach Semiconductors"
+industry = "Semiconductors"
+city = "Munich"
+stack = ["C", "Verilog", "Python", "Linux"]
+band = "€72,000 - €90,000"
+remote = false
+
+[[companies]]
+name = "Uferlicht Studios"
+industry = "Design software"
+city = "Berlin"
+stack = ["TypeScript", "WebGL", "Rust", "React"]
+band = "€70,000 - €88,000"
+remote = true
+
+[[companies]]
+name = "Wolkenhain Cloud"
+industry = "Managed hosting"
+city = "Zurich"
+stack = ["Go", "Terraform", "Kubernetes", "Ceph"]
+band = "CHF 110,000 - CHF 135,000"
+remote = false
+
+[[companies]]
+name = "Hochmoor Biotech"
+industry = "Biotech"
+city = "Heidelberg"
+stack = ["Python", "Nextflow", "AWS", "R"]
+band = "€64,000 - €80,000"
+remote = false
+
+[[companies]]
+name = "Drachenfels Legal"
+industry = "Legaltech"
+city = "Cologne"
+stack = ["Python", "FastAPI", "PostgreSQL", "React"]
+band = "€62,000 - €78,000"
+remote = true
+
+[[companies]]
+name = "Steglitz Property"
+industry = "Proptech"
+city = "Berlin"
+stack = ["Ruby", "Rails", "PostgreSQL", "Sidekiq"]
+band = "€60,000 - €75,000"
+remote = true
+
+[[companies]]
+name = "Almhof Foods"
+industry = "Food delivery"
+city = "Munich"
+stack = ["Kotlin", "Spring Boot", "Kafka", "React Native"]
+band = "€66,000 - €82,000"
+remote = false
+
+[[companies]]
+name = "Kranichsee Aviation"
+industry = "Aerospace"
+city = "Bremen"
+stack = ["C++", "Ada", "Python", "MATLAB"]
+band = "€68,000 - €84,000"
+remote = false
+
+[[companies]]
+name = "Lindenpfad HR"
+industry = "HR software"
+city = "Munich"
+stack = ["TypeScript", "NestJS", "PostgreSQL", "React"]
+band = "€64,000 - €80,000"
+remote = true
+
+[[companies]]
+name = "Tiefensee Storage"
+industry = "Storage systems"
+city = "Kiel"
+stack = ["Rust", "C", "Linux", "NVMe"]
+band = "€74,000 - €92,000"
+remote = true
+
+[[companies]]
+name = "Sandufer Marketing"
+industry = "Martech"
+city = "Düsseldorf"
+stack = ["Python", "Airflow", "BigQuery", "React"]
+band = "€58,000 - €74,000"
+remote = true
+
+[[companies]]
+name = "Grauhorn Networks"
+industry = "Networking"
+city = "Nuremberg"
+stack = ["C", "Go", "DPDK", "Linux"]
+band = "€72,000 - €90,000"
+remote = false
+
+[[companies]]
+name = "Blauwasser Maritime"
+industry = "Maritime tech"
+city = "Rostock"
+stack = ["Python", "InfluxDB", "MQTT", "Grafana"]
+band = "€58,000 - €72,000"
+remote = false
+
+[[companies]]
+name = "Elbschleuse Public"
+industry = "Govtech"
+city = "Hamburg"
+stack = ["Java", "Spring Boot", "PostgreSQL", "Angular"]
+band = "€62,000 - €76,000"
+remote = false
+
+# ---------------------------------------------------------------------------
+# Coordinates for every location above, as [latitude, longitude].
+#
+# GermanyMap.tsx geocodes each distinct location through Nominatim at render
+# time and caches the result in localStorage under `geocode_<lowercased name>`.
+# That is fine for one user with a warm cache, but the demo gets cold browsers
+# all day and the component fires every location in parallel — which is exactly
+# what Nominatim's usage policy forbids, and it duly answers 429. seed.py emits
+# these into boot.js, which pre-fills that same cache, so the map draws
+# instantly and the demo never touches the service at all.
+#
+# Keys must be the lowercased location string. seed.py fails loudly if an
+# application ends up somewhere that is not listed here.
+# ---------------------------------------------------------------------------
+
+[coordinates]
+"berlin"            = [52.5200, 13.4050]
+"munich"            = [48.1372, 11.5755]
+"hamburg"           = [53.5503,  9.9920]
+"frankfurt am main" = [50.1109,  8.6821]
+"cologne"           = [50.9375,  6.9603]
+"leipzig"           = [51.3397, 12.3731]
+"karlsruhe"         = [49.0069,  8.4037]
+"stuttgart"         = [48.7758,  9.1829]
+"düsseldorf"        = [51.2277,  6.7735]
+"dresden"           = [51.0504, 13.7373]
+"nuremberg"         = [49.4521, 11.0767]
+"bochum"            = [51.4818,  7.2162]
+"hannover"          = [52.3759,  9.7320]
+"bonn"              = [50.7374,  7.0982]
+"essen"             = [51.4556,  7.0116]
+"heidelberg"        = [49.3988,  8.6724]
+"bremen"            = [53.0793,  8.8017]
+"kiel"              = [54.3233, 10.1228]
+"rostock"           = [54.0924, 12.0991]
+"vienna"            = [48.2082, 16.3738]
+"amsterdam"         = [52.3676,  4.9041]
+"zurich"            = [47.3769,  8.5417]
+# The geographic centre of Germany — the map needs a point, and the component
+# would otherwise send this one to Nominatim on every page load and drop it.
+"remote (germany)"  = [51.1657, 10.4515]
+
+# Job boards. `generic_rate` is the share of applications from that source sent
+# as generic, one-click applications (Easy Apply and the like); the rest get a
+# tailored effort level. The EffortComparison chart is only interesting if the
+# rates actually differ by source.
+[[sources]]
+name = "LinkedIn"
+weight = 30
+generic_rate = 0.75
+
+[[sources]]
+name = "StepStone"
+weight = 18
+generic_rate = 0.35
+
+[[sources]]
+name = "Indeed"
+weight = 14
+generic_rate = 0.6
+
+[[sources]]
+name = "Xing"
+weight = 10
+generic_rate = 0.4
+
+[[sources]]
+name = "Glassdoor"
+weight = 6
+generic_rate = 0.5
+
+[[sources]]
+name = "Company website"
+weight = 16
+generic_rate = 0.0
+
+[[sources]]
+name = "Referral"
+weight = 6
+generic_rate = 0.0
+
+# ---------------------------------------------------------------------------
+# Network contacts. `company` is filled in from a drawn company at seed time,
+# so only the person and the nature of the connection live here.
+# ---------------------------------------------------------------------------
+
+[[contacts]]
+name = "Marlene Kruse"
+relationship_type = "Recruiter"
+strength = 4
+note = "Reached out on LinkedIn about the platform role. Quick to reply, sends real feedback."
+
+[[contacts]]
+name = "Tobias Ehrlich"
+relationship_type = "Former colleague"
+strength = 5
+note = "Worked together for two years. Happy to refer internally, just needs the job ID."
+
+[[contacts]]
+name = "Priya Raghavan"
+relationship_type = "Meetup contact"
+strength = 3
+note = "Met at the Berlin Go meetup. Works on their payments platform."
+
+[[contacts]]
+name = "Jonas Friedrich"
+relationship_type = "Hiring manager"
+strength = 3
+note = "Ran the phone screen. Said to ping him directly if I don't hear back in two weeks."
+
+[[contacts]]
+name = "Sabine Wagner"
+relationship_type = "Recruiter"
+strength = 2
+note = "Agency recruiter, mostly Munich roles. Volume over fit, but occasionally useful."
+
+[[contacts]]
+name = "Ahmed Nazir"
+relationship_type = "University friend"
+strength = 5
+note = "Same Master's cohort. Now a senior engineer, offered to review my CV."
+
+[[contacts]]
+name = "Lena Brandt"
+relationship_type = "Former colleague"
+strength = 4
+note = "Was my tech lead. Strong referral if a backend opening comes up on her team."
+
+[[contacts]]
+name = "Michael Oduya"
+relationship_type = "Conference contact"
+strength = 2
+note = "Chatted at KubeCon. Works on their internal developer platform."
+
+[[contacts]]
+name = "Franziska Vogel"
+relationship_type = "Recruiter"
+strength = 3
+note = "In-house recruiter. Very clear about the process and timelines, which is rare."
+
+[[contacts]]
+name = "Rahul Menon"
+relationship_type = "Community"
+strength = 3
+note = "Runs the Kerala-in-Germany dev Slack. Good source of unlisted openings."
+
+[[contacts]]
+name = "Katharina Simon"
+relationship_type = "Mentor"
+strength = 5
+note = "Monthly catch-up. Pushed me to negotiate rather than accept the first number."
+
+[[contacts]]
+name = "David Lindqvist"
+relationship_type = "Former colleague"
+strength = 3
+note = "Moved to Amsterdam last year. Says the visa process there is faster than DE."
+
+# ---------------------------------------------------------------------------
+# Note templates, keyed by the status the application ended up in. seed.py
+# formats them with {company}, {title} and {role_area}.
+# ---------------------------------------------------------------------------
+
+[notes]
+shortlisted = [
+  "Looks like a strong fit on the stack. Need to tailor the CV before applying.",
+  "Saved from the {source} feed. Salary band is not published — worth asking early.",
+  "Team page suggests a small platform group, which is what I want. Apply this week.",
+  "Requires German B2 per the posting, but the team language is listed as English. Ask.",
+  "Bookmarked. Waiting to hear back from {company} elsewhere before adding another.",
+]
+applied = [
+  "Applied via {source}. Standard form, no cover letter required.",
+  "Applied with a tailored CV highlighting the {stack} work. No confirmation email yet.",
+  "Submitted through their own portal — the ATS wanted every field retyped.",
+  "Applied. Posting has been live for three weeks, so may already be far along.",
+  "Sent the application plus a short note about the migration project.",
+]
+replied = [
+  "Recruiter replied within two days asking for salary expectations. Gave the band.",
+  "Got a reply — they want a 30 minute intro call. Sent my availability.",
+  "Positive first response. Asked about visa status, which I answered up front.",
+]
+interview = [
+  "Phone screen went well. Mostly background and motivation, light on technical.",
+  "Technical round was a system design discussion — event ingestion at scale. Felt solid.",
+  "Second technical was pair programming on their own codebase. Enjoyed it.",
+  "Final round with the CTO and two engineers. Culture-fit heavy, asked good questions.",
+]
+offer = [
+  "Offer received. Base at the top of the band plus a relocation package. Negotiating start date.",
+]
+rejected = [
+  "Rejected after the screen — they went with someone already in the country.",
+  "Standard rejection email, no feedback given.",
+  "Rejected at the CV stage. Likely the German requirement.",
+  "Came down to two candidates. Feedback was that they wanted deeper {stack} experience.",
+  "Role was put on hold and then closed. Not a fit issue.",
+  "Rejected — they filled it internally before the external process finished.",
+]
+ghosted = [
+  "No response in six weeks. Following up once more, then writing it off.",
+  "Recruiter went quiet after asking for references. Two follow-ups unanswered.",
+  "Application still shows 'in review' on the portal. Assuming it's dead.",
+  "Went silent after the technical round despite promising feedback by Friday.",
+]
