@@ -17,7 +17,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen text-blue-600">Loading...</div>;
+    // Loading: the page's shape in slate, not a spinner or a word.
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-6 space-y-4" aria-busy="true" aria-label="Loading">
+        <div className="h-12 placeholder" />
+        <div className="h-40 placeholder" />
+        <div className="h-64 placeholder" />
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
@@ -31,7 +38,23 @@ function App() {
   return (
     <Router>
       <AppProvider>
-        <Toaster position="top-right" reverseOrder={false} />
+        {/* Toasts as house callouts: a panel with a left rule in the state's colour. */}
+        <Toaster
+          position="top-right"
+          reverseOrder={false}
+          toastOptions={{
+            style: {
+              background: 'rgb(var(--panel-lit))', color: 'rgb(var(--ink))', borderRadius: 0,
+              border: '2px solid rgb(var(--engrave))', borderLeft: '6px solid rgb(var(--arc))',
+              boxShadow: 'none', fontFamily: 'Archivo, system-ui, sans-serif',
+            },
+            success: { iconTheme: { primary: 'rgb(var(--arc))', secondary: 'rgb(var(--ground))' } },
+            error: {
+              style: { borderLeft: '6px solid rgb(var(--gold))' },
+              iconTheme: { primary: 'rgb(var(--gold))', secondary: 'rgb(var(--ground))' },
+            },
+          }}
+        />
         <Routes>
           <Route path="/login" element={<Login />} />
 

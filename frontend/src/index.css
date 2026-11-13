@@ -1,3 +1,227 @@
+/* ApplyQuest, in the Instrument language: a machined instrument, not a glowing
+   screen. Palette, faces, 2px rules and engraved corner brackets come from the
+   instrument-design starter (v2), arm's-length scale, as a Tailwind theme
+   (tailwind.config.js) plus the component classes below.
+
+   Departures, on purpose:
+   - Tokens are RGB triplets ("10 14 20"), not hex, so Tailwind's opacity
+     modifiers work (bg-ground/80).
+   - The content column is 80rem, not 54rem: the applications table and the
+     Kanban board need the width on a laptop. Forms and cards keep their own
+     narrower measure.
+   - The Germany map's OpenStreetMap tiles are darkened with a CSS filter
+     (GermanyMap.tsx) rather than swapped for a dark tile host, so no new third
+     party sees the traffic.
+   - No Manjari or Monaspace: nothing here is Malayalam or code.
+
+   Semantic aliases (application stages; utils/statusStyle.ts uses them):
+     --stage-draft     Shortlisted: not sent yet                     arc-dim
+     --stage-live      Applied: sent, waiting                        arc
+     --stage-human     Replied, screens, rounds: a person is in it   gold
+     --stage-offer     Offer                                         go (green)
+     --stage-ended     Rejected, Ghosted                             slate
+   Green (--go, #4fd68a) is added under the "adding a colour" rule for Offer,
+   as in Recipie's traffic light; offline it falls to #4c7a60. Red (--alert)
+   is kept for destructive actions (delete) only. A third chart series uses
+   violet (--c-3, #b39cff), the house precedent. */
+
+@font-face {
+  font-family: "Archivo";
+  src: url("/fonts/archivo-var.woff2") format("woff2-variations");
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Plex Mono";
+  src: url("/fonts/plexmono-400.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Plex Mono";
+  src: url("/fonts/plexmono-500.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --ground: 10 14 20;       /* #0a0e14, never #000: pure black reads as a dead panel */
+    --panel: 17 24 35;        /* #111823 */
+    --panel-lit: 22 32 46;    /* #16202e */
+    --engrave: 42 53 67;      /* #2a3543 */
+    --ink: 232 241 248;       /* #e8f1f8 */
+    --ink-dim: 124 143 163;   /* #7c8fa3 */
+    --arc: 61 214 245;        /* #3dd6f5 */
+    --arc-dim: 29 127 150;    /* #1d7f96 */
+    --gold: 232 163 61;       /* #e8a33d */
+    --alert: 255 77 77;       /* #ff4d4d */
+    --slate: 85 100 122;      /* #55647a */
+    --slate-dim: 58 70 87;    /* #3a4657 */
+    --go: 79 214 138;         /* #4fd68a, Offer only */
+    --c-1: 36 156 184;        /* #249cb8, arc one step deeper, for fills */
+    --c-2: 194 132 43;        /* #c2842b, gold one step deeper */
+    --c-3: 179 156 255;       /* #b39cff, the violet precedent */
+    --c-grid: 28 38 51;       /* #1c2633, gridlines that recede */
+
+    --stage-draft: var(--arc-dim);
+    --stage-live: var(--arc);
+    --stage-human: var(--gold);
+    --stage-offer: var(--go);
+    --stage-ended: var(--slate);
+
+    --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+    color-scheme: dark;
+  }
+
+  /* Offline swaps the tokens wholesale, so no component needs a conditional. */
+  :root[data-connection="offline"] {
+    --arc: var(--slate);
+    --arc-dim: var(--slate-dim);
+    --gold: 138 115 80;       /* #8a7350 */
+    --ink: 185 196 209;       /* #b9c4d1 */
+    --go: 76 122 96;          /* #4c7a60 */
+    --c-1: var(--slate);
+    --c-2: 138 115 80;
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    @apply bg-ground text-ink font-data;
+    line-height: 1.45;
+    /* Not optional: without tabular numerals a changing count twitches. */
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 { font-weight: 600; line-height: 1.05; letter-spacing: -0.02em; text-wrap: balance; }
+
+  *, ::before, ::after { border-color: rgb(var(--engrave)); }
+
+  :focus-visible { outline: 2px solid rgb(var(--arc)); outline-offset: 2px; }
+
+  input::placeholder, textarea::placeholder { color: rgb(var(--slate)); }
+  input[type="date"], input[type="datetime-local"], input[type="time"] { color-scheme: dark; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* ---- Type roles ---- */
+  .label { @apply font-mono text-label font-medium uppercase tracking-label text-arc-dim; }
+  .stamp { @apply font-mono text-min tracking-stamp text-ink-dim; }
+  .wordmark { @apply font-mono text-label font-medium uppercase tracking-mark text-ink; }
+  .hero { font-size: clamp(3.25rem, 17vw, 5.5rem); font-weight: 600; line-height: 0.92; letter-spacing: -0.03em; }
+  .readout { font-size: clamp(1.375rem, 5.5vw, 1.875rem); font-weight: 500; line-height: 1.05; }
+  .major { font-size: clamp(1.75rem, 8vw, 2.75rem); font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
+
+  /* ---- The instrument panel: two engraved corner brackets, not a box ---- */
+  .instrument { @apply relative bg-panel; padding: 1.25rem; }
+  .instrument::before, .instrument::after {
+    content: ""; position: absolute; width: 1rem; height: 1rem;
+    border: 2px solid rgb(var(--engrave)); pointer-events: none;
+  }
+  .instrument::before { top: 0; left: 0; border-right: none; border-bottom: none; }
+  .instrument::after { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+  /* A callout: a thick left border in the state's colour (set --c). */
+  .verdict { @apply bg-panel; border-left: 6px solid rgb(var(--c, var(--arc))); padding: 0.875rem 1.25rem; }
+
+  /* ---- Status ---- */
+  .dot { flex: none; width: 8px; height: 8px; background: rgb(var(--c, var(--arc))); }
+  .dot-syncing { animation: blink 0.9s steps(2) infinite; } /* a mechanical blink, not a pulse */
+  @keyframes blink { 50% { opacity: 0.2; } }
+
+  /* ---- Controls ---- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-mono text-label font-medium uppercase tracking-stamp text-ink;
+    min-height: 44px; padding: 0 1.25rem;
+    border: 2px solid rgb(var(--engrave)); border-radius: 2px; background: transparent;
+    cursor: pointer; text-decoration: none;
+    transition: background 160ms var(--ease), color 160ms var(--ease), border-color 160ms var(--ease);
+  }
+  .btn:hover { background: rgb(var(--engrave)); }
+  .btn:disabled { opacity: 0.35; cursor: default; }
+  .btn:disabled:hover { background: transparent; }
+  .btn-primary { background: rgb(var(--arc)); border-color: rgb(var(--arc)); color: rgb(var(--ground)); }
+  .btn-primary:hover { background: rgb(var(--ink)); border-color: rgb(var(--ink)); }
+  .btn-primary:disabled:hover { background: rgb(var(--arc)); border-color: rgb(var(--arc)); }
+  .btn-quiet { color: rgb(var(--ink-dim)); }
+  .btn-danger { border-color: rgb(var(--alert)); color: rgb(var(--alert)); }
+  .btn-danger:hover { background: rgb(var(--alert)); color: rgb(var(--ground)); }
+  .btn-add { width: 100%; border-style: dashed; color: rgb(var(--arc)); }
+  .btn-sm { min-height: 36px; padding: 0 0.75rem; font-size: 0.75rem; }
+  /* An icon-only control: still 44px to hit. */
+  .btn-icon { min-width: 44px; padding: 0 0.625rem; }
+
+  .chip {
+    @apply inline-flex items-center font-mono text-min uppercase text-ink-dim;
+    min-height: 36px; padding: 0 0.75rem; letter-spacing: 0.06em;
+    border: 2px solid rgb(var(--engrave)); border-radius: 2px; background: transparent; cursor: pointer;
+  }
+  .chip:hover { color: rgb(var(--ink)); background: rgb(var(--engrave)); }
+  .chip[aria-pressed="true"], .chip.on { background: rgb(var(--arc)); border-color: rgb(var(--arc)); color: rgb(var(--ground)); }
+
+  /* A small engraved tag: a skill, a code, a count. Not a pill. */
+  .tag { @apply inline-flex items-center font-mono text-min text-ink-dim; padding: 0.0625rem 0.375rem; background: rgb(var(--panel-lit)); border: 2px solid rgb(var(--engrave)); border-radius: 2px; }
+
+  /* ---- Forms ---- */
+  .field-label { @apply block font-mono text-min uppercase tracking-stamp text-ink-dim; margin-bottom: 0.375rem; }
+  .input {
+    width: 100%; min-height: 44px; padding: 0.5rem 0.75rem;
+    background: rgb(var(--ground)); color: rgb(var(--ink));
+    border: 2px solid rgb(var(--engrave)); border-radius: 0; font-size: 1rem;
+  }
+  .input:focus { border-color: rgb(var(--arc-dim)); outline: none; box-shadow: none; }
+  select.input {
+    appearance: none; padding-right: 2rem; cursor: pointer;
+    background-image: linear-gradient(45deg, transparent 50%, rgb(var(--arc-dim)) 50%), linear-gradient(-45deg, transparent 50%, rgb(var(--arc-dim)) 50%); /* instrument-lint: ok — draws the chevron */
+    background-position: right 1.1rem center, right 0.75rem center; background-size: 0.35rem 0.35rem; background-repeat: no-repeat;
+  }
+  textarea.input { line-height: 1.4; resize: vertical; }
+  .tick { flex: none; position: relative; width: 1.25rem; height: 1.25rem; border: 2px solid rgb(var(--arc-dim)); }
+  .tick[data-on="true"]::after { content: ""; position: absolute; inset: 0.2rem; background: rgb(var(--arc)); }
+
+  /* ---- Tables and lists ---- */
+  .table { width: 100%; border-collapse: collapse; }
+  .table th { @apply font-mono text-min font-medium uppercase text-arc-dim; letter-spacing: 0.12em; text-align: left; padding: 0.5rem 0.75rem 0.5rem 0; }
+  .table td { padding: 0.75rem 0.75rem 0.75rem 0; border-top: 2px solid rgb(var(--engrave)); vertical-align: top; }
+  .table .n { text-align: right; font-family: "Plex Mono", ui-monospace, monospace; font-size: 0.8125rem; white-space: nowrap; }
+
+  /* Progress: lit ticks, or a flat bar on an engraved track. */
+  .meter { height: 10px; background: rgb(var(--engrave)); }
+  .meter > i { display: block; height: 100%; background: rgb(var(--c, var(--c-1))); }
+
+  /* Empty state and loading. */
+  .empty { @apply flex flex-col items-center gap-2 text-center text-ink-dim; padding: 2.5rem 1.25rem; }
+  .empty-title { @apply font-mono uppercase tracking-label text-slate; }
+  .placeholder { background: rgb(var(--panel)); }
+
+  /* ---- Charts (Recharts and hand-drawn SVG) ---- */
+  .recharts-text, .recharts-cartesian-axis-tick-value { font-family: "Plex Mono", ui-monospace, monospace; font-size: 12px; fill: rgb(var(--ink-dim)); }
+  .recharts-legend-item-text { font-family: "Plex Mono", ui-monospace, monospace; font-size: 12px; color: rgb(var(--ink-dim)) !important; }
+  .recharts-cartesian-grid line { stroke: rgb(var(--c-grid)); }
+  .recharts-default-tooltip {
+    background: rgb(var(--ground)) !important; border: 2px solid rgb(var(--engrave)) !important; border-radius: 0 !important;
+    font-family: "Plex Mono", ui-monospace, monospace; font-size: 12px;
+  }
+  .recharts-tooltip-label { color: rgb(var(--ink)) !important; }
+
+  /* ---- Leaflet: the map's chrome in the palette ---- */
+  .leaflet-container { background: rgb(var(--ground)) !important; font-family: "Archivo", system-ui, sans-serif !important; }
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: rgb(var(--ground)) !important; color: rgb(var(--ink)) !important; border-radius: 0 !important; border: 2px solid rgb(var(--engrave)); }
+  .leaflet-bar a { background: rgb(var(--panel)) !important; color: rgb(var(--ink)) !important; border-color: rgb(var(--engrave)) !important; border-radius: 0 !important; }
+  .leaflet-control-attribution { background: rgb(var(--ground) / 0.8) !important; color: rgb(var(--ink-dim)) !important; font-size: 12px; }
+  .leaflet-control-attribution a { color: rgb(var(--arc)) !important; }
+}
