@@ -3,47 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <title>ApplyQuest Clipper</title>
-  <link rel="stylesheet" href="popup.css" />
+  <link rel="stylesheet" href="ui.css" />
 </head>
-<body>
-  <div class="header">
-    <span class="logo">AQ</span>
-    <span class="title">ApplyQuest Clipper</span>
-    <button class="settings-btn" id="settingsBtn" title="Settings">⚙</button>
-  </div>
+<body class="popup">
+  <header class="topbar">
+    <span class="wordmark">ApplyQuest</span>
+    <button class="act" id="settingsBtn">Settings</button>
+  </header>
 
   <div id="viewUnauthenticated" class="view hidden">
     <p class="message">Not connected to ApplyQuest.</p>
-    <button class="btn btn-primary" id="goToSettingsBtn">Open Settings</button>
+    <button class="btn btn-primary btn-full" id="goToSettingsBtn">Open settings</button>
   </div>
 
   <div id="viewForm" class="view hidden">
-    <form id="jobForm">
+    <form id="jobForm" class="form">
       <div class="field">
-        <label for="jobTitle">Job Title *</label>
-        <input type="text" id="jobTitle" required placeholder="e.g. Senior Software Engineer" />
+        <label for="jobTitle">Job title</label>
+        <input type="text" id="jobTitle" required placeholder="Senior Software Engineer" />
       </div>
       <div class="field">
-        <label for="companyName">Company *</label>
-        <input type="text" id="companyName" required placeholder="e.g. Acme GmbH" />
+        <label for="companyName">Company</label>
+        <input type="text" id="companyName" required placeholder="Acme GmbH" />
       </div>
       <div class="field">
-        <label for="location">Location *</label>
-        <input type="text" id="location" required placeholder="e.g. Berlin, Germany" />
+        <label for="location">Location</label>
+        <input type="text" id="location" required placeholder="Berlin, Germany" />
       </div>
       <div class="field-row">
-        <div class="field field-half">
+        <div class="field">
           <label for="jobBoardSource">Source</label>
           <input type="text" id="jobBoardSource" placeholder="LinkedIn" />
         </div>
-        <div class="field field-half">
-          <label>Priority</label>
-          <div class="stars" id="starsInput">
-            <span class="star" data-value="1">★</span>
-            <span class="star" data-value="2">★</span>
-            <span class="star" data-value="3">★</span>
-            <span class="star" data-value="4">★</span>
-            <span class="star" data-value="5">★</span>
+        <div class="field">
+          <span class="field-label" id="priorityLabel">Priority</span>
+          <div class="ticks" id="starsInput" role="radiogroup" aria-labelledby="priorityLabel">
+            <button type="button" class="tick star" data-value="1" aria-label="Priority 1"></button>
+            <button type="button" class="tick star" data-value="2" aria-label="Priority 2"></button>
+            <button type="button" class="tick star" data-value="3" aria-label="Priority 3"></button>
+            <button type="button" class="tick star" data-value="4" aria-label="Priority 4"></button>
+            <button type="button" class="tick star" data-value="5" aria-label="Priority 5"></button>
           </div>
           <input type="hidden" id="priorityStars" value="0" />
         </div>
@@ -59,21 +58,21 @@
       </div>
       <div class="field">
         <label for="notes">Notes</label>
-        <textarea id="notes" rows="2" placeholder="Optional notes..."></textarea>
+        <textarea id="notes" rows="2" placeholder="Optional"></textarea>
       </div>
 
-      <div id="errorMsg" class="error-msg hidden"></div>
+      <div id="errorMsg" class="verdict error-msg hidden" role="alert"></div>
 
-      <button type="submit" class="btn btn-primary btn-full" id="submitBtn">
-        Add to ApplyQuest
-      </button>
+      <button type="submit" class="btn btn-primary btn-full" id="submitBtn">Add to ApplyQuest</button>
     </form>
   </div>
 
   <div id="viewSuccess" class="view hidden">
-    <div class="success-icon">✓</div>
-    <p class="success-msg">Saved to ApplyQuest!</p>
-    <a id="viewLink" href="#" target="_blank" class="link">View in ApplyQuest →</a>
+    <div class="saved">
+      <span class="label">Shortlisted</span>
+      <span class="readout">Saved</span>
+      <a id="viewLink" href="#" target="_blank" class="act">Open ApplyQuest ›</a>
+    </div>
   </div>
 
   <script src="popup.js"></script>

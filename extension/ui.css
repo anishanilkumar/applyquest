@@ -1,0 +1,225 @@
+/* ApplyQuest Clipper's popup and settings page, in the Instrument language: a
+   machined instrument, not a glowing screen. Palette, faces and 2px rules come
+   from the instrument-design starter (v2), arm's-length scale, cut down to
+   what two small extension pages use.
+
+   Departures, on purpose:
+   - Font URLs are relative ("fonts/…"): extension pages have no site root.
+   - No Manjari or Monaspace: nothing here is Malayalam or code, and the
+     extension should stay small.
+   - The popup is a fixed 360px panel, not the 54rem column: Firefox sizes it
+     to its content.
+
+   Semantic aliases:
+     --priority  the 1-5 priority ticks: a human judgement, so warm (gold)
+     --problem   a refusal or a failed save, which needs a look (gold)
+   Red (--alert) is not used: nothing here is worse than "look at it". */
+
+@font-face {
+  font-family: "Archivo";
+  src: url("fonts/archivo-var.woff2") format("woff2-variations");
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Plex Mono";
+  src: url("fonts/plexmono-400.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Plex Mono";
+  src: url("fonts/plexmono-500.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
+:root {
+  --ground: #0a0e14;    /* never #000: pure black on an LCD reads as a dead panel */
+  --panel: #111823;
+  --panel-lit: #16202e;
+  --arc: #3dd6f5;
+  --arc-dim: #1d7f96;
+  --gold: #e8a33d;
+  --alert: #ff4d4d;
+  --engrave: #2a3543;
+  --ink: #e8f1f8;
+  --ink-dim: #7c8fa3;
+  --slate: #55647a;
+  --slate-dim: #3a4657;
+
+  --priority: var(--gold);
+  --problem: var(--gold);
+
+  --face-data: "Archivo", system-ui, sans-serif;
+  --face-mono: "Plex Mono", ui-monospace, "Roboto Mono", monospace;
+
+  --t-readout: 1.875rem;
+  --t-headline: 1.25rem;
+  --t-body: 1rem;
+  --t-label: 0.8125rem;
+  --t-min: 0.75rem;     /* the floor: nothing renders smaller */
+  --track-label: 0.16em;
+
+  --rule: 2px;          /* never thinner: hairlines smear or vanish */
+  --gap: 1rem;
+  --pad: 1.25rem;
+  --bracket: 1rem;
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 100%; }
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--face-data);
+  font-size: var(--t-body);
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2 { font-weight: 600; line-height: 1.05; letter-spacing: -0.02em; text-wrap: balance; }
+a { color: var(--arc); }
+button, input, select, textarea { font: inherit; color: inherit; }
+.hidden { display: none !important; }
+
+:focus-visible { outline: var(--rule) solid var(--arc); outline-offset: 2px; }
+
+/* ---- Type roles ---------------------------------------------------------- */
+
+.label {
+  font-family: var(--face-mono); font-size: var(--t-label); font-weight: 500;
+  letter-spacing: var(--track-label); text-transform: uppercase; color: var(--arc-dim);
+}
+.wordmark {
+  font-family: var(--face-mono); font-size: var(--t-label); font-weight: 500;
+  letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink);
+}
+.readout { font-size: var(--t-readout); font-weight: 500; line-height: 1.05; }
+.hint { font-size: 0.9375rem; color: var(--ink-dim); }
+
+/* ---- Top bar and status -------------------------------------------------- */
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  min-height: 52px; border-bottom: var(--rule) solid var(--engrave);
+}
+.pill {
+  display: inline-flex; align-items: center; gap: 0.5rem; min-height: 44px;
+  font-family: var(--face-mono); font-size: var(--t-min); letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-dim); white-space: nowrap;
+}
+/* Square, like everything else; colour is read before the words. */
+.dot { flex: none; width: 8px; height: 8px; background: var(--arc); }
+
+/* ---- The instrument panel ------------------------------------------------ */
+
+.instrument { position: relative; background: var(--panel); padding: var(--pad); }
+.instrument::before, .instrument::after {
+  content: ""; position: absolute; width: var(--bracket); height: var(--bracket);
+  border: var(--rule) solid var(--engrave); pointer-events: none;
+}
+.instrument::before { top: 0; left: 0; border-right: none; border-bottom: none; }
+.instrument::after { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+/* A callout: a thick left border in the state's colour. */
+.verdict { background: var(--panel); border-left: 6px solid var(--c, var(--arc)); padding: 0.75rem var(--gap); }
+.error-msg { --c: var(--problem); font-size: 0.9375rem; }
+
+/* ---- Controls ------------------------------------------------------------ */
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  min-height: 48px; padding: 0 1.25rem;
+  border: var(--rule) solid var(--engrave); border-radius: 2px;
+  background: transparent; color: var(--ink);
+  font-family: var(--face-mono); font-size: var(--t-label); font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none;
+  cursor: pointer;
+  transition: background 160ms var(--ease), color 160ms var(--ease);
+}
+.btn:hover { background: var(--engrave); }
+.btn:disabled { opacity: 0.35; cursor: default; }
+.btn-primary { background: var(--arc); border-color: var(--arc); color: var(--ground); }
+.btn-primary:hover { background: var(--ink); border-color: var(--ink); }
+.btn-primary:disabled:hover { background: var(--arc); border-color: var(--arc); }
+.btn-full { width: 100%; }
+
+/* A borderless mono action ("Settings", "Open ApplyQuest"). */
+.act {
+  display: inline-flex; align-items: center; gap: 0.375rem; min-height: 44px; padding: 0 0.25rem;
+  border: 0; background: transparent; cursor: pointer; text-decoration: none;
+  font-family: var(--face-mono); font-size: var(--t-min); letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-dim);
+  transition: color 160ms var(--ease);
+}
+.act:hover { color: var(--arc); }
+
+/* ---- Forms --------------------------------------------------------------- */
+
+.field { display: flex; flex-direction: column; gap: 0.375rem; min-width: 0; }
+.field > label, .field > .field-label {
+  font-family: var(--face-mono); font-size: var(--t-min); letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-dim);
+}
+.field input, .field select, .field textarea {
+  width: 100%; min-height: 44px; padding: 0.5rem 0.75rem;
+  background: var(--ground); border: var(--rule) solid var(--engrave); border-radius: 0;
+  font-size: 1rem;
+}
+.field textarea { min-height: 64px; resize: vertical; line-height: 1.4; }
+.field input::placeholder, .field textarea::placeholder { color: var(--slate); }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--arc-dim); outline: none; }
+.field select {
+  appearance: none; padding-right: 2rem; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--arc-dim) 50%), linear-gradient(-45deg, transparent 50%, var(--arc-dim) 50%); /* instrument-lint: ok — draws the chevron */
+  background-position: right 1.1rem center, right 0.75rem center;
+  background-size: 0.35rem 0.35rem; background-repeat: no-repeat;
+}
+.field-row { display: flex; gap: 0.75rem; align-items: flex-start; }
+.field-row > .field { flex: 1; }
+.form { display: flex; flex-direction: column; gap: 0.75rem; }
+
+/* Priority: five engraved squares, lit in gold up to the chosen one. Each is a
+   44px target with the square drawn inside it. */
+.ticks { display: flex; }
+.tick {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 44px; border: 0; background: transparent; cursor: pointer;
+}
+.tick::before {
+  content: ""; width: 1.125rem; height: 1.125rem;
+  border: var(--rule) solid var(--slate);
+  transition: background 160ms var(--ease), border-color 160ms var(--ease);
+}
+.tick.on::before { background: var(--priority); border-color: var(--priority); }
+.tick.hover::before { border-color: var(--priority); }
+
+/* ---- The popup ----------------------------------------------------------- */
+
+.popup { width: 360px; }
+.popup .topbar { padding: 0 0.5rem 0 var(--gap); }
+.popup .view { padding: var(--gap); }
+.popup .message { margin-bottom: 0.875rem; color: var(--ink-dim); }
+.saved { display: flex; flex-direction: column; gap: 0.5rem; }
+.saved .readout { color: var(--arc); }
+
+/* ---- Settings page ------------------------------------------------------- */
+
+.settings { max-width: 30rem; margin: 0 auto; padding: 1.5rem var(--gap) 4rem; display: flex; flex-direction: column; gap: 1.25rem; }
+.settings .topbar { padding-bottom: 0.25rem; }
+.settings h2 { margin-bottom: 0.25rem; font-family: var(--face-mono); font-size: var(--t-label); font-weight: 500; letter-spacing: var(--track-label); text-transform: uppercase; color: var(--arc-dim); }
+.connected { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

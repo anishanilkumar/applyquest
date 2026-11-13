@@ -1,4 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-  <rect width="48" height="48" rx="10" fill="#4f46e5"/>
-  <text x="24" y="34" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="white" text-anchor="middle">AQ</text>
+  <!-- Instrument style: the ground colour, square-cornered, and a line mark in
+       arc: a bookmark (a job kept for later) with an index tick. -->
+  <rect width="48" height="48" fill="#0a0e14"/>
+  <path d="M15 10h18v28l-9-6-9 6z" fill="none" stroke="#3dd6f5" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M20 18h8" stroke="#3dd6f5" stroke-width="3" stroke-linecap="round"/>
 </svg>

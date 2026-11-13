@@ -103,6 +103,8 @@ The Dashboard's Runway card works back from `User.search_deadline` (the Chancenk
 
 Plain HTML/CSS/JS, no build step. Manifest V3, Firefox-only (`browser.*` APIs).
 
+**Look:** the popup and settings page share `ui.css`, in the Instrument house style (the `instrument-design` skill), with self-hosted Archivo and IBM Plex Mono in `extension/fonts/`. Priority is five lit squares rather than stars; the stored field is still `priorityStars`.
+
 **Three JS contexts:**
 - `background.js` — service worker; the only code that calls the ApplyQuest API. Handles messages: `DO_LOGIN`, `SAVE_JOB`, `GET_SETTINGS`, `CLEAR_AUTH`. All `fetch()` calls go here to avoid page CSP issues.
 - `content/` — injected into job pages on load. Six files loaded in order: five site extractors (`linkedin.js`, `indeed.js`, `glassdoor.js`, `xing.js`, `stepstone.js`) each defining a global `extractX()` function, plus `extractor.js` which is the message listener that routes `EXTRACT_JOB` to the right function and responds with `{ success, data }`.

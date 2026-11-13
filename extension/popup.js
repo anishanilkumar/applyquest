@@ -19,15 +19,19 @@ function hideError() {
   $('errorMsg').classList.add('hidden');
 }
 
-// --- Star rating ---
+// --- Priority (stored as priorityStars, drawn as five lit squares) ---
 let selectedStars = 0;
 
 function renderStars(hoverValue) {
-  const current = hoverValue !== undefined ? hoverValue : selectedStars;
   document.querySelectorAll('.star').forEach(star => {
-    star.classList.toggle('active', parseInt(star.dataset.value, 10) <= current);
+    const v = parseInt(star.dataset.value, 10);
+    star.classList.toggle('on', v <= selectedStars);
+    star.classList.toggle('hover', hoverValue !== undefined && v <= hoverValue);
+    star.setAttribute('aria-checked', String(v === selectedStars));
+    star.setAttribute('role', 'radio');
   });
 }
+renderStars();
 
 document.querySelectorAll('.star').forEach(star => {
   star.addEventListener('click', () => {
