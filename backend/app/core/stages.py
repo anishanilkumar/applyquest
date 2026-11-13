@@ -62,3 +62,7 @@ def has_positive_response(app) -> bool:
 
 def has_reached_interview(app) -> bool:
     return bool(_held(app) & set(REACHED_INTERVIEW))
+
+
+def has_reached_offer(app) -> bool:
+    return S.OFFER in _held(app)

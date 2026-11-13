@@ -237,6 +237,11 @@ def update_application_status(
     if is_step_back:
         return application
 
+    from app.core import friday, nudges
+    news = nudges.good_news(new_status, application.company_name, application.position_title)
+    if news:
+        friday.tell(*news)
+
     interview_statuses = {
         ApplicationStatus.PHONE_SCREEN,
         ApplicationStatus.TECHNICAL_ROUND_1,

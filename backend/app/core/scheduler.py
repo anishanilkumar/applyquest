@@ -131,10 +131,45 @@ def job_weekly_summary():
         db.close()
 
 
+def _friday(pick):
+    """Build the summary and send what `pick` makes of it to Friday (core/friday.py)."""
+    from app.db.session import SessionLocal
+    from app.api.v1.endpoints.stats import load_summary
+    from app.core import friday
+
+    db = SessionLocal()
+    try:
+        user = _load_user(db)
+        if user is None:
+            return
+        said = pick(load_summary(db, user))
+        if said:
+            friday.tell(*said)
+    except Exception:
+        logger.exception("Error in a Friday nudge")
+    finally:
+        db.close()
+
+
+def job_friday_evening():
+    """8 PM Berlin: nothing sent on a working day — the streak, the shortlist, the week."""
+    from app.core import nudges
+    _friday(nudges.evening)
+
+
+def job_friday_weekly():
+    """Monday 8:30 Berlin: last week against the target, and the runway."""
+    from app.core import nudges
+    _friday(nudges.weekly)
+
+
 def start_scheduler():
     scheduler.add_job(job_daily_reminder, CronTrigger(hour=20, minute=0, timezone=BERLIN))
     scheduler.add_job(job_streak_check, CronTrigger(hour=0, minute=5, timezone=BERLIN))
     scheduler.add_job(job_weekly_summary, CronTrigger(day_of_week="sun", hour=19, minute=0, timezone=BERLIN))
+    # The nudges, as Friday notifications (the emails above only send with RESEND_API_KEY set).
+    scheduler.add_job(job_friday_evening, CronTrigger(hour=20, minute=0, timezone=BERLIN))
+    scheduler.add_job(job_friday_weekly, CronTrigger(day_of_week="mon", hour=8, minute=30, timezone=BERLIN))
     scheduler.start()
     logger.info("Scheduler started")
 
