@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import { Flame, Target, TrendingUp, Briefcase, Users, CheckCircle, Star, DollarSign, Zap, FileText, Bookmark } from 'lucide-react';
+import { Target, Briefcase, Users, Star, DollarSign, Zap, FileText, Bookmark } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import { JobApplication, NetworkContact } from '../../types';
@@ -7,14 +7,6 @@ import { userService } from '../../services/api';
 import RunwayCard from './RunwayCard';
 import NextInterviewsCard from './NextInterviewsCard';
 import { hasPositiveResponse, hasReachedInterview, isSubmitted } from '../../utils/stages';
-
-const motivationalMessages = [
-  "Every application is a step closer to your dream job! 🚀",
-  "Your persistence will pay off. Keep going! 💪",
-  "You're building momentum. Stay consistent! ⭐",
-  "Great progress today! Tomorrow will be even better! 🌟",
-  "The right opportunity is out there waiting for you! 🎯"
-];
 
 const toLocalDate = (iso: string) => {
   const d = new Date(iso);
@@ -154,10 +146,6 @@ const ApplyQuestDashboard: React.FC = () => {
     };
   }, [applications]);
 
-  const motivationalMessage = useMemo(() =>
-    motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]
-    , []);
-
   const allGoalsComplete = dailyGoals.every(g => g.current >= g.target);
 
   useEffect(() => {
@@ -168,7 +156,13 @@ const ApplyQuestDashboard: React.FC = () => {
   }, [allGoalsComplete, setUser]);
 
   if (loading || !user) {
-    return <div className="p-8 text-center text-gray-500">Loading dashboard...</div>;
+    return (
+      <div className="space-y-4" aria-busy="true" aria-label="Loading">
+        <div className="h-10 w-1/3 placeholder" />
+        <div className="h-40 placeholder" />
+        <div className="h-40 placeholder" />
+      </div>
+    );
   }
 
   // Level Calculations
@@ -177,189 +171,100 @@ const ApplyQuestDashboard: React.FC = () => {
   const nextLevelPoints = nextLevelIndex !== -1 ? levels[nextLevelIndex] : user.points * 1.5;
   const currentLevelBase = nextLevelIndex !== -1 && nextLevelIndex > 0 ? levels[nextLevelIndex - 1] : 0;
 
-  const getLevelProgress = () => {
-    const pointsInCurrentLevel = user.points - currentLevelBase;
-    const pointsNeededForLevel = nextLevelPoints - currentLevelBase;
-    return Math.min(Math.max((pointsInCurrentLevel / pointsNeededForLevel) * 100, 0), 100);
-  };
+
+  // Lit ticks rather than a sliding bar: progress reads as a count of marks.
+  const lit = (n: number, of: number) => Math.round(Math.min(Math.max(n / of, 0), 1) * 10);
+  const levelTicks = lit(user.points - currentLevelBase, nextLevelPoints - currentLevelBase);
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">ApplyQuest</h1>
-        <p className="text-gray-600">Welcome back, {user.name}! Let's make progress today. 🎯</p>
-      </div>
-
-      {/* Motivational Message */}
-      <div className="bg-gradient-to-r from-green-400 to-blue-500 rounded-xl p-6 mb-6 shadow-lg">
-        <p className="text-white text-xl font-medium text-center">{motivationalMessage}</p>
-      </div>
+    <div className="space-y-6">
+      <header className="flex items-end justify-between gap-4">
+        <div>
+          <span className="label">Dashboard</span>
+          <h1 className="major mt-1">{user.name}</h1>
+        </div>
+        <span className="stamp">{new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+      </header>
 
       <NextInterviewsCard />
 
       <RunwayCard />
 
-      {/* Gamification Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {/* Level & Points */}
-        <div className="bg-white rounded-xl p-6 shadow-md border-2 border-blue-100">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-gray-600 text-sm">Level {user.level}</p>
-              <h3 className="text-2xl font-bold text-blue-600">{user.levelName || 'Novice'}</h3>
-            </div>
-            <div className="bg-blue-100 rounded-full p-3">
-              <TrendingUp className="w-8 h-8 text-blue-600" />
-            </div>
-          </div>
-          <div className="mb-2">
-            <div className="flex justify-between text-sm mb-1">
-              <span className="text-gray-600">{user.points} points</span>
-              <span className="text-gray-600">{nextLevelPoints} points</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${getLevelProgress()}%` }}
-              ></div>
-            </div>
-          </div>
-          <p className="text-sm text-gray-600 mt-2">{nextLevelPoints - user.points} points to next level</p>
-        </div>
-
-        {/* Streak */}
-        <div className="bg-white rounded-xl p-6 shadow-md border-2 border-orange-100">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-gray-600 text-sm">Current Streak</p>
-              <h3 className="text-4xl font-bold text-orange-500">{user.currentStreak}</h3>
-            </div>
-            <div className="bg-orange-100 rounded-full p-3">
-              <Flame className="w-8 h-8 text-orange-500" />
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {[...Array(7)].map((_, i) => (
-              <div
-                key={i}
-                className={`w-2 h-8 rounded-full ${i < Math.min(user.currentStreak, 7) ? 'bg-orange-500' : 'bg-gray-200'
-                  }`}
-              ></div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Level and points: kept, shown as a plain readout. */}
+        <section className="instrument">
+          <span className="label">Level {user.level}</span>
+          <p className="readout mt-2">{user.levelName || 'Novice'}</p>
+          <div className="flex gap-1 mt-4" aria-label={`${levelTicks} of 10 toward the next level`}>
+            {Array.from({ length: 10 }, (_, i) => (
+              <i key={i} className={`h-3 flex-1 ${i < levelTicks ? 'bg-arc' : 'bg-engrave'}`} />
             ))}
           </div>
-          <p className="text-sm text-gray-600 mt-3">Best: {user.longestStreak} days 🏆</p>
-        </div>
+          <p className="stamp mt-2">{user.points} pts · {Math.max(Math.round(nextLevelPoints - user.points), 0)} to the next level</p>
+        </section>
 
-        {/* Quick Stats */}
-        <div className="bg-white rounded-xl p-6 shadow-md border-2 border-green-100">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-gray-600 text-sm">Applications Sent</p>
-              <h3 className="text-4xl font-bold text-green-600">{quickStats.totalApplications}</h3>
-            </div>
-            <div className="bg-green-100 rounded-full p-3">
-              <Briefcase className="w-8 h-8 text-green-600" />
-            </div>
+        {/* Streak: working days in a row with an application. */}
+        <section className="instrument">
+          <span className="label">Streak</span>
+          <p className="mt-2"><span className="hero text-gold">{user.currentStreak}</span> <span className="stamp">days</span></p>
+          <div className="flex gap-1 mt-4" aria-hidden="true">
+            {Array.from({ length: 7 }, (_, i) => (
+              <i key={i} className={`h-3 flex-1 ${i < Math.min(user.currentStreak, 7) ? 'bg-gold' : 'bg-engrave'}`} />
+            ))}
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600" title="A reply or any later stage; rejections and ghosting don't count">Positive Response</span>
-              <span className="font-semibold text-green-600">{quickStats.responseRate}%</span>
+          <p className="stamp mt-2">Best {user.longestStreak} days</p>
+        </section>
+
+        <section className="instrument">
+          <span className="label">Sent</span>
+          <p className="mt-2"><span className="hero text-arc">{quickStats.totalApplications}</span></p>
+          <dl className="mt-3 space-y-1 text-sm">
+            <div className="flex justify-between" title="A reply or any later stage; rejections and ghosting don't count">
+              <dt className="text-ink-dim">Positive response</dt><dd className="font-mono">{quickStats.responseRate}%</dd>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Interview Rate</span>
-              <span className="font-semibold text-green-600">{quickStats.interviewRate}%</span>
+            <div className="flex justify-between">
+              <dt className="text-ink-dim">Interview rate</dt><dd className="font-mono">{quickStats.interviewRate}%</dd>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Awaiting an outcome</span>
-              <span className="font-semibold text-green-600">{quickStats.activeApplications}</span>
+            <div className="flex justify-between">
+              <dt className="text-ink-dim">Awaiting an outcome</dt><dd className="font-mono">{quickStats.activeApplications}</dd>
             </div>
             {quickStats.drafts > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Drafts not yet sent</span>
-                <span className="font-semibold text-gray-700">{quickStats.drafts}</span>
+              <div className="flex justify-between">
+                <dt className="text-ink-dim">Drafts not yet sent</dt><dd className="font-mono text-ink-dim">{quickStats.drafts}</dd>
               </div>
             )}
-          </div>
-        </div>
+          </dl>
+        </section>
       </div>
 
-      {/* Today's Goals */}
-      <div className={`bg-white rounded-xl p-6 shadow-md mb-6 ${allGoalsComplete ? 'border-2 border-green-400' : ''}`}>
-        <div className="flex items-center gap-2 mb-4">
-          <Target className="w-6 h-6 text-purple-600" />
-          <h2 className="text-2xl font-bold text-gray-800">Today's Goals</h2>
+      <section className="instrument">
+        <div className="flex items-center justify-between mb-3">
+          <span className="label">Today</span>
+          {allGoalsComplete && <span className="stamp uppercase text-arc">All done</span>}
         </div>
-        {allGoalsComplete && (
-          <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 mb-4 text-center">
-            <span className="text-green-700 font-semibold">All goals complete! Great work today.</span>
-          </div>
-        )}
-        <div className="space-y-4">
-          {dailyGoals.map((goal) => {
-            const GoalIcon = goal.icon;
-            const progress = (goal.current / goal.target) * 100;
+        <ul>
+          {dailyGoals.map((goal, i) => {
             const isComplete = goal.current >= goal.target;
-
             return (
-              <div key={goal.id} className="border-2 border-gray-100 rounded-lg p-4 hover:border-purple-200 transition-colors">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <div className={`rounded-full p-2 ${isComplete ? 'bg-green-100' : 'bg-gray-100'}`}>
-                      {isComplete ? (
-                        <CheckCircle className="w-5 h-5 text-green-600" />
-                      ) : (
-                        <GoalIcon className="w-5 h-5 text-gray-600" />
-                      )}
-                    </div>
-                    <span className="font-medium text-gray-800">{goal.label}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-sm font-semibold ${isComplete ? 'text-green-600' : 'text-gray-600'}`}>
-                      {goal.current}/{goal.target}{isComplete ? ' ✓' : ''}
-                    </span>
-                  </div>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className={`h-2 rounded-full transition-all duration-500 ${isComplete ? 'bg-green-500' : 'bg-purple-500'}`}
-                    style={{ width: `${Math.min(progress, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
+              <li key={goal.id} className={`flex items-center gap-3 min-h-[56px] py-2 ${i ? 'border-t-2 border-engrave' : ''}`}>
+                <span className="tick" data-on={isComplete} aria-hidden="true" />
+                <span className={`flex-1 ${isComplete ? 'text-ink-dim' : ''}`}>{goal.label}</span>
+                <span className="font-mono text-label">{Math.min(goal.current, goal.target)} / {goal.target}</span>
+              </li>
             );
           })}
-        </div>
-      </div>
+        </ul>
+      </section>
 
-      {/* Action Buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <button
-          onClick={() => navigate('/applications')}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-left"
-        >
-          <Briefcase className="w-8 h-8 mb-2" />
-          <h3 className="text-xl font-bold mb-1">Add Application</h3>
-          <p className="text-blue-100 text-sm">Track a new job application</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <button onClick={() => navigate('/applications')} className="btn btn-primary">
+          <Briefcase className="w-5 h-5" strokeWidth={1.6} /> Add application
         </button>
-
-        <button
-          onClick={() => navigate('/applications')}
-          className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-        >
-          <Target className="w-8 h-8 mb-2" />
-          <h3 className="text-xl font-bold mb-1">View Board</h3>
-          <p className="text-purple-100 text-sm">Kanban view of applications</p>
+        <button onClick={() => navigate('/applications')} className="btn">
+          <Target className="w-5 h-5" strokeWidth={1.6} /> Board
         </button>
-
-        <button
-          onClick={() => navigate('/network')}
-          className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-        >
-          <Users className="w-8 h-8 mb-2" />
-          <h3 className="text-xl font-bold mb-1">Network</h3>
-          <p className="text-green-100 text-sm">Manage your contacts</p>
+        <button onClick={() => navigate('/network')} className="btn">
+          <Users className="w-5 h-5" strokeWidth={1.6} /> Network
         </button>
       </div>
     </div>

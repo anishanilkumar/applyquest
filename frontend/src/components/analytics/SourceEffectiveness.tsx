@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Compass } from 'lucide-react';
+
 import { JobApplication } from '../../types';
 import { hasPositiveResponse } from '../../utils/stages';
 
@@ -34,37 +34,34 @@ const SourceEffectiveness: React.FC<SourceEffectivenessProps> = ({ applications 
   const maxTotal = Math.max(1, ...rows.map(r => r.total));
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-md">
+    <div className="instrument">
       <div className="flex items-center gap-3 mb-6">
-        <div className="bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full p-3">
-          <Compass className="w-6 h-6 text-white" />
-        </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-800">Source Effectiveness</h2>
-          <p className="text-xs text-gray-500">Which channels actually get responses</p>
+          <h2 className="label">Source Effectiveness</h2>
+          <p className="text-xs text-ink-dim">Which channels actually get responses</p>
         </div>
       </div>
 
       {rows.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">No applications yet</div>
+        <div className="text-center py-8 text-ink-dim">No applications yet</div>
       ) : (
         <div className="space-y-3">
           {rows.map(r => (
-            <div key={r.source} className="p-3 bg-gray-50 rounded-lg">
+            <div key={r.source} className="p-3 bg-panel-lit rounded-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-medium text-gray-800">{r.source}</span>
-                <span className="text-sm text-gray-500">{r.total} apps</span>
+                <span className="font-medium text-ink">{r.source}</span>
+                <span className="text-sm text-ink-dim">{r.total} apps</span>
               </div>
               {/* Volume bar */}
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
+              <div className="h-2 bg-engrave rounded-full overflow-hidden mb-2">
                 <div
-                  className="h-full bg-indigo-400 rounded-full"
+                  className="h-full bg-arc rounded-full"
                   style={{ width: `${(r.total / maxTotal) * 100}%` }}
                 />
               </div>
               <div className="flex items-center gap-4 text-xs">
-                <span className="text-green-600 font-medium">{r.positiveRate}% responded</span>
-                <span className="text-gray-500">{r.ghostRate}% ghosted</span>
+                <span className="text-arc font-medium">{r.positiveRate}% responded</span>
+                <span className="text-ink-dim">{r.ghostRate}% ghosted</span>
               </div>
             </div>
           ))}

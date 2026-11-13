@@ -49,7 +49,7 @@ const Network: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500">Loading network...</div>;
+    return <div className="p-8 text-center text-ink-dim">Loading network...</div>;
   }
 
   return (

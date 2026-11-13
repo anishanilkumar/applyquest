@@ -69,6 +69,7 @@ Models: `User`, `Application` + `ApplicationHistory`, `NetworkContact`, `PointHi
 - Global state (user, applications, contacts, auth status) lives in `context/AppContext.tsx`. All pages consume this context rather than fetching data independently.
 - Two auth modes: regular user (JWT token in `localStorage`) and mentor view (password-based, read-only via the share endpoint).
 - The dev server proxies `/api` to `http://localhost:8000` (set in `package.json`).
+- **Look:** the Instrument house style (the `instrument-design` skill), adopted November 2026. The palette is a Tailwind theme named by job (`bg-panel`, `text-ink`, `text-arc`, `text-gold`…) over CSS variables in `index.css`, which also holds the component classes (`instrument`, `label`, `stamp`, `btn`, `input`, `verdict`, `dot`, `tag`) and its departures. `rounded-*` is capped at 2px and `shadow-*` is none for every class, in `tailwind.config.js`. Application stages have one colour each, from `utils/statusStyle.ts` (`stageVar`, `stageHex`); `components/common/Marks.tsx` draws a status (`StatusMark`), a 1-5 rating as lit squares (`Priority`) and a `Tag`. Charts and the map take literal colours from `PALETTE` there. `lint.sh` from the skill should pass on `frontend/src`.
 
 ### MCP server (`backend/mcp_server.py`)
 

@@ -3,6 +3,7 @@ import { Download } from 'lucide-react';
 import { ResponsiveContainer, Sankey, Tooltip, Layer, Rectangle } from 'recharts';
 import { JobApplication, ApplicationHistory } from '../../types';
 import { effectiveHistory } from '../../utils/stages';
+import { PALETTE as P, stageHex } from '../../utils/statusStyle';
 
 interface ApplicationProcessSankeyProps {
     applications: JobApplication[];
@@ -12,7 +13,7 @@ interface ApplicationProcessSankeyProps {
 const CustomLink = (props: any) => {
     const { sourceX, targetX, sourceY, targetY, sourceControlX, targetControlX, linkWidth, index, payload } = props;
 
-    const color = payload?.fill || '#94A3B8';
+    const color = payload?.fill || P.slate;
 
     return (
         <Layer key={`CustomLink${index}`}>
@@ -29,7 +30,7 @@ const CustomLink = (props: any) => {
                     Z
                 `}
                 fill={color}
-                fillOpacity={0.5}
+                fillOpacity={0.55}
                 stroke={color}
                 strokeWidth={0}
                 strokeOpacity={0.3}
@@ -53,40 +54,40 @@ const CustomNode = (props: any) => {
                 y={y}
                 width={width}
                 height={height}
-                fill="#64748B"
+                fill={P.slateDim}
                 fillOpacity="1"
-                stroke="#475569"
-                strokeWidth={1}
             />
             <text
                 textAnchor={textAnchor}
                 x={textX}
                 y={y + height / 2}
                 fontSize="12"
-                fontWeight="600"
-                fill="#1F2937"
+                fontFamily={FONT}
+                fill={P.ink}
                 dominantBaseline="middle"
-                stroke="#FFFFFF"
+                stroke={P.ground}
                 strokeWidth={3}
                 strokeLinejoin="round"
                 paintOrder="stroke"
             >
+                {/* A flat ground-coloured outline (no blur) keeps the label legible
+                    where it crosses a link. */}
                 {payload.name}
-                <tspan fontWeight="400" fill="#4B5563">{` · ${payload.count}`}</tspan>
+                <tspan fill={P.inkDim}>{` · ${payload.count}`}</tspan>
             </text>
         </Layer>
     );
 };
 
+// Links take the colour of the stage they lead into (utils/statusStyle.ts).
 const LEGEND = [
-    { color: '#3B82F6', label: 'Early Stage' },
-    { color: '#8B5CF6', label: 'Interview' },
-    { color: '#F59E0B', label: 'Advanced' },
-    { color: '#22C55E', label: 'Success' },
-    { color: '#EF4444', label: 'Rejected' },
+    { color: stageHex('Applied', true), label: 'Sent' },
+    { color: stageHex('Replied', true), label: 'In conversation' },
+    { color: stageHex('Offer', true), label: 'Offer' },
+    { color: stageHex('Rejected', true), label: 'Ended' },
 ];
 
-const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+const FONT = '"Plex Mono", ui-monospace, monospace';
 
 // Renders the chart's SVG onto a canvas with a title and legend, then saves it
 // as a PNG. The SVG is serialized standalone, so the font is set explicitly.
@@ -111,20 +112,20 @@ const downloadChart = (container: HTMLElement | null) => {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
         ctx.scale(scale, scale);
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = P.ground;
         ctx.fillRect(0, 0, width, height + header);
 
-        ctx.fillStyle = '#1F2937';
-        ctx.font = `bold 20px ${FONT}`;
+        ctx.fillStyle = P.ink;
+        ctx.font = `500 16px ${FONT}`;
         ctx.textBaseline = 'top';
-        ctx.fillText('Application Flow', 24, 20);
+        ctx.fillText('APPLICATION FLOW', 24, 20);
 
         ctx.font = `12px ${FONT}`;
         let x = 24;
         LEGEND.forEach(({ color, label }) => {
             ctx.fillStyle = color;
             ctx.fillRect(x, 50, 10, 10);
-            ctx.fillStyle = '#4B5563';
+            ctx.fillStyle = P.inkDim;
             ctx.fillText(label, x + 14, 49);
             x += 14 + ctx.measureText(label).width + 16;
         });
@@ -214,26 +215,9 @@ const ApplicationProcessSankey: React.FC<ApplicationProcessSankeyProps> = ({ app
         nodes.sort((a, b) => (statusOrder[a.name] ?? 99) - (statusOrder[b.name] ?? 99));
 
         // Color mapping for different transition types
-        const getLinkColor = (source: string, target: string): string => {
-            // Terminal states - red/gray
-            if (target === 'Rejected') return '#EF4444'; // Red
-            if (target === 'Ghosted') return '#9CA3AF'; // Gray
-
-            // Success path - green
-            if (target === 'Offer') return '#22C55E'; // Green
-            if (target === 'Final Round') return '#F59E0B'; // Amber/Orange
-
-            // Interview stages - purple/pink
-            if (target === 'Technical Round 2') return '#EC4899'; // Pink
-            if (target === 'Technical Round 1') return '#A855F7'; // Purple
-            if (target === 'Phone Screen') return '#8B5CF6'; // Violet
-
-            // Early stages - blue
-            if (target === 'Replied') return '#3B82F6'; // Blue
-            if (source === 'Applied') return '#60A5FA'; // Light Blue
-
-            return '#94A3B8'; // Default slate
-        };
+        // A link is coloured by the stage it leads into: sent arc, a person
+        // involved gold, Offer green, Rejected and Ghosted slate.
+        const getLinkColor = (_source: string, target: string): string => stageHex(target, true);
 
         const links = Array.from(linksMap.entries()).map(([key, value]) => {
             const [sourceName, targetName] = key.split('|');
@@ -255,9 +239,9 @@ const ApplicationProcessSankey: React.FC<ApplicationProcessSankeyProps> = ({ app
 
     if (data.nodes.length === 0 || data.links.length === 0) {
         return (
-            <div className="bg-white p-6 rounded-xl shadow-md">
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Application Flow</h3>
-                <div className="h-64 flex items-center justify-center text-gray-400">
+            <div className="instrument">
+                <h3 className="label">Application Flow</h3>
+                <div className="h-64 flex items-center justify-center text-slate">
                     Not enough transition data to display Sankey chart
                 </div>
             </div>
@@ -265,30 +249,30 @@ const ApplicationProcessSankey: React.FC<ApplicationProcessSankeyProps> = ({ app
     }
 
     return (
-        <div className="bg-white p-6 rounded-xl shadow-md">
+        <div className="instrument">
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h3 className="text-xl font-bold text-gray-800">Application Flow</h3>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <h3 className="label">Application Flow</h3>
+                    <p className="text-sm text-ink-dim mt-1">
                         Visualizing how applications progress through different stages
                     </p>
                 </div>
                 <div className="flex items-center gap-4">
-                    <div className="flex flex-wrap gap-3 text-xs">
+                    <div className="flex flex-wrap gap-3 stamp uppercase">
                         {LEGEND.map(({ color, label }) => (
                             <div key={label} className="flex items-center gap-1">
-                                <div className="w-3 h-3 rounded" style={{ backgroundColor: color }}></div>
-                                <span className="text-gray-600">{label}</span>
+                                <div className="w-2.5 h-2.5" style={{ backgroundColor: color }}></div>
+                                <span className="text-ink-dim">{label}</span>
                             </div>
                         ))}
                     </div>
                     <button
                         type="button"
                         onClick={() => downloadChart(chartRef.current)}
-                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                        className="btn"
                         title="Download as PNG"
                     >
-                        <Download className="w-4 h-4" />
+                        <Download className="w-4 h-4" strokeWidth={1.6} />
                         Download
                     </button>
                 </div>
@@ -316,13 +300,13 @@ const ApplicationProcessSankey: React.FC<ApplicationProcessSankeyProps> = ({ app
                                         const sourceName = data.payload.source.name || data.payload.sourceName;
                                         const targetName = data.payload.target.name || data.payload.targetName;
                                         const value = data.value;
-                                        const color = data.payload.fill || '#3B82F6';
+                                        const color = data.payload.fill || P.arc;
 
                                         return (
-                                            <div className="bg-white p-3 rounded-lg shadow-lg border-l-4" style={{ borderColor: color }}>
-                                                <p className="font-semibold text-gray-800">{sourceName} → {targetName}</p>
-                                                <p className="text-gray-600">
-                                                    <span className="font-bold text-gray-900">{value}</span> application{value !== 1 ? 's' : ''}
+                                            <div className="bg-ground p-3 border-2 border-engrave" style={{ borderLeft: `6px solid ${color}` }}>
+                                                <p className="font-semibold text-ink">{sourceName} → {targetName}</p>
+                                                <p className="text-ink-dim">
+                                                    <span className="font-bold text-ink">{value}</span> application{value !== 1 ? 's' : ''}
                                                 </p>
                                             </div>
                                         );
@@ -334,11 +318,11 @@ const ApplicationProcessSankey: React.FC<ApplicationProcessSankeyProps> = ({ app
                                         const value = data.value; // Total value passing through node
 
                                         return (
-                                            <div className="bg-white p-3 rounded-lg shadow-lg border-l-4 border-gray-500">
-                                                <p className="font-semibold text-gray-800">{name}</p>
+                                            <div className="bg-ground p-3 border-2 border-engrave">
+                                                <p className="font-semibold text-ink">{name}</p>
                                                 {value !== undefined && (
-                                                    <p className="text-gray-600">
-                                                        <span className="font-bold text-gray-900">{value}</span> application{value !== 1 ? 's' : ''}
+                                                    <p className="text-ink-dim">
+                                                        <span className="font-bold text-ink">{value}</span> application{value !== 1 ? 's' : ''}
                                                     </p>
                                                 )}
                                             </div>

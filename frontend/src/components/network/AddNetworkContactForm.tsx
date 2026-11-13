@@ -112,33 +112,32 @@ const AddNetworkContactForm: React.FC<AddNetworkContactFormProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
+    <div className="fixed inset-0 bg-ground/[0.82] flex items-center justify-center z-50 p-4">
+      <div className="bg-panel border-2 border-engrave w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 z-10 bg-panel px-6 min-h-[64px] flex items-center justify-between border-b-2 border-engrave">
           <div className="flex items-center gap-3">
-            <User className="w-6 h-6" />
-            <h2 className="text-2xl font-bold">
+            <h2 className="label">
               {contact ? 'Edit Network Contact' : 'Add Network Contact'}
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors"
+            className="btn-icon btn btn-quiet border-transparent transition-colors"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" strokeWidth={1.6} />
           </button>
         </div>
 
         <div className="p-6 space-y-6">
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              <User className="w-5 h-5 text-green-500" />
+            <h3 className="label flex items-center gap-2 border-b-2 border-engrave pb-2">
+              <User className="w-4 h-4" strokeWidth={1.6} />
               Basic Information
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="field-label">
                   Full Name *
                 </label>
                 <input
@@ -148,55 +147,55 @@ const AddNetworkContactForm: React.FC<AddNetworkContactFormProps> = ({
                   onChange={handleChange}
                   required
                   placeholder="e.g., John Smith"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="input w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="field-label">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-2.5 w-5 h-5 text-slate" />
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="john@example.com"
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="input w-full pl-10 pr-4"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="field-label">
                   Company
                 </label>
                 <div className="relative">
-                  <Building className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+                  <Building className="absolute left-3 top-2.5 w-5 h-5 text-slate" />
                   <input
                     type="text"
                     name="company"
                     value={formData.company}
                     onChange={handleChange}
                     placeholder="e.g., SAP, Siemens"
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="input w-full pl-10 pr-4"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="field-label">
                   Relationship
                 </label>
                 <div className="relative">
-                  <Users className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+                  <Users className="absolute left-3 top-2.5 w-5 h-5 text-slate" />
                   <select
                     name="relationship"
                     value={formData.relationship}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none"
+                    className="input w-full pl-10 pr-4"
                   >
                     <option value="">Select relationship...</option>
                     {relationships.map(rel => (
@@ -209,8 +208,8 @@ const AddNetworkContactForm: React.FC<AddNetworkContactFormProps> = ({
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              <Star className="w-5 h-5 text-green-500" />
+            <h3 className="label flex items-center gap-2 border-b-2 border-engrave pb-2">
+              <Star className="w-4 h-4" strokeWidth={1.6} />
               Connection Strength
             </h3>
 
@@ -221,24 +220,19 @@ const AddNetworkContactForm: React.FC<AddNetworkContactFormProps> = ({
                     key={star}
                     type="button"
                     onClick={() => handleStarClick(star)}
-                    className="transition-transform hover:scale-110"
-                  >
-                    <Star
-                      className={`w-8 h-8 ${
-                        star <= formData.connectionStrength
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300'
-                      }`}
-                    />
+                    className="w-11 h-11 inline-flex items-center justify-center" aria-label={`${star} of 5`}
+                    >
+                      {/* Lit squares, not stars: the house mark for a 1-5 judgement. */}
+                      <i className={`block w-5 h-5 ${star <= formData.connectionStrength ? 'bg-gold' : 'border-2 border-slate'}`} />
                   </button>
                 ))}
               </div>
-              <span className="text-sm text-gray-600">
-                ({formData.connectionStrength} {formData.connectionStrength === 1 ? 'star' : 'stars'})
+              <span className="text-sm text-ink-dim">
+                {formData.connectionStrength} of 5
               </span>
             </div>
 
-            <div className="text-sm text-gray-600 bg-yellow-50 p-3 rounded-lg">
+            <div className="text-sm text-ink-dim bg-panel-lit p-3 rounded-lg">
               <strong>Rating Guide:</strong><br />
               1 star = Very Weak (just met, no real connection)<br />
               2 stars = Weak (basic acquaintance)<br />
@@ -249,13 +243,13 @@ const AddNetworkContactForm: React.FC<AddNetworkContactFormProps> = ({
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-green-500" />
+            <h3 className="label flex items-center gap-2 border-b-2 border-engrave pb-2">
+              <Calendar className="w-4 h-4" strokeWidth={1.6} />
               Last Contact
             </h3>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="field-label">
                 When did you last contact this person?
               </label>
               <input
@@ -263,27 +257,27 @@ const AddNetworkContactForm: React.FC<AddNetworkContactFormProps> = ({
                 name="lastContactDate"
                 value={formData.lastContactDate}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="input w-full"
               />
             </div>
           </div>
 
           {applications.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <Link2 className="w-5 h-5 text-green-500" />
+              <h3 className="label flex items-center gap-2 border-b-2 border-engrave pb-2">
+                <Link2 className="w-4 h-4" strokeWidth={1.6} />
                 Link to Application (Optional)
               </h3>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="field-label">
                   Connect this contact to a job application
                 </label>
                 <select
                   name="applicationId"
                   value={formData.applicationId}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="input w-full"
                 >
                   <option value="">No application linked</option>
                   {applications.map(app => (
@@ -297,7 +291,7 @@ const AddNetworkContactForm: React.FC<AddNetworkContactFormProps> = ({
           )}
 
           <div className="space-y-4">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="field-label">
               Notes (Optional)
             </label>
             <textarea
@@ -306,7 +300,7 @@ const AddNetworkContactForm: React.FC<AddNetworkContactFormProps> = ({
               onChange={handleChange}
               rows={4}
               placeholder="Add any additional notes about this contact, shared interests, or conversation topics..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+              className="input w-full"
             />
           </div>
 
@@ -314,14 +308,14 @@ const AddNetworkContactForm: React.FC<AddNetworkContactFormProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              className="btn flex-1"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSubmit}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
+              className="btn btn-primary flex-1"
             >
               {contact ? 'Update Contact' : 'Add Contact (+5 points)'}
             </button>

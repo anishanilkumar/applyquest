@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Hourglass, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { userService } from '../../services/api';
 import { computeRunway, paceFor, Stage } from '../../utils/runway';
@@ -10,13 +10,13 @@ const pct = (x: number) => `${Math.round(x * 100)}%`;
 const perWeek = (x: number) => (Number.isFinite(x) ? `${Math.ceil(x)}/week` : '—');
 
 const StageTile: React.FC<{ stage: Stage; unit: string }> = ({ stage, unit }) => (
-  <div className="flex-1 min-w-[7rem] rounded-lg bg-gray-50 px-3 py-2">
-    <div className="text-xs text-gray-500">{stage.label} rate</div>
-    <div className="text-lg font-bold text-gray-800">{pct(stage.rate)}</div>
-    <div className="text-xs text-gray-500">
+  <div className="flex-1 min-w-[7rem] rounded-lg bg-panel-lit px-3 py-2">
+    <div className="text-xs text-ink-dim">{stage.label} rate</div>
+    <div className="text-lg font-bold text-ink">{pct(stage.rate)}</div>
+    <div className="text-xs text-ink-dim">
       {stage.successes} of {stage.trials} {unit}
       {(stage.assumed || stage.successes === 0) && (
-        <span className="block text-amber-700" title="Until real outcomes accumulate, this stage leans on an assumed rate">
+        <span className="block text-gold" title="Until real outcomes accumulate, this stage leans on an assumed rate">
           assumes {stage.priorNote}
         </span>
       )}
@@ -61,30 +61,30 @@ const RunwayCard: React.FC = () => {
   };
 
   const settingsForm = (
-    <form onSubmit={save} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end bg-gray-50 rounded-lg p-4 mb-4">
-      <label className="text-xs text-gray-600">
+    <form onSubmit={save} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end bg-panel-lit rounded-lg p-4 mb-4">
+      <label className="text-xs text-ink-dim">
         Search must end by
         <input type="date" required value={form.searchDeadline}
           onChange={e => setForm({ ...form, searchDeadline: e.target.value })}
-          className="mt-1 w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-gray-800" />
+          className="input mt-1 w-full" />
       </label>
-      <label className="text-xs text-gray-600">
+      <label className="text-xs text-ink-dim">
         Hiring takes (weeks)
         <input type="number" min={1} max={52} required value={form.hiringWeeks}
           onChange={e => setForm({ ...form, hiringWeeks: Number(e.target.value) })}
-          className="mt-1 w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-gray-800" />
+          className="input mt-1 w-full" />
       </label>
-      <label className="text-xs text-gray-600">
+      <label className="text-xs text-ink-dim">
         Paperwork after an offer (weeks)
         <input type="number" min={0} max={52} required value={form.paperworkWeeks}
           onChange={e => setForm({ ...form, paperworkWeeks: Number(e.target.value) })}
-          className="mt-1 w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-gray-800" />
+          className="input mt-1 w-full" />
       </label>
       <div className="flex gap-2">
-        <button type="submit" disabled={saving} className="flex-1 bg-gray-800 text-white text-sm rounded-lg px-3 py-1.5 hover:bg-gray-700 disabled:opacity-50">
+        <button type="submit" disabled={saving} className="btn btn-primary flex-1">
           {saving ? 'Saving…' : 'Save'}
         </button>
-        <button type="button" onClick={() => setEditing(false)} className="flex-1 border border-gray-300 text-sm rounded-lg px-3 py-1.5 text-gray-700 hover:bg-gray-100">
+        <button type="button" onClick={() => setEditing(false)} className="btn flex-1">
           Cancel
         </button>
       </div>
@@ -94,12 +94,9 @@ const RunwayCard: React.FC = () => {
   const header = (
     <div className="flex items-start justify-between gap-4 mb-4">
       <div className="flex items-center gap-3">
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full p-3">
-          <Hourglass className="w-6 h-6 text-white" />
-        </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-800">Runway</h2>
-          <p className="text-xs text-gray-500">
+          <h2 className="label">Runway</h2>
+          <p className="text-xs text-ink-dim">
             {user.searchDeadline
               ? `Search ends ${fmtDate(new Date(`${user.searchDeadline}T00:00:00`))}`
               : 'How likely an offer is before your deadline, from your real conversion rates'}
@@ -108,7 +105,7 @@ const RunwayCard: React.FC = () => {
       </div>
       {!isMentorView && !editing && (
         <button type="button" onClick={openSettings} title="Runway settings"
-          className="text-gray-500 hover:text-gray-800 p-1.5 rounded-lg hover:bg-gray-100">
+          className="btn btn-quiet btn-icon border-transparent">
           <Settings className="w-5 h-5" />
         </button>
       )}
@@ -117,10 +114,10 @@ const RunwayCard: React.FC = () => {
 
   if (!runway) {
     return (
-      <div className="bg-white rounded-xl p-6 shadow-md mb-6">
+      <div className="instrument mb-6">
         {header}
         {editing ? settingsForm : (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-ink-dim">
             Set the date your search must end by — a visa window, savings, a notice period — to see your odds of an offer in time and the pace it takes.
           </p>
         )}
@@ -133,26 +130,26 @@ const RunwayCard: React.FC = () => {
   const closed = base.weeksLeft === 0;
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-md mb-6">
+    <div className="instrument mb-6">
       {header}
       {editing && settingsForm}
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,20rem)_1fr] gap-6">
         {/* Headline: the odds at the current pace */}
         <div>
-          <div className="text-5xl font-bold text-gray-900 tabular-nums">{pct(r.chance)}</div>
-          <div className="text-sm text-gray-700 mt-1">
+          <div className="text-5xl font-bold text-ink tabular-nums">{pct(r.chance)}</div>
+          <div className="text-sm text-ink mt-1">
             chance of an offer by <span className="font-semibold">{fmtDate(r.offerBy)}</span>
           </div>
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden mt-3" role="img" aria-label={`${pct(r.chance)} chance`}>
-            <div className="h-full bg-indigo-500 rounded-full" style={{ width: pct(r.chance) }} />
+          <div className="h-2 bg-panel-lit rounded-full overflow-hidden mt-3" role="img" aria-label={`${pct(r.chance)} chance`}>
+            <div className="h-full bg-arc rounded-full" style={{ width: pct(r.chance) }} />
           </div>
-          <p className="text-xs text-gray-500 mt-3 leading-relaxed">
+          <p className="text-xs text-ink-dim mt-3 leading-relaxed">
             {closed
               ? `The last useful application date (${fmtDate(r.lastApplyBy)}) has passed — this is what is already in flight.`
-              : <>At your pace of <span className="font-semibold text-gray-700">{r.pacePerWeek.toFixed(1)}/week</span> (last 4 weeks), about{' '}
-                  <span className="font-semibold text-gray-700">{Math.round(r.projectedApplications)}</span> more applications before{' '}
-                  <span className="font-semibold text-gray-700">{fmtDate(r.lastApplyBy)}</span>, the last date one can still turn into an offer in time.</>}
+              : <>At your pace of <span className="font-semibold text-ink">{r.pacePerWeek.toFixed(1)}/week</span> (last 4 weeks), about{' '}
+                  <span className="font-semibold text-ink">{Math.round(r.projectedApplications)}</span> more applications before{' '}
+                  <span className="font-semibold text-ink">{fmtDate(r.lastApplyBy)}</span>, the last date one can still turn into an offer in time.</>}
             {r.inFlight > 0 && ` ${r.inFlight} live application${r.inFlight === 1 ? '' : 's'} add ${pct(r.inFlightChance)} on their own.`}
           </p>
         </div>
@@ -160,8 +157,8 @@ const RunwayCard: React.FC = () => {
         <div className="space-y-4">
           {/* The funnel the odds come from */}
           <div>
-            <div className="text-xs font-medium text-gray-500 mb-2">
-              Your funnel — about <span className="text-gray-800 font-semibold">{Math.round(r.applicationsPerOffer)}</span> applications per offer
+            <div className="text-xs font-medium text-ink-dim mb-2">
+              Your funnel — about <span className="text-ink font-semibold">{Math.round(r.applicationsPerOffer)}</span> applications per offer
             </div>
             <div className="flex flex-wrap gap-2">
               <StageTile stage={r.stages[0]} unit="sent" />
@@ -173,16 +170,16 @@ const RunwayCard: React.FC = () => {
           {/* What it takes */}
           {!closed && (
             <div>
-              <div className="text-xs font-medium text-gray-500 mb-2">Pace needed until {fmtDate(r.lastApplyBy)}</div>
+              <div className="text-xs font-medium text-ink-dim mb-2">Pace needed until {fmtDate(r.lastApplyBy)}</div>
               <div className="flex flex-wrap gap-2">
                 {TARGETS.map(t => {
                   const need = paceFor(t, r.offerPerApplication, r.weeksLeft, r.inFlightChance);
                   const onPace = need <= r.pacePerWeek;
                   return (
-                    <div key={t} className={`flex-1 min-w-[6rem] rounded-lg px-3 py-2 border ${onPace ? 'border-emerald-200 bg-emerald-50' : 'border-gray-200'}`}>
-                      <div className="text-xs text-gray-500">{pct(t)} chance</div>
-                      <div className="text-lg font-bold text-gray-800">{perWeek(need)}</div>
-                      <div className="text-xs text-gray-500">{onPace ? 'on pace' : Number.isFinite(need) ? `+${Math.ceil(need - r.pacePerWeek)} vs now` : 'out of reach'}</div>
+                    <div key={t} className={`flex-1 min-w-[6rem] rounded-lg px-3 py-2 border ${onPace ? 'border-engrave bg-panel-lit' : 'border-engrave'}`}>
+                      <div className="text-xs text-ink-dim">{pct(t)} chance</div>
+                      <div className="text-lg font-bold text-ink">{perWeek(need)}</div>
+                      <div className="text-xs text-ink-dim">{onPace ? 'on pace' : Number.isFinite(need) ? `+${Math.ceil(need - r.pacePerWeek)} vs now` : 'out of reach'}</div>
                     </div>
                   );
                 })}
@@ -192,15 +189,15 @@ const RunwayCard: React.FC = () => {
 
           {/* The lever that moves everything */}
           <div>
-            <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <div className="flex justify-between text-xs text-ink-dim mb-1">
               <label htmlFor="reply-boost" className="font-medium">What if your reply rate were…</label>
-              <span className="font-semibold text-gray-800">
+              <span className="font-semibold text-ink">
                 {pct(boosted.stages[0].rate)}{replyBoost > 1 && ` (${replyBoost.toFixed(1)}×)`}
               </span>
             </div>
             <input id="reply-boost" type="range" min={1} max={4} step={0.25} value={replyBoost}
-              onChange={e => setReplyBoost(Number(e.target.value))} className="w-full accent-indigo-500" />
-            <p className="text-xs text-gray-500">
+              onChange={e => setReplyBoost(Number(e.target.value))} className="w-full accent-arc" />
+            <p className="text-xs text-ink-dim">
               {replyBoost === 1
                 ? 'Drag to see what better-targeted applications, referrals or a sharper CV would do.'
                 : `${pct(boosted.chance)} at today's pace, versus ${pct(base.chance)} now.`}
@@ -209,7 +206,7 @@ const RunwayCard: React.FC = () => {
         </div>
       </div>
 
-      <p className="text-[11px] text-gray-400 mt-4 leading-relaxed">
+      <p className="text-min text-slate mt-4 leading-relaxed">
         Rates are your own outcomes, nudged toward a stated assumption where data is thin. Applications are treated as independent
         chances, so treat the percentage as a direction, not a forecast. Offer-by date = deadline − {user.paperworkWeeks} weeks of paperwork;
         last useful application = that − {user.hiringWeeks} weeks of hiring.

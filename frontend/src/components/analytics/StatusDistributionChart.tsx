@@ -1,7 +1,7 @@
 import React from 'react';
-import { PieChart as PieChartIcon } from 'lucide-react';
 import { PieChart as RechartsPieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import { ApplicationStatus } from '../../types';
+
+import { PALETTE as P, stageHex } from '../../utils/statusStyle';
 
 interface StatusData {
   name: string;
@@ -16,26 +16,13 @@ interface StatusDistributionChartProps {
 
 const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({ statusData }) => {
   // Colors for status chart
-  const statusColors: Record<ApplicationStatus, string> = {
-    'Shortlisted': '#14B8A6',
-    'Applied': '#3B82F6',
-    'Replied': '#8B5CF6',
-    'Phone Screen': '#F59E0B',
-    'Technical Round 1': '#F97316',
-    'Technical Round 2': '#EF4444',
-    'Final Round': '#8B5CF6',
-    'Offer': '#10B981',
-    'Rejected': '#EF4444',
-    'Ghosted': '#6B7280'
-  };
+  // One colour per stage (utils/statusStyle.ts), the deeper fill tones.
+  const colorOf = (status: string) => stageHex(status, true);
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-md">
+    <div className="instrument">
       <div className="flex items-center gap-3 mb-6">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-full p-3">
-          <PieChartIcon className="w-6 h-6 text-white" />
-        </div>
-        <h2 className="text-xl font-bold text-gray-800">Application Status Distribution</h2>
+        <h2 className="label">Application Status Distribution</h2>
       </div>
 
       <div className="h-80">
@@ -47,11 +34,12 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({ statu
               cy="50%"
               innerRadius={60}
               outerRadius={100}
-              paddingAngle={5}
+              paddingAngle={2}
+              isAnimationActive={false}
               dataKey="value"
             >
               {statusData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={statusColors[entry.name as ApplicationStatus] || '#6B7280'} />
+                <Cell key={`cell-${index}`} fill={colorOf(entry.name)} stroke={P.panel} strokeWidth={2} />
               ))}
             </Pie>
             <Tooltip
@@ -67,11 +55,8 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({ statu
       <div className="mt-4 grid grid-cols-2 gap-2">
         {statusData.map((item, index) => (
           <div key={index} className="flex items-center gap-2 text-sm">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: statusColors[item.name as ApplicationStatus] }}
-            ></div>
-            <span className="text-gray-600">{item.name}: {item.value}</span>
+            <div className="w-2.5 h-2.5" style={{ backgroundColor: colorOf(item.name) }}></div>
+            <span className="text-ink-dim">{item.name}: {item.value}</span>
           </div>
         ))}
       </div>

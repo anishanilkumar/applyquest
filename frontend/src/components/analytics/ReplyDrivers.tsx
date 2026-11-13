@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Target } from 'lucide-react';
+
 import { JobApplication } from '../../types';
 import { hasPositiveResponse, hasReachedInterview } from '../../utils/stages';
 
@@ -74,26 +74,23 @@ const ReplyDrivers: React.FC<ReplyDriversProps> = ({ applications }) => {
   const maxRate = Math.max(...rows.map(r => (r.total ? r.positive / r.total : 0)), 0.01);
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-md">
+    <div className="instrument">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full p-3">
-            <Target className="w-6 h-6 text-white" />
-          </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-800">What Gets Replies</h2>
-            <p className="text-xs text-gray-500">
+            <h2 className="label">What Gets Replies</h2>
+            <p className="text-xs text-ink-dim">
               Positive responses and interviews, grouped by what went into the application
             </p>
           </div>
         </div>
-        <div className="flex rounded-lg border border-gray-200 overflow-hidden text-sm">
+        <div className="flex rounded-lg border border-engrave overflow-hidden text-sm">
           {(Object.keys(DIMENSIONS) as Dimension[]).map(d => (
             <button
               key={d}
               type="button"
               onClick={() => setDimension(d)}
-              className={`px-3 py-1.5 ${d === dimension ? 'bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+              className={`px-3 py-1.5 ${d === dimension ? 'bg-arc text-ground' : 'text-ink-dim hover:bg-panel-lit'}`}
             >
               {DIMENSIONS[d].label}
             </button>
@@ -102,10 +99,10 @@ const ReplyDrivers: React.FC<ReplyDriversProps> = ({ applications }) => {
       </div>
 
       {rows.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">No submitted applications yet</div>
+        <div className="text-center py-8 text-ink-dim">No submitted applications yet</div>
       ) : (
         <div className="space-y-3">
-          <div className="grid grid-cols-[minmax(0,10rem)_1fr_auto_auto] gap-x-4 text-xs text-gray-400 px-1">
+          <div className="grid grid-cols-[minmax(0,10rem)_1fr_auto_auto] gap-x-4 text-xs text-slate px-1">
             <span />
             <span>Positive response</span>
             <span className="text-right w-20">Replies</span>
@@ -116,21 +113,21 @@ const ReplyDrivers: React.FC<ReplyDriversProps> = ({ applications }) => {
             return (
               <div key={r.label} className="grid grid-cols-[minmax(0,10rem)_1fr_auto_auto] gap-x-4 items-center px-1">
                 <div className="min-w-0">
-                  <div className="text-sm font-medium text-gray-800 truncate">{r.label}</div>
-                  <div className="text-xs text-gray-400">{r.total} sent</div>
+                  <div className="text-sm font-medium text-ink truncate">{r.label}</div>
+                  <div className="text-xs text-slate">{r.total} sent</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(rate / maxRate) * 100}%` }} />
+                  <div className="flex-1 h-2 bg-panel-lit rounded-full overflow-hidden">
+                    <div className="h-full bg-arc rounded-full" style={{ width: `${(rate / maxRate) * 100}%` }} />
                   </div>
-                  <span className="text-xs font-semibold text-gray-700 w-9 text-right">{Math.round(rate * 100)}%</span>
+                  <span className="text-xs font-semibold text-ink w-9 text-right">{Math.round(rate * 100)}%</span>
                 </div>
-                <span className="text-sm text-gray-700 text-right w-20 tabular-nums">{r.positive} of {r.total}</span>
-                <span className="text-sm text-gray-700 text-right w-20 tabular-nums">{r.interviewed}</span>
+                <span className="text-sm text-ink text-right w-20 tabular-nums">{r.positive} of {r.total}</span>
+                <span className="text-sm text-ink text-right w-20 tabular-nums">{r.interviewed}</span>
               </div>
             );
           })}
-          <p className="text-xs text-gray-400 pt-2">
+          <p className="text-xs text-slate pt-2">
             Bars are scaled to the best group. Groups of a few applications swing on a single reply.
           </p>
         </div>

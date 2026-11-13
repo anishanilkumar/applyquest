@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { MapPin, Star, Calendar, ExternalLink, Edit, Trash2, Users, FileText } from 'lucide-react';
+import { MapPin, Calendar, ExternalLink, Edit, Trash2, Users, FileText } from 'lucide-react';
 import { JobApplication, ApplicationStatus } from '../../types';
-import { EFFORT_BADGE, EFFORT_DESCRIPTION } from '../../utils/effort';
+import { EFFORT_TONE, EFFORT_DESCRIPTION } from '../../utils/effort';
+import { Priority, Tag } from '../common/Marks';
+import { stageVar } from '../../utils/statusStyle';
 import { useAppContext } from '../../context/AppContext';
 
 interface KanbanBoardProps {
@@ -24,16 +26,16 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onDelete
 }) => {
   const stages = [
-    { id: 'Shortlisted', name: 'Shortlisted', color: 'bg-teal-500' },
-    { id: 'Applied', name: 'Applied', color: 'bg-blue-500' },
-    { id: 'Replied', name: 'Replied', color: 'bg-purple-500' },
-    { id: 'Phone Screen', name: 'Phone Screen', color: 'bg-yellow-500' },
-    { id: 'Technical Round 1', name: 'Technical 1', color: 'bg-orange-500' },
-    { id: 'Technical Round 2', name: 'Technical 2', color: 'bg-pink-500' },
-    { id: 'Final Round', name: 'Final Round', color: 'bg-indigo-500' },
-    { id: 'Offer', name: 'Offer', color: 'bg-green-500' },
-    { id: 'Rejected', name: 'Rejected', color: 'bg-red-500' },
-    { id: 'Ghosted', name: 'Ghosted', color: 'bg-gray-500' },
+    { id: 'Shortlisted', name: 'Shortlisted' },
+    { id: 'Applied', name: 'Applied' },
+    { id: 'Replied', name: 'Replied' },
+    { id: 'Phone Screen', name: 'Phone Screen' },
+    { id: 'Technical Round 1', name: 'Technical 1' },
+    { id: 'Technical Round 2', name: 'Technical 2' },
+    { id: 'Final Round', name: 'Final Round' },
+    { id: 'Offer', name: 'Offer' },
+    { id: 'Rejected', name: 'Rejected' },
+    { id: 'Ghosted', name: 'Ghosted' },
   ];
 
 
@@ -86,25 +88,11 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
       <div className="max-w-[1800px] mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Application Board</h1>
-          <p className="text-gray-600">Drag and drop applications to update their status</p>
-          <div className="mt-4 flex gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-              <span className="text-gray-600">Early Stage</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-              <span className="text-gray-600">Interview Process</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              <span className="text-gray-600">Success</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-gray-500"></div>
-              <span className="text-gray-600">No Response</span>
-            </div>
+          <div className="flex flex-wrap gap-x-5 gap-y-1 stamp uppercase">
+            {!isMentorView && <span className="normal-case text-ink-dim mr-2">Drag a card to change its status.</span>}
+            {[['Shortlisted', 'Not sent'], ['Applied', 'Sent'], ['Replied', 'In conversation'], ['Offer', 'Offer'], ['Rejected', 'Ended']].map(([s, word]) => (
+              <span key={s} className="flex items-center gap-2"><i className="dot" style={{ ['--c' as any]: stageVar(s) }} />{word}</span>
+            ))}
           </div>
         </div>
 
@@ -121,20 +109,19 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                 onDrop={() => handleDrop(stage.id)}
               >
                 {/* Column Header */}
-                <div className={`${stage.color} text-white rounded-lg p-4 mb-3 shadow-md`}>
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-lg">{stage.name}</h3>
-                    <span className="bg-white bg-opacity-30 rounded-full px-3 py-1 text-sm font-semibold">
-                      {stageApps.length}
-                    </span>
-                  </div>
+                {/* Column header: the stage's dot and name on an engraved rule. */}
+                <div className="flex items-center justify-between min-h-[44px] mb-3 border-b-2 border-engrave">
+                  <h3 className="flex items-center gap-2 font-mono text-label uppercase tracking-stamp text-ink">
+                    <i className="dot" style={{ ['--c' as any]: stageVar(stage.id) }} />{stage.name}
+                  </h3>
+                  <span className="font-mono text-label text-ink-dim">{stageApps.length}</span>
                 </div>
 
                 {/* Cards Container */}
                 <div className="space-y-3 min-h-[200px]">
                   {stageApps.length === 0 && (
-                    <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">
-                      <p className="text-gray-400 text-sm">Drop applications here</p>
+                    <div className="border-2 border-dashed border-engrave p-8 text-center">
+                      <p className="empty-title text-min">Empty</p>
                     </div>
                   )}
 
@@ -143,74 +130,58 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                       key={app.id}
                       draggable={!isMentorView}
                       onDragStart={() => handleDragStart(app)}
-                      className={`bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-all border-2 border-transparent hover:border-blue-300 ${isMentorView ? 'cursor-default' : 'cursor-move'}`}
+                      className={`bg-panel p-4 transition-colors border-2 border-transparent hover:bg-panel-lit ${isMentorView ? 'cursor-default' : 'cursor-move'}`}
                     >
                       {/* Card Header */}
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-bold text-gray-800">{app.companyName}</h4>
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-ink">{app.companyName}</h4>
                             {app.referralContactId && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-800" title="Referred by network contact">
-                                <Users className="w-3 h-3" />
-                              </span>
+                              <Tag title="Referred by network contact"><Users className="w-3 h-3" strokeWidth={1.6} /></Tag>
                             )}
                             {app.effort !== 'Unknown' && (
-                              <span className={`inline-flex shrink-0 items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap ${EFFORT_BADGE[app.effort]}`} title={EFFORT_DESCRIPTION[app.effort]}>
-                                {app.effort}
-                              </span>
+                              <Tag tone={EFFORT_TONE[app.effort]} title={EFFORT_DESCRIPTION[app.effort]}>{app.effort}</Tag>
                             )}
                             {app.fitScore !== undefined && (
-                              <span className="inline-flex shrink-0 px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap bg-emerald-50 text-emerald-700" title="Fit score from ai-job-search">
-                                Fit {app.fitScore}
-                              </span>
+                              <Tag title="Fit score from ai-job-search">Fit {app.fitScore}</Tag>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600">{app.positionTitle}</p>
+                          <p className="text-sm text-ink-dim">{app.positionTitle}</p>
                         </div>
-                        <div className="flex gap-1">
-                          {[...Array(app.priorityStars)].map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          ))}
-                        </div>
+                        {app.priorityStars > 0 && <div className="pt-1.5"><Priority value={app.priorityStars} /></div>}
                       </div>
 
                       {/* Location */}
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                        <MapPin className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-sm text-ink-dim mb-3">
+                        <MapPin className="w-4 h-4" strokeWidth={1.6} />
                         <span>{app.location}</span>
                       </div>
 
                       {/* Tags */}
                       <div className="flex flex-wrap gap-2 mb-3">
                         {app.visaSponsorship && (
-                          <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">
-                            Visa
-                          </span>
+                          <Tag>Visa</Tag>
                         )}
                         {app.germanRequirement !== 'None' && (
-                          <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
-                            German: {app.germanRequirement}
-                          </span>
+                          <Tag>German {app.germanRequirement}</Tag>
                         )}
                         {app.salaryRange && (
-                          <span className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full">
-                            €{app.salaryRange}
-                          </span>
+                          <Tag>€{app.salaryRange}</Tag>
                         )}
                       </div>
 
                       {/* Prep files: the documents drafted for this application, once
                           the employer is talking — names only, the files stay local */}
                       {PREP_STAGES.includes(app.status) && (app.cvFile || app.coverLetterFile || app.researchFile) && (
-                        <div className="mb-3 bg-amber-50 border border-amber-100 rounded-lg p-2">
-                          <p className="text-xs font-medium text-amber-800 mb-1">Prep files</p>
+                        <div className="mb-3 bg-ground border-2 border-engrave p-2">
+                          <p className="label text-min mb-1">Prep files</p>
                           {[['CV', app.cvFile], ['Cover letter', app.coverLetterFile], ['Research', app.researchFile]]
                             .filter(([, file]) => file)
                             .map(([label, file]) => (
-                              <div key={label} className="flex items-center gap-1 text-xs text-gray-700 min-w-0" title={file}>
-                                <FileText className="w-3 h-3 flex-shrink-0 text-amber-600" />
-                                <span className="text-gray-500 flex-shrink-0">{label}:</span>
+                              <div key={label} className="flex items-center gap-1 text-xs text-ink min-w-0" title={file}>
+                                <FileText className="w-3 h-3 flex-shrink-0 text-ink-dim" strokeWidth={1.6} />
+                                <span className="text-ink-dim flex-shrink-0">{label}:</span>
                                 <span className="font-mono truncate">{file!.split('/').pop()}</span>
                               </div>
                             ))}
@@ -220,42 +191,42 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                       {/* Tech Stack */}
                       {app.techStack && (
                         <div className="mb-3">
-                          <p className="text-xs text-gray-500 mb-1">Tech Stack:</p>
-                          <p className="text-xs text-gray-700 truncate">{app.techStack}</p>
+                          <p className="stamp uppercase mb-1">Stack</p>
+                          <p className="text-sm text-ink truncate">{app.techStack}</p>
                         </div>
                       )}
 
                       {/* Footer */}
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                          <Calendar className="w-3 h-3" />
+                      <div className="flex items-center justify-between pt-3 border-t border-engrave">
+                        <div className="flex items-center gap-1 stamp">
+                          <Calendar className="w-3 h-3" strokeWidth={1.6} />
                           <span>{formatDate(app.appliedDate)}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           {app.jobUrl && (
                             <button
                               onClick={() => window.open(app.jobUrl, '_blank')}
-                              className="text-blue-500 hover:text-blue-700 p-1"
+                              className="btn btn-quiet btn-icon border-transparent hover:text-arc"
                               title="Open job posting"
                             >
-                              <ExternalLink className="w-4 h-4" />
+                              <ExternalLink className="w-4 h-4" strokeWidth={1.6} />
                             </button>
                           )}
                           {!isMentorView && (
                             <>
                               <button
                                 onClick={() => onEdit(app)}
-                                className="text-gray-500 hover:text-blue-700 p-1"
+                                className="btn btn-quiet btn-icon border-transparent hover:text-arc"
                                 title="Edit application"
                               >
-                                <Edit className="w-4 h-4" />
+                                <Edit className="w-4 h-4" strokeWidth={1.6} />
                               </button>
                               <button
                                 onClick={() => handleDelete(app.id)}
-                                className="text-gray-500 hover:text-red-700 p-1"
+                                className="btn btn-quiet btn-icon border-transparent hover:text-alert"
                                 title="Delete"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4" strokeWidth={1.6} />
                               </button>
                             </>
                           )}
@@ -264,33 +235,33 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
                       {/* Quick Action Buttons */}
                       {!isMentorView && app.status === 'Shortlisted' && (
-                        <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                        <div className="flex gap-2 mt-3 pt-3 border-t border-engrave">
                           <button
                             onClick={() => handleQuickStatus(app.id, 'Applied')}
-                            className="flex-1 bg-blue-50 text-blue-700 text-xs py-2 rounded-lg hover:bg-blue-100 transition-colors font-medium"
+                            className="btn btn-sm flex-1"
                           >
                             Mark Applied
                           </button>
                           <button
                             onClick={() => handleQuickStatus(app.id, 'Rejected')}
-                            className="flex-1 bg-red-50 text-red-700 text-xs py-2 rounded-lg hover:bg-red-100 transition-colors font-medium"
+                            className="btn btn-sm btn-quiet flex-1"
                           >
                             Skip
                           </button>
                         </div>
                       )}
                       {!isMentorView && app.status !== 'Shortlisted' && app.status !== 'Rejected' && (
-                        <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                        <div className="flex gap-2 mt-3 pt-3 border-t border-engrave">
                           <button
                             onClick={() => handleQuickStatus(app.id, 'Rejected')}
-                            className="flex-1 bg-red-50 text-red-700 text-xs py-2 rounded-lg hover:bg-red-100 transition-colors font-medium"
+                            className="btn btn-sm btn-quiet flex-1"
                           >
                             Mark Rejected
                           </button>
                           {app.status !== 'Ghosted' && (
                             <button
                               onClick={() => handleQuickStatus(app.id, 'Ghosted')}
-                              className="flex-1 bg-gray-50 text-gray-700 text-xs py-2 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+                              className="btn btn-sm btn-quiet flex-1"
                             >
                               Mark Ghosted
                             </button>

@@ -74,21 +74,21 @@ const Interviews: React.FC = () => {
       <li className="py-3 flex items-center gap-4">
         <button type="button" disabled={isMentorView} onClick={() => setEditing({ interview: i })}
           className="min-w-0 flex-1 text-left flex items-center gap-4 disabled:cursor-default">
-          <div className="w-28 shrink-0 text-sm font-semibold text-gray-800">
+          <div className="w-28 shrink-0 text-sm font-semibold text-ink">
             {whenLabel(i)}
-            <div className="text-xs font-normal text-gray-500">{endOf(i) > Date.now() ? countdown(i) : new Date(i.startsAt).getFullYear()}</div>
+            <div className="text-xs font-normal text-ink-dim">{endOf(i) > Date.now() ? countdown(i) : new Date(i.startsAt).getFullYear()}</div>
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-gray-800 truncate">
+            <div className="text-sm font-semibold text-ink truncate">
               {app?.companyName ?? 'Unknown application'}
-              {(i.title || i.stage) && <span className="font-normal text-gray-500"> · {i.title ?? i.stage}</span>}
+              {(i.title || i.stage) && <span className="font-normal text-ink-dim"> · {i.title ?? i.stage}</span>}
             </div>
-            <div className="text-xs text-gray-500 truncate">{app?.positionTitle}{i.interviewers && ` · ${i.interviewers}`}</div>
+            <div className="text-xs text-ink-dim truncate">{app?.positionTitle}{i.interviewers && ` · ${i.interviewers}`}</div>
           </div>
         </button>
         {i.meetingUrl && endOf(i) > Date.now() && (
           <a href={i.meetingUrl} target="_blank" rel="noopener noreferrer"
-            className="shrink-0 inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">
+            className="shrink-0 inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg bg-panel-lit text-ink hover:bg-engrave">
             <Video className="w-4 h-4" /> Join
           </a>
         )}
@@ -98,31 +98,31 @@ const Interviews: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl p-6 shadow-md">
+      <div className="instrument">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
-              className="p-1.5 rounded-lg hover:bg-gray-100" title="Previous month"><ChevronLeft className="w-5 h-5" /></button>
-            <h1 className="text-2xl font-bold text-gray-800 w-48 text-center">
+              className="p-1.5 rounded-lg hover:bg-panel-lit" title="Previous month"><ChevronLeft className="w-5 h-5" /></button>
+            <h1 className="text-2xl font-bold text-ink w-48 text-center">
               {month.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
             </h1>
             <button type="button" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
-              className="p-1.5 rounded-lg hover:bg-gray-100" title="Next month"><ChevronRight className="w-5 h-5" /></button>
+              className="p-1.5 rounded-lg hover:bg-panel-lit" title="Next month"><ChevronRight className="w-5 h-5" /></button>
             <button type="button" onClick={() => { const d = new Date(); setMonth(new Date(d.getFullYear(), d.getMonth(), 1)); }}
-              className="ml-2 text-sm px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Today</button>
+              className="btn ml-2">Today</button>
           </div>
           {!isMentorView && (
             <button type="button" onClick={() => setEditing({})}
-              className="inline-flex items-center gap-1 text-sm px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700">
+              className="btn btn-primary">
               <Plus className="w-4 h-4" /> Add interview
             </button>
           )}
         </div>
 
         <div className="overflow-x-auto">
-          <div className="grid grid-cols-7 min-w-[42rem] border-t border-l border-gray-200">
+          <div className="grid grid-cols-7 min-w-[42rem] border-t border-l border-engrave">
             {WEEKDAYS.map(w => (
-              <div key={w} className="border-r border-b border-gray-200 bg-gray-50 text-xs font-medium text-gray-500 px-2 py-1">{w}</div>
+              <div key={w} className="border-r border-b border-engrave bg-panel-lit stamp uppercase px-2 py-1">{w}</div>
             ))}
             {monthGrid(month).map(d => {
               const key = dayKey(d);
@@ -131,8 +131,8 @@ const Interviews: React.FC = () => {
               return (
                 <div key={key}
                   onClick={() => !isMentorView && setEditing({ date: d })}
-                  className={`border-r border-b border-gray-200 min-h-[5.5rem] p-1.5 ${inMonth ? 'bg-white' : 'bg-gray-50'} ${isMentorView ? '' : 'cursor-pointer hover:bg-blue-50/40'}`}>
-                  <div className={`text-xs mb-1 ${key === today ? 'inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white font-semibold' : inMonth ? 'text-gray-700' : 'text-gray-400'}`}>
+                  className={`border-r border-b border-engrave min-h-[5.5rem] p-1.5 ${inMonth ? 'bg-panel' : 'bg-panel-lit'} ${isMentorView ? '' : 'cursor-pointer hover:bg-panel-lit/40'}`}>
+                  <div className={`text-xs mb-1 ${key === today ? 'inline-flex items-center justify-center w-6 h-6 rounded-full bg-arc text-ground font-semibold' : inMonth ? 'text-ink' : 'text-slate'}`}>
                     {d.getDate()}
                   </div>
                   <div className="space-y-1">
@@ -140,7 +140,7 @@ const Interviews: React.FC = () => {
                       <button key={i.id} type="button"
                         onClick={e => { e.stopPropagation(); if (!isMentorView) setEditing({ interview: i }); }}
                         title={`${company(i)} · ${i.title ?? i.stage ?? ''}`}
-                        className={`w-full text-left truncate text-xs px-1.5 py-0.5 rounded ${isInProgress(i) ? 'bg-red-100 text-red-800' : endOf(i) <= Date.now() ? 'bg-gray-100 text-gray-500' : 'bg-amber-100 text-amber-900'}`}>
+                        className={`w-full text-left truncate text-xs px-1.5 py-0.5 rounded ${isInProgress(i) ? 'bg-panel-lit text-arc' : endOf(i) <= Date.now() ? 'bg-panel-lit text-ink-dim' : 'bg-panel-lit text-gold'}`}>
                         <span className="font-semibold">{time(i.startsAt)}</span> {company(i)}
                       </button>
                     ))}
@@ -153,17 +153,17 @@ const Interviews: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl p-6 shadow-md">
-          <h2 className="text-lg font-bold text-gray-800 mb-2">Upcoming</h2>
+        <div className="instrument">
+          <h2 className="label">Upcoming</h2>
           {upcoming.length === 0
-            ? <p className="text-sm text-gray-500">Nothing scheduled.</p>
-            : <ul className="divide-y divide-gray-100">{upcoming.map(i => <Row key={i.id} i={i} />)}</ul>}
+            ? <p className="text-sm text-ink-dim">Nothing scheduled.</p>
+            : <ul className="divide-y divide-engrave">{upcoming.map(i => <Row key={i.id} i={i} />)}</ul>}
         </div>
-        <div className="bg-white rounded-xl p-6 shadow-md">
-          <h2 className="text-lg font-bold text-gray-800 mb-2">Past</h2>
+        <div className="instrument">
+          <h2 className="label">Past</h2>
           {past.length === 0
-            ? <p className="text-sm text-gray-500">None yet.</p>
-            : <ul className="divide-y divide-gray-100">{past.slice(0, 10).map(i => <Row key={i.id} i={i} />)}</ul>}
+            ? <p className="text-sm text-ink-dim">None yet.</p>
+            : <ul className="divide-y divide-engrave">{past.slice(0, 10).map(i => <Row key={i.id} i={i} />)}</ul>}
         </div>
       </div>
 

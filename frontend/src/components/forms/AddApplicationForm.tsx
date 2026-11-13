@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Briefcase, MapPin, DollarSign, Code, Star, Link2, Globe, Building, Users } from 'lucide-react';
+import { X, MapPin, DollarSign, Code, Star, Link2, Globe, Building, Users } from 'lucide-react';
 import { api } from '../../services/api';
 import type { ApplicationEffort, NetworkContact } from '../../types';
 import { EFFORTS, EFFORT_DESCRIPTION } from '../../utils/effort';
@@ -92,31 +92,30 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
   return (
     <div>
       {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
+        <div className="fixed inset-0 bg-ground/[0.82] flex items-center justify-center z-50 p-4">
+          <div className="bg-panel border-2 border-engrave w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 z-10 bg-panel px-6 min-h-[64px] flex items-center justify-between border-b-2 border-engrave">
               <div className="flex items-center gap-3">
-                <Briefcase className="w-6 h-6" />
-                <h2 className="text-2xl font-bold">{initialData?.companyName ? 'Edit Application' : 'Add New Application'}</h2>
+                <h2 className="label">{initialData?.companyName ? 'Edit Application' : 'Add New Application'}</h2>
               </div>
               <button
                 onClick={onClose}
-                className="hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors"
+                className="btn-icon btn btn-quiet border-transparent transition-colors"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" strokeWidth={1.6} />
               </button>
             </div>
 
             <div className="p-6 space-y-6">
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  <Building className="w-5 h-5 text-blue-500" />
+                <h3 className="label flex items-center gap-2 border-b-2 border-engrave pb-2">
+                  <Building className="w-4 h-4" strokeWidth={1.6} />
                   Basic Information
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="field-label">
                       Company Name *
                     </label>
                     <input
@@ -126,12 +125,12 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                       onChange={handleChange}
                       required
                       placeholder="e.g., SAP, Siemens"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="input w-full"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="field-label">
                       Position Title *
                     </label>
                     <input
@@ -141,16 +140,16 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                       onChange={handleChange}
                       required
                       placeholder="e.g., Full Stack Developer"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="input w-full"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="field-label">
                       Location (City) *
                     </label>
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+                      <MapPin className="absolute left-3 top-2.5 w-5 h-5 text-slate" />
                       <input
                         type="text"
                         name="location"
@@ -158,24 +157,24 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                         onChange={handleChange}
                         required
                         placeholder="e.g., Berlin, Munich"
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="input w-full pl-10 pr-4"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="field-label">
                       Job URL
                     </label>
                     <div className="relative">
-                      <Link2 className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+                      <Link2 className="absolute left-3 top-2.5 w-5 h-5 text-slate" />
                       <input
                         type="url"
                         name="jobUrl"
                         value={formData.jobUrl}
                         onChange={handleChange}
                         placeholder="https://linkedin.com/jobs/..."
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="input w-full pl-10 pr-4"
                       />
                     </div>
                   </div>
@@ -183,38 +182,38 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  <Code className="w-5 h-5 text-blue-500" />
+                <h3 className="label flex items-center gap-2 border-b-2 border-engrave pb-2">
+                  <Code className="w-4 h-4" strokeWidth={1.6} />
                   Job Details
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="field-label">
                       Salary Range (EUR)
                     </label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+                      <DollarSign className="absolute left-3 top-2.5 w-5 h-5 text-slate" />
                       <input
                         type="text"
                         name="salaryRange"
                         value={formData.salaryRange}
                         onChange={handleChange}
                         placeholder="e.g., 60000-80000"
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="input w-full pl-10 pr-4"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="field-label">
                       Job Board Source
                     </label>
                     <select
                       name="jobBoardSource"
                       value={formData.jobBoardSource}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="input w-full"
                     >
                       <option value="">Select source...</option>
                       {jobBoards.map(board => (
@@ -224,23 +223,23 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                   </div>
                 </div>
 
-                <div className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Effort</label>
+                <div className="p-4 border border-engrave rounded-lg hover:border-arc-dim transition-colors">
+                  <label className="field-label">Effort</label>
                   <select
                     name="effort"
                     value={formData.effort}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input w-full"
                   >
                     {EFFORTS.map(effort => (
                       <option key={effort} value={effort}>{effort}</option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1">{EFFORT_DESCRIPTION[formData.effort]}</p>
+                  <p className="text-xs text-ink-dim mt-1">{EFFORT_DESCRIPTION[formData.effort]}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="field-label">
                     Tech Stack
                   </label>
                   <input
@@ -249,53 +248,53 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                     value={formData.techStack}
                     onChange={handleChange}
                     placeholder="e.g., React, Python, PostgreSQL, Docker"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input w-full"
                   />
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  <Globe className="w-5 h-5 text-blue-500" />
+                <h3 className="label flex items-center gap-2 border-b-2 border-engrave pb-2">
+                  <Globe className="w-4 h-4" strokeWidth={1.6} />
                   Germany-Specific Requirements
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                  <div className="flex items-center gap-3 p-4 border border-engrave rounded-lg hover:border-arc-dim transition-colors">
                     <input
                       type="checkbox"
                       name="visaSponsorship"
                       checked={formData.visaSponsorship}
                       onChange={handleChange}
-                      className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      className="w-5 h-5 text-arc rounded"
                     />
-                    <label className="text-sm font-medium text-gray-700 cursor-pointer">
+                    <label className="text-sm font-medium text-ink cursor-pointer">
                       Visa Sponsorship
                     </label>
                   </div>
 
-                  <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                  <div className="flex items-center gap-3 p-4 border border-engrave rounded-lg hover:border-arc-dim transition-colors">
                     <input
                       type="checkbox"
                       name="relocationSupport"
                       checked={formData.relocationSupport}
                       onChange={handleChange}
-                      className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      className="w-5 h-5 text-arc rounded"
                     />
-                    <label className="text-sm font-medium text-gray-700 cursor-pointer">
+                    <label className="text-sm font-medium text-ink cursor-pointer">
                       Relocation Support
                     </label>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="field-label">
                       German Level Required
                     </label>
                     <select
                       name="germanRequirement"
                       value={formData.germanRequirement}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="input w-full"
                     >
                       {germanLevels.map(level => (
                         <option key={level} value={level}>{level}</option>
@@ -306,8 +305,8 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  <Star className="w-5 h-5 text-blue-500" />
+                <h3 className="label flex items-center gap-2 border-b-2 border-engrave pb-2">
+                  <Star className="w-4 h-4" strokeWidth={1.6} />
                   Priority Level
                 </h3>
 
@@ -317,43 +316,39 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                       key={star}
                       type="button"
                       onClick={() => handleStarClick(star)}
-                      className="transition-transform hover:scale-110"
+                      className="w-11 h-11 inline-flex items-center justify-center" aria-label={`${star} of 5`}
                     >
-                      <Star
-                        className={`w-8 h-8 ${star <= formData.priorityStars
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300'
-                          }`}
-                      />
+                      {/* Lit squares, not stars: the house mark for a 1-5 judgement. */}
+                      <i className={`block w-5 h-5 ${star <= formData.priorityStars ? 'bg-gold' : 'border-2 border-slate'}`} />
                     </button>
                   ))}
-                  <span className="ml-2 text-sm text-gray-600">
-                    ({formData.priorityStars} {formData.priorityStars === 1 ? 'star' : 'stars'})
+                  <span className="ml-2 text-sm text-ink-dim">
+                    {formData.priorityStars} of 5
                   </span>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-blue-500" />
+                <h3 className="label flex items-center gap-2 border-b-2 border-engrave pb-2">
+                  <Users className="w-4 h-4" strokeWidth={1.6} />
                   Referral Contact (Optional)
                 </h3>
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="field-label">
                     Got this position through a contact?
                   </label>
 
                   {formData.referralContactId && networkContacts.find(c => c.id === formData.referralContactId) ? (
-                    <div className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <div className="flex items-center justify-between p-3 bg-panel-lit border border-engrave rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold border border-purple-200">
+                        <div className="w-10 h-10 rounded-full bg-panel-lit flex items-center justify-center text-arc-dim font-bold border border-engrave">
                           {networkContacts.find(c => c.id === formData.referralContactId)?.name.charAt(0)}
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-ink">
                             {networkContacts.find(c => c.id === formData.referralContactId)?.name}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-ink-dim">
                             {networkContacts.find(c => c.id === formData.referralContactId)?.company}
                           </div>
                         </div>
@@ -364,7 +359,7 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                           setFormData(prev => ({ ...prev, referralContactId: '' }));
                           setContactSearch('');
                         }}
-                        className="p-2 hover:bg-purple-100 rounded-full text-gray-500 hover:text-red-500 transition-colors"
+                        className="p-2 hover:bg-panel-lit rounded-full text-ink-dim hover:text-alert transition-colors"
                         title="Remove referral"
                       >
                         <X className="w-5 h-5" />
@@ -381,12 +376,12 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                         }}
                         onFocus={() => setShowContactDropdown(true)}
                         placeholder="Search contacts..."
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="input w-full"
                       />
                       {showContactDropdown && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-ground border-2 border-engrave max-h-48 overflow-y-auto">
                           <div
-                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-600"
+                            className="px-4 py-2 hover:bg-panel-lit cursor-pointer text-sm text-ink-dim"
                             onClick={() => {
                               setFormData(prev => ({ ...prev, referralContactId: '' }));
                               setContactSearch('');
@@ -403,16 +398,16 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                             .map(contact => (
                               <div
                                 key={contact.id}
-                                className="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                className="px-4 py-2 hover:bg-panel-lit cursor-pointer border-b border-engrave last:border-b-0"
                                 onClick={() => {
                                   setFormData(prev => ({ ...prev, referralContactId: contact.id }));
                                   setContactSearch(contact.name);
                                   setShowContactDropdown(false);
                                 }}
                               >
-                                <div className="font-medium text-gray-900">{contact.name}</div>
+                                <div className="font-medium text-ink">{contact.name}</div>
                                 {contact.company && (
-                                  <div className="text-sm text-gray-500">{contact.company}</div>
+                                  <div className="text-sm text-ink-dim">{contact.company}</div>
                                 )}
                               </div>
                             ))}
@@ -424,7 +419,7 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
               </div>
 
               <div className="space-y-4">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="field-label">
                   Notes (Optional)
                 </label>
                 <textarea
@@ -433,7 +428,7 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                   onChange={handleChange}
                   rows={4}
                   placeholder="Add any additional notes, interview impressions, or reminders..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className="input w-full"
                 />
               </div>
 
@@ -441,14 +436,14 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  className="btn flex-1"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
+                  className="btn btn-primary flex-1"
                 >
                   {initialData?.companyName ? 'Update Application (+1 point)' : 'Add Application (+2 points)'}
                 </button>

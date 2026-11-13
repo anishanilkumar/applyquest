@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NetworkContact, JobApplication } from '../../types';
 import NetworkContactCard from './NetworkContactCard';
 import AddNetworkContactForm from './AddNetworkContactForm';
-import { Plus, Search, Users } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 
 interface NetworkListProps {
@@ -75,64 +75,49 @@ const NetworkList: React.FC<NetworkListProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header with Stats */}
-      <div className="bg-white rounded-xl p-6 shadow-md">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              <Users className="w-6 h-6 text-green-500" />
-              Network Contacts
-            </h2>
-            <p className="text-gray-600 mt-1">Manage your professional network</p>
-          </div>
-          {!isMentorView && (
-            <button
-              onClick={() => setIsFormOpen(true)}
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl px-6 py-3 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2"
-            >
-              <Plus className="w-5 h-5" />
-              Add Contact
-            </button>
-          )}
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <span className="label">Network</span>
+          <h1 className="major mt-1">{stats.totalContacts} contacts</h1>
         </div>
+        {!isMentorView && (
+          <button onClick={() => setIsFormOpen(true)} className="btn btn-primary">
+            <Plus className="w-5 h-5" strokeWidth={1.6} />
+            Add contact
+          </button>
+        )}
+      </header>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4">
-            <div className="text-2xl font-bold text-blue-600">{stats.totalContacts}</div>
-            <div className="text-sm text-blue-800">Total Contacts</div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[['Contacts', stats.totalContacts, 'text-ink'], ['Strong (4-5)', stats.strongConnections, 'text-arc'], ['Contacted in 30 days', stats.recentContacts, 'text-ink']].map(([label, n, tone]) => (
+          <div key={label as string} className="instrument">
+            <span className="label">{label}</span>
+            <p className={`readout mt-2 ${tone}`}>{n}</p>
           </div>
-          <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4">
-            <div className="text-2xl font-bold text-green-600">{stats.strongConnections}</div>
-            <div className="text-sm text-green-800">Strong Connections (4-5⭐)</div>
-          </div>
-          <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4">
-            <div className="text-2xl font-bold text-purple-600">{stats.recentContacts}</div>
-            <div className="text-sm text-purple-800">Contacted in Last 30 Days</div>
-          </div>
-        </div>
+        ))}
+      </div>
 
+      <div>
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-3 top-3 w-5 h-5 text-slate" strokeWidth={1.6} />
           <input
             type="text"
             placeholder="Search contacts by name, company, email, or relationship..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="input w-full pl-10 pr-4"
           />
         </div>
       </div>
 
       {/* Contacts Grid */}
       {filteredContacts.length === 0 ? (
-        <div className="bg-white rounded-xl p-12 text-center shadow-md">
-          <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-600 mb-2">
-            {contacts.length === 0 ? 'No network contacts yet' : 'No contacts match your search'}
+        <div className="instrument empty">
+          <h3 className="empty-title">
+            {contacts.length === 0 ? 'No contacts yet' : 'Nothing matches'}
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="text-ink-dim mb-4">
             {contacts.length === 0
               ? 'Start building your professional network by adding contacts who can help with your job search.'
               : 'Try adjusting your search terms.'
@@ -141,10 +126,10 @@ const NetworkList: React.FC<NetworkListProps> = ({
           {contacts.length === 0 && !isMentorView && (
             <button
               onClick={() => setIsFormOpen(true)}
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl px-6 py-3 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 inline-flex items-center gap-2"
+              className="btn btn-primary"
             >
               <Plus className="w-5 h-5" />
-              Add Your First Contact
+              Add a contact
             </button>
           )}
         </div>

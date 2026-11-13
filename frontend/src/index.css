@@ -13,6 +13,8 @@
      (GermanyMap.tsx) rather than swapped for a dark tile host, so no new third
      party sees the traffic.
    - No Manjari or Monaspace: nothing here is Malayalam or code.
+   - Fonts live in src/fonts and are bundled (hashed) by the build, not
+     served from public/: CRA resolves every url() in CSS at build time.
 
    Semantic aliases (application stages; utils/statusStyle.ts uses them):
      --stage-draft     Shortlisted: not sent yet                     arc-dim
@@ -27,19 +29,19 @@
 
 @font-face {
   font-family: "Archivo";
-  src: url("/fonts/archivo-var.woff2") format("woff2-variations");
+  src: url("./fonts/archivo-var.woff2") format("woff2-variations");
   font-weight: 400 700;
   font-display: swap;
 }
 @font-face {
   font-family: "Plex Mono";
-  src: url("/fonts/plexmono-400.woff2") format("woff2");
+  src: url("./fonts/plexmono-400.woff2") format("woff2");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: "Plex Mono";
-  src: url("/fonts/plexmono-500.woff2") format("woff2");
+  src: url("./fonts/plexmono-500.woff2") format("woff2");
   font-weight: 500;
   font-display: swap;
 }
@@ -208,20 +210,27 @@
   .empty-title { @apply font-mono uppercase tracking-label text-slate; }
   .placeholder { background: rgb(var(--panel)); }
 
-  /* ---- Charts (Recharts and hand-drawn SVG) ---- */
-  .recharts-text, .recharts-cartesian-axis-tick-value { font-family: "Plex Mono", ui-monospace, monospace; font-size: 12px; fill: rgb(var(--ink-dim)); }
-  .recharts-legend-item-text { font-family: "Plex Mono", ui-monospace, monospace; font-size: 12px; color: rgb(var(--ink-dim)) !important; }
-  .recharts-cartesian-grid line { stroke: rgb(var(--c-grid)); }
-  .recharts-default-tooltip {
-    background: rgb(var(--ground)) !important; border: 2px solid rgb(var(--engrave)) !important; border-radius: 0 !important;
-    font-family: "Plex Mono", ui-monospace, monospace; font-size: 12px;
-  }
-  .recharts-tooltip-label { color: rgb(var(--ink)) !important; }
-
-  /* ---- Leaflet: the map's chrome in the palette ---- */
-  .leaflet-container { background: rgb(var(--ground)) !important; font-family: "Archivo", system-ui, sans-serif !important; }
-  .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: rgb(var(--ground)) !important; color: rgb(var(--ink)) !important; border-radius: 0 !important; border: 2px solid rgb(var(--engrave)); }
-  .leaflet-bar a { background: rgb(var(--panel)) !important; color: rgb(var(--ink)) !important; border-color: rgb(var(--engrave)) !important; border-radius: 0 !important; }
-  .leaflet-control-attribution { background: rgb(var(--ground) / 0.8) !important; color: rgb(var(--ink-dim)) !important; font-size: 12px; }
-  .leaflet-control-attribution a { color: rgb(var(--arc)) !important; }
 }
+
+/* Third-party chrome. Outside @layer on purpose: Tailwind drops a layered rule
+   whose class never appears in the source, and these classes are written by
+   Recharts and Leaflet at runtime. */
+/* ---- Charts (Recharts and hand-drawn SVG) ---- */
+.recharts-text, .recharts-cartesian-axis-tick-value { font-family: "Plex Mono", ui-monospace, monospace; font-size: 12px; fill: rgb(var(--ink-dim)); }
+.recharts-legend-item-text { font-family: "Plex Mono", ui-monospace, monospace; font-size: 12px; color: rgb(var(--ink-dim)) !important; }
+.recharts-cartesian-grid line { stroke: rgb(var(--c-grid)); }
+.recharts-default-tooltip {
+  background: rgb(var(--ground)) !important; border: 2px solid rgb(var(--engrave)) !important; border-radius: 0 !important;
+  font-family: "Plex Mono", ui-monospace, monospace; font-size: 12px;
+}
+.recharts-tooltip-label { color: rgb(var(--ink)) !important; }
+
+/* ---- Leaflet: the map's chrome in the palette ---- */
+.leaflet-container { background: rgb(var(--ground)) !important; font-family: "Archivo", system-ui, sans-serif !important; }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: rgb(var(--ground)) !important; color: rgb(var(--ink)) !important; border-radius: 0 !important; border: 2px solid rgb(var(--engrave)); }
+.leaflet-bar a { background: rgb(var(--panel)) !important; color: rgb(var(--ink)) !important; border-color: rgb(var(--engrave)) !important; border-radius: 0 !important; }
+.leaflet-control-attribution { background: rgb(var(--ground) / 0.8) !important; color: rgb(var(--ink-dim)) !important; font-size: 12px; }
+.leaflet-control-attribution a { color: rgb(var(--arc)) !important; }
+/* OSM's light tiles turned to dark navy: invert, turn the hues back, and
+   dim. Only the tile pane, so markers and popups keep their real colours. */
+.map-dark .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.4); }

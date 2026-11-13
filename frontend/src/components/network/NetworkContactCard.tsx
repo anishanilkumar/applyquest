@@ -1,6 +1,7 @@
 import React from 'react';
 import { NetworkContact } from '../../types';
-import { Mail, Building, User, Calendar, Star, Edit2, Trash2 } from 'lucide-react';
+import { Mail, Building, Calendar, Edit2, Trash2 } from 'lucide-react';
+import { Priority } from '../common/Marks';
 import { useAppContext } from '../../context/AppContext';
 
 interface NetworkContactCardProps {
@@ -12,9 +13,9 @@ interface NetworkContactCardProps {
 const NetworkContactCard: React.FC<NetworkContactCardProps> = ({ contact, onEdit, onDelete }) => {
   const { isMentorView } = useAppContext();
   const getConnectionStrengthColor = (strength: number) => {
-    if (strength >= 4) return 'text-green-500';
-    if (strength >= 3) return 'text-yellow-500';
-    return 'text-red-500';
+    if (strength >= 4) return 'text-arc';
+    if (strength >= 3) return 'text-gold';
+    return 'text-ink-dim';
   };
 
   const getConnectionStrengthLabel = (strength: number) => {
@@ -35,17 +36,14 @@ const NetworkContactCard: React.FC<NetworkContactCardProps> = ({ contact, onEdit
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-100">
+    <div className="instrument !p-0 hover:bg-panel-lit transition-colors">
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-full p-3">
-              <User className="w-6 h-6 text-white" />
-            </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-800">{contact.name}</h3>
+              <h3 className="font-semibold text-ink">{contact.name}</h3>
               {contact.relationship && (
-                <p className="text-sm text-gray-600">{contact.relationship}</p>
+                <p className="text-sm text-ink-dim">{contact.relationship}</p>
               )}
             </div>
           </div>
@@ -53,61 +51,50 @@ const NetworkContactCard: React.FC<NetworkContactCardProps> = ({ contact, onEdit
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onEdit(contact)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="btn btn-quiet btn-icon border-transparent hover:text-arc"
                 title="Edit contact"
               >
-                <Edit2 className="w-4 h-4 text-gray-600" />
+                <Edit2 className="w-4 h-4" strokeWidth={1.6} />
               </button>
               <button
                 onClick={() => onDelete(contact.id)}
-                className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                className="btn btn-quiet btn-icon border-transparent hover:text-alert"
                 title="Delete contact"
               >
-                <Trash2 className="w-4 h-4 text-red-500" />
+                <Trash2 className="w-4 h-4" strokeWidth={1.6} />
               </button>
             </div>
           )}
         </div>
 
         <div className="space-y-3">
-          <div className="flex items-center gap-3 text-sm text-gray-600">
+          <div className="flex items-center gap-3 text-sm text-ink-dim">
             <Mail className="w-4 h-4" />
             <span>{contact.email || 'No email'}</span>
           </div>
 
           {contact.company && (
-            <div className="flex items-center gap-3 text-sm text-gray-600">
+            <div className="flex items-center gap-3 text-sm text-ink-dim">
               <Building className="w-4 h-4" />
               <span>{contact.company}</span>
             </div>
           )}
 
           <div className="flex items-center gap-3 text-sm">
-            <Calendar className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-600">Last contact: {formatDate(contact.lastContactDate)}</span>
+            <Calendar className="w-4 h-4 text-slate" />
+            <span className="text-ink-dim">Last contact: {formatDate(contact.lastContactDate)}</span>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  className={`w-4 h-4 ${
-                    star <= contact.connectionStrength
-                      ? 'fill-yellow-400 text-yellow-400'
-                      : 'text-gray-300'
-                  }`}
-                />
-              ))}
-            </div>
+            <Priority value={contact.connectionStrength} />
             <span className={`text-sm font-medium ${getConnectionStrengthColor(contact.connectionStrength)}`}>
               {getConnectionStrengthLabel(contact.connectionStrength)}
             </span>
           </div>
 
           {contact.notes && (
-            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-700">{contact.notes}</p>
+            <div className="mt-4 p-3 bg-panel-lit rounded-lg">
+              <p className="text-sm text-ink">{contact.notes}</p>
             </div>
           )}
         </div>

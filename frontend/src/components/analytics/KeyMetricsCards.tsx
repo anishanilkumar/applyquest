@@ -73,34 +73,26 @@ const KeyMetricsCards: React.FC<KeyMetricsCardsProps> = ({ metrics }) => {
     },
   ] as const;
 
-  const tints: Record<string, { bg: string; icon: string; value: string }> = {
-    blue: { bg: 'bg-blue-100', icon: 'text-blue-600', value: 'text-blue-600' },
-    green: { bg: 'bg-green-100', icon: 'text-green-600', value: 'text-green-600' },
-    amber: { bg: 'bg-amber-100', icon: 'text-amber-600', value: 'text-amber-600' },
-    gray: { bg: 'bg-gray-200', icon: 'text-gray-600', value: 'text-gray-700' },
-    red: { bg: 'bg-red-100', icon: 'text-red-600', value: 'text-red-600' },
-    purple: { bg: 'bg-purple-100', icon: 'text-purple-600', value: 'text-purple-600' },
+  // Each tint is a meaning, not a hue: arc for the live or good figures, gold
+  // for the ones that need attention, ink for plain counts.
+  const tints: Record<string, string> = {
+    blue: 'text-arc',
+    green: 'text-arc',
+    amber: 'text-gold',
+    gray: 'text-ink',
+    red: 'text-gold',
+    purple: 'text-ink',
   };
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      {cards.map(({ icon: Icon, value, sub, label, tint }) => {
-        const c = tints[tint];
-        return (
-          <div key={label} className="bg-white rounded-xl p-4 shadow-md">
-            <div className="flex items-center gap-3">
-              <div className={`${c.bg} rounded-full p-2 flex-shrink-0`}>
-                <Icon className={`w-5 h-5 ${c.icon}`} />
-              </div>
-              <div className="min-w-0">
-                <div className={`text-2xl font-bold ${c.value} leading-tight`}>{value}</div>
-                <div className="text-[11px] text-gray-400 truncate">{sub}</div>
-              </div>
-            </div>
-            <div className="text-xs font-medium text-gray-600 mt-2">{label}</div>
-          </div>
-        );
-      })}
+      {cards.map(({ value, sub, label, tint }) => (
+        <div key={label} className="instrument">
+          <span className="label block truncate">{label}</span>
+          <div className={`readout mt-2 ${tints[tint]}`}>{value}</div>
+          <div className="stamp mt-1 truncate">{sub}</div>
+        </div>
+      ))}
     </div>
   );
 };

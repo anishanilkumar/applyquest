@@ -11,9 +11,10 @@ export const EFFORT_DESCRIPTION: Record<ApplicationEffort, string> = {
   Unknown: 'Not classified yet',
 };
 
-export const EFFORT_BADGE: Record<ApplicationEffort, string> = {
-  Full: 'bg-indigo-100 text-indigo-800',
-  Light: 'bg-sky-100 text-sky-800',
-  Generic: 'bg-gray-100 text-gray-700',
-  Unknown: '',
+// Effort as a tag tone (components/common/Marks.tsx): more effort reads brighter.
+export const EFFORT_TONE: Record<ApplicationEffort, 'ink' | 'arc' | 'dim'> = {
+  Full: 'arc',
+  Light: 'ink',
+  Generic: 'dim',
+  Unknown: 'dim',
 };

@@ -1,5 +1,4 @@
 import React from 'react';
-import { Lightbulb } from 'lucide-react';
 
 interface InsightsStripProps {
   insights: string[];
@@ -11,16 +10,14 @@ interface InsightsStripProps {
 const InsightsStrip: React.FC<InsightsStripProps> = ({ insights }) => {
   if (insights.length === 0) return null;
 
+  // A callout with a gold rule: worth reading, not an alarm.
   return (
-    <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-100 rounded-xl p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <Lightbulb className="w-4 h-4 text-amber-500" />
-        <h3 className="text-sm font-semibold text-amber-900">What the data says</h3>
-      </div>
+    <div className="verdict" style={{ ['--c' as any]: 'var(--gold)' }}>
+      <h3 className="label mb-2">What the data says</h3>
       <ul className="space-y-1.5">
         {insights.map((text, i) => (
-          <li key={i} className="text-sm text-amber-900/90 flex gap-2">
-            <span className="text-amber-400">•</span>
+          <li key={i} className="text-sm text-ink flex gap-2">
+            <span className="text-gold" aria-hidden="true">·</span>
             <span>{text}</span>
           </li>
         ))}

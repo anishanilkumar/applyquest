@@ -77,17 +77,17 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ applications, initial, in
     }
   };
 
-  const input = 'mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800';
+  const input = 'input mt-1';
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-ground/[0.82] z-50 flex items-center justify-center p-4" onClick={onClose}>
       <form onSubmit={submit} onClick={e => e.stopPropagation()}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 space-y-4">
+        className="bg-panel rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-800">{initial ? 'Edit interview' : 'Add interview'}</h2>
-          <button type="button" onClick={onClose} className="text-gray-500 hover:text-gray-800"><X className="w-5 h-5" /></button>
+          <h2 className="label">{initial ? 'Edit interview' : 'Add interview'}</h2>
+          <button type="button" onClick={onClose} className="text-ink-dim hover:text-ink"><X className="w-5 h-5" /></button>
         </div>
 
-        <label className="block text-sm text-gray-700">
+        <label className="field-label">
           Application
           <select required disabled={!!initial} value={form.applicationId} onChange={set('applicationId')} className={input}>
             <option value="" disabled>Choose…</option>
@@ -98,50 +98,50 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ applications, initial, in
         </label>
 
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_8rem] gap-3">
-          <label className="block text-sm text-gray-700">
+          <label className="field-label">
             Starts
             <input type="datetime-local" required value={form.startsAt} onChange={set('startsAt')} className={input} />
           </label>
-          <label className="block text-sm text-gray-700">
+          <label className="field-label">
             Minutes
             <input type="number" min={5} max={480} step={5} required value={form.minutes} onChange={set('minutes')} className={input} />
           </label>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label className="block text-sm text-gray-700">
+          <label className="field-label">
             Stage
             <select value={form.stage} onChange={set('stage')} className={input}>
               {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </label>
-          <label className="block text-sm text-gray-700">
-            Title <span className="text-gray-400">(optional)</span>
+          <label className="field-label">
+            Title <span className="text-slate">(optional)</span>
             <input value={form.title} onChange={set('title')} placeholder="e.g. Talent Talk" className={input} />
           </label>
         </div>
 
-        <label className="block text-sm text-gray-700">
-          Meeting link <span className="text-gray-400">(optional)</span>
+        <label className="field-label">
+          Meeting link <span className="text-slate">(optional)</span>
           <input type="url" value={form.meetingUrl} onChange={set('meetingUrl')} placeholder="https://meet.google.com/…" className={input} />
         </label>
-        <label className="block text-sm text-gray-700">
-          Interviewers <span className="text-gray-400">(optional)</span>
+        <label className="field-label">
+          Interviewers <span className="text-slate">(optional)</span>
           <input value={form.interviewers} onChange={set('interviewers')} placeholder="Name (Title), …" className={input} />
         </label>
-        <label className="block text-sm text-gray-700">
-          Notes <span className="text-gray-400">(optional)</span>
+        <label className="field-label">
+          Notes <span className="text-slate">(optional)</span>
           <textarea value={form.notes} onChange={set('notes')} rows={2} className={input} />
         </label>
 
         <div className="flex gap-2 pt-2">
           {initial && onDelete && (
             <button type="button" onClick={async () => { await onDelete(); onClose(); }}
-              className="px-4 py-2 text-sm rounded-lg text-red-600 hover:bg-red-50">Delete</button>
+              className="btn btn-quiet border-transparent hover:text-alert">Delete</button>
           )}
           <div className="flex-1" />
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
-          <button type="submit" disabled={saving} className="px-4 py-2 text-sm rounded-lg bg-gray-800 text-white hover:bg-gray-700 disabled:opacity-50">
+          <button type="button" onClick={onClose} className="btn">Cancel</button>
+          <button type="submit" disabled={saving} className="btn btn-primary">
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>

@@ -50,3 +50,21 @@ export function stageText(status: ApplicationStatus | string): string {
   return { draft: 'text-arc-dim', live: 'text-arc', human: 'text-gold',
            offer: 'text-go', ended: 'text-slate' }[stageOf(status)];
 }
+
+// The palette as literal colours, for code that cannot read CSS variables: a
+// canvas (the Sankey's PNG export), an SVG serialised to an image, Leaflet
+// markers. Keep in step with index.css; these do not follow the offline swap.
+export const PALETTE = {
+  ground: '#0a0e14', panel: '#111823', panelLit: '#16202e', engrave: '#2a3543',
+  ink: '#e8f1f8', inkDim: '#7c8fa3', arc: '#3dd6f5', arcDim: '#1d7f96',
+  gold: '#e8a33d', alert: '#ff4d4d', slate: '#55647a', slateDim: '#3a4657',
+  go: '#4fd68a', c1: '#249cb8', c2: '#c2842b', c3: '#b39cff', grid: '#1c2633',
+} as const;
+
+// A stage's colour as a literal hex value; `fill` gives the deeper fill tone.
+export function stageHex(status: ApplicationStatus | string, fill = false): string {
+  const s = stageOf(status);
+  const P = PALETTE;
+  if (fill) return { draft: P.arcDim, live: P.c1, human: P.c2, offer: P.go, ended: P.slate }[s];
+  return { draft: P.arcDim, live: P.arc, human: P.gold, offer: P.go, ended: P.slate }[s];
+}

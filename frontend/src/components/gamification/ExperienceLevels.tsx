@@ -1,5 +1,4 @@
 import React from 'react';
-import { Trophy, Star, Zap, Award } from 'lucide-react';
 
 interface ExperienceLevelsProps {
     currentPoints: number;
@@ -31,84 +30,40 @@ const ExperienceLevels: React.FC<ExperienceLevelsProps> = ({ currentPoints }) =>
     const pointsNeeded = pointsForNextLevel - pointsForCurrentLevel;
     const progressPercent = Math.min((pointsInLevel / pointsNeeded) * 100, 100);
 
+    // Plain readouts: the level as a name and number, progress as lit ticks,
+    // the milestones as a list of tick boxes. No trophies.
+    const ticks = Math.round(progressPercent / 10);
+
     return (
-        <div className="bg-white rounded-xl p-6 shadow-md">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full p-3">
-                    <Zap className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                    <h2 className="text-xl font-bold text-gray-800">Experience Levels</h2>
-                    <p className="text-sm text-gray-500">Track your career journey progress</p>
-                </div>
+        <div className="instrument">
+            <span className="label">Level {currentLevel.level}</span>
+            <p className="readout mt-2">{currentLevel.name}</p>
+            <div className="flex gap-1 mt-4" aria-label={`${Math.round(progressPercent)}% of the way to the next level`}>
+                {Array.from({ length: 10 }, (_, i) => (
+                    <i key={i} className={`h-3 flex-1 ${i < ticks ? 'bg-arc' : 'bg-engrave'}`} />
+                ))}
             </div>
+            <p className="stamp mt-2">
+                {currentPoints} pts · {nextLevel ? `${nextLevel.minPoints} for ${nextLevel.name}` : 'Top level'}
+            </p>
 
-            <div className="mb-8 text-center p-6 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl border border-blue-100">
-                <div className="inline-flex items-center justify-center p-4 bg-white rounded-full shadow-md mb-4">
-                    <Trophy className="w-10 h-10 text-yellow-500" />
-                </div>
-                <h3 className="text-2xl font-bold text-indigo-900 mb-1">{currentLevel.name}</h3>
-                <p className="text-indigo-600 font-medium mb-4">Level {currentLevel.level}</p>
-
-                <div className="relative pt-1 max-w-md mx-auto">
-                    <div className="flex mb-2 items-center justify-between">
-                        <div>
-                            <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-200">
-                                Current
-                            </span>
-                        </div>
-                        <div className="text-right">
-                            <span className="text-xs font-semibold inline-block text-indigo-600">
-                                {Math.round(progressPercent)}%
-                            </span>
-                        </div>
-                    </div>
-                    <div className="overflow-hidden h-4 mb-4 text-xs flex rounded-full bg-indigo-200">
-                        <div style={{ width: `${progressPercent}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500 transition-all duration-500 ease-out"></div>
-                    </div>
-                    <div className="flex justify-between text-xs text-gray-500 font-medium">
-                        <span>{currentPoints} pts</span>
-                        <span>{nextLevel ? `${nextLevel.minPoints} pts (Next Level)` : 'Max Level'}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div className="space-y-4">
-                <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <Award className="w-5 h-5 text-gray-400" />
-                    Level Milestones
-                </h4>
-                <div className="relative border-l-2 border-gray-200 ml-3 pl-6 space-y-6 pb-2">
-                    {levels.map((lvl) => {
-                        const isUnlocked = currentPoints >= lvl.minPoints;
-                        const isCurrent = lvl.level === currentLevel.level;
-
-                        return (
-                            <div key={lvl.level} className="relative">
-                                <span className={`absolute -left-[31px] flex items-center justify-center w-8 h-8 rounded-full ring-4 ring-white ${isUnlocked ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'
-                                    }`}>
-                                    {isUnlocked ? <Star className="w-4 h-4 fill-current" /> : <span className="text-xs font-bold">{lvl.level}</span>}
-                                </span>
-
-                                <div className={`p-3 rounded-lg border ${isCurrent
-                                    ? 'bg-green-50 border-green-200 shadow-sm'
-                                    : isUnlocked
-                                        ? 'bg-gray-50 border-gray-100'
-                                        : 'bg-transparent border-transparent opacity-60'
-                                    }`}>
-                                    <h5 className={`font-bold ${isCurrent ? 'text-green-800' : 'text-gray-800'}`}>
-                                        {lvl.name}
-                                    </h5>
-                                    <p className="text-sm text-gray-600">{lvl.description}</p>
-                                    <div className="mt-1 text-xs font-medium text-gray-400">
-                                        Unlocks at {lvl.minPoints} pts
-                                    </div>
-                                </div>
+            <h3 className="label mt-6 mb-2">Milestones</h3>
+            <ul>
+                {levels.map((lvl, i) => {
+                    const isUnlocked = currentPoints >= lvl.minPoints;
+                    const isCurrent = lvl.level === currentLevel.level;
+                    return (
+                        <li key={lvl.level} className={`flex items-start gap-3 py-3 ${i ? 'border-t-2 border-engrave' : ''}`}>
+                            <span className="tick mt-0.5" data-on={isUnlocked} aria-hidden="true" />
+                            <div className="flex-1">
+                                <p className={`font-semibold ${isCurrent ? 'text-arc' : isUnlocked ? 'text-ink' : 'text-ink-dim'}`}>{lvl.name}</p>
+                                <p className="text-sm text-ink-dim">{lvl.description}</p>
                             </div>
-                        );
-                    })}
-                </div>
-            </div>
+                            <span className="stamp whitespace-nowrap">{lvl.minPoints} pts</span>
+                        </li>
+                    );
+                })}
+            </ul>
         </div>
     );
 };

@@ -5,7 +5,7 @@ import { applicationService } from '../services/api';
 import KanbanBoard from '../components/kanban/KanbanBoard';
 import ApplicationsTable from '../components/applications/ApplicationsTable';
 import AddApplicationForm from '../components/forms/AddApplicationForm';
-import { Grid, List, Plus, BarChart3 } from 'lucide-react';
+import { Grid, List, Plus } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 type ViewMode = 'kanban' | 'table';
@@ -146,105 +146,51 @@ const Applications: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500">Loading applications...</div>;
+    return (
+      <div className="space-y-4" aria-busy="true" aria-label="Loading">
+        <div className="h-10 w-1/3 placeholder" /><div className="h-24 placeholder" /><div className="h-96 placeholder" />
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-xl p-6 shadow-md">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Job Applications</h1>
-            <p className="text-gray-600">Track and manage your job search applications</p>
-          </div>
-          {!isMentorView && (
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl px-6 py-3 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2"
-            >
-              <Plus className="w-5 h-5" />
-              Add Application
-            </button>
-          )}
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <span className="label">Applications</span>
+          <h1 className="major mt-1">{stats.total} tracked</h1>
         </div>
+        {!isMentorView && (
+          <button onClick={() => setShowAddForm(true)} className="btn btn-primary">
+            <Plus className="w-5 h-5" strokeWidth={1.6} />
+            Add application
+          </button>
+        )}
+      </header>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <BarChart3 className="w-8 h-8 text-blue-600" />
-              <div>
-                <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-                <div className="text-sm text-blue-800">Total Applications</div>
-              </div>
-            </div>
+      {/* The counts that matter, as readouts. */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          ['Total', stats.total, 'text-ink'],
+          ['Applied', stats.applied, 'text-arc'],
+          ['Interviews', stats.interviews, 'text-gold'],
+          ['Full effort', stats.fullEffort, 'text-ink'],
+        ].map(([label, n, tone]) => (
+          <div key={label as string} className="instrument">
+            <span className="label">{label}</span>
+            <p className={`readout mt-2 ${tone}`}>{n}</p>
           </div>
-          <div className="bg-purple-50 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">{stats.applied}</span>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-purple-600">{stats.applied}</div>
-                <div className="text-sm text-purple-800">Applied</div>
-              </div>
-            </div>
-          </div>
-          <div className="bg-yellow-50 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-yellow-600 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">{stats.interviews}</span>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-yellow-600">{stats.interviews}</div>
-                <div className="text-sm text-yellow-800">Interviews</div>
-              </div>
-            </div>
-          </div>
-          <div className="bg-green-50 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">{stats.fullEffort}</span>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-green-600">{stats.fullEffort}</div>
-                <div className="text-sm text-green-800">Full Applications</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* View Toggle */}
-      <div className="bg-white rounded-xl p-4 shadow-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${viewMode === 'kanban'
-                ? 'bg-blue-500 text-white'
-                : 'text-gray-600 hover:bg-gray-100'
-                }`}
-            >
-              <Grid className="w-4 h-4" />
-              Kanban Board
-            </button>
-            <button
-              onClick={() => setViewMode('table')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${viewMode === 'table'
-                ? 'bg-blue-500 text-white'
-                : 'text-gray-600 hover:bg-gray-100'
-                }`}
-            >
-              <List className="w-4 h-4" />
-              Table View
-            </button>
-          </div>
-          <div className="text-sm text-gray-600">
-            {viewMode === 'kanban' ? 'Visual board view' : 'Detailed list view'}
-          </div>
-        </div>
+      {/* View: tabs on an engraved rule. */}
+      <div className="flex gap-5 border-b-2 border-engrave">
+        {([['kanban', 'Board', Grid], ['table', 'Table', List]] as const).map(([mode, label, Icon]) => (
+          <button key={mode} onClick={() => setViewMode(mode)} aria-current={viewMode === mode ? 'page' : undefined}
+            className={`flex items-center gap-2 min-h-[44px] -mb-[2px] border-b-2 font-mono text-label uppercase tracking-stamp ${viewMode === mode ? 'text-arc border-arc' : 'text-ink-dim border-transparent hover:text-ink'}`}>
+            <Icon className="w-4 h-4" strokeWidth={1.6} />{label}
+          </button>
+        ))}
       </div>
 
       {/* Content */}

@@ -4,7 +4,6 @@ import { useAppContext } from '../context/AppContext';
 import { userService } from '../services/api';
 import UserProfile from '../components/profile/UserProfile';
 import ExperienceLevels from '../components/gamification/ExperienceLevels';
-import { Trophy, TrendingUp, Target, Award } from 'lucide-react';
 
 const Profile: React.FC = () => {
   const { user, setUser, applications, contacts, loading, isMentorView } = useAppContext();
@@ -52,11 +51,11 @@ const Profile: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500">Loading profile...</div>;
+    return <div className="p-8 text-center text-ink-dim">Loading profile...</div>;
   }
 
   if (!user) {
-    return <div className="p-8 text-center text-gray-500">User not found</div>;
+    return <div className="p-8 text-center text-ink-dim">User not found</div>;
   }
 
   // Calculate stats
@@ -66,22 +65,22 @@ const Profile: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl p-6 shadow-md">
-        <div className="flex items-center justify-between">
+      <header>
+        <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">My Profile</h1>
-            <p className="text-gray-600">Manage your account and track your progress</p>
+            <span className="label">Profile</span>
+            <h1 className="major mt-1">{user.name}</h1>
           </div>
           {!isEditing && !isMentorView && (
             <button
               onClick={handleEditProfile}
-              className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium"
+              className="btn"
             >
-              Edit Profile
+              Edit profile
             </button>
           )}
         </div>
-      </div>
+      </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - User Info */}
@@ -95,53 +94,22 @@ const Profile: React.FC = () => {
             onChange={handleChange}
           />
 
-          {/* Gamification Stats */}
-          <div className="bg-white rounded-xl p-6 shadow-md">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-500" />
-              Achievements
-            </h3>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="bg-yellow-100 p-2 rounded-full">
-                    <Award className="w-5 h-5 text-yellow-600" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-800">Current Level</div>
-                    <div className="text-sm text-gray-500">{user.levelName} (Lvl {user.level})</div>
-                  </div>
+          {/* Points and streaks, as readouts. */}
+          <div className="instrument">
+            <h3 className="label mb-3">Record</h3>
+            <dl>
+              {[['Points', `${user.points}`, `Level ${user.level} · ${user.levelName}`],
+                ['Streak', `${currentStreak} days`, 'Working days in a row'],
+                ['Best streak', `${longestStreak} days`, '']].map(([k, v, sub], i) => (
+                <div key={k} className={`flex items-baseline justify-between gap-3 py-3 ${i ? 'border-t-2 border-engrave' : ''}`}>
+                  <dt>
+                    <span className="block text-ink">{k}</span>
+                    {sub && <span className="stamp">{sub}</span>}
+                  </dt>
+                  <dd className="font-mono text-ink">{v}</dd>
                 </div>
-                <div className="font-bold text-yellow-600">{user.points} pts</div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="bg-orange-100 p-2 rounded-full">
-                    <TrendingUp className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-800">Current Streak</div>
-                    <div className="text-sm text-gray-500">Keep it going!</div>
-                  </div>
-                </div>
-                <div className="font-bold text-orange-600">{currentStreak} days</div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="bg-purple-100 p-2 rounded-full">
-                    <Target className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-800">Longest Streak</div>
-                    <div className="text-sm text-gray-500">Personal Best</div>
-                  </div>
-                </div>
-                <div className="font-bold text-purple-600">{longestStreak} days</div>
-              </div>
-            </div>
+              ))}
+            </dl>
           </div>
         </div>
 
@@ -150,24 +118,24 @@ const Profile: React.FC = () => {
           <ExperienceLevels currentPoints={user.points} />
 
           {/* Stats Summary */}
-          <div className="bg-white rounded-xl p-6 shadow-md">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Application Stats</h3>
+          <div className="instrument">
+            <h3 className="label mb-3">Applications</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="p-4 bg-gray-50 rounded-lg text-center">
-                <div className="text-2xl font-bold text-gray-800">{applications.length}</div>
-                <div className="text-sm text-gray-500">Total Applications</div>
+              <div className="p-4 bg-panel-lit">
+                <div className="readout text-ink">{applications.length}</div>
+                <div className="stamp mt-1">Total Applications</div>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg text-center">
-                <div className="text-2xl font-bold text-gray-800">{contacts.length}</div>
-                <div className="text-sm text-gray-500">Network Contacts</div>
+              <div className="p-4 bg-panel-lit">
+                <div className="readout text-ink">{contacts.length}</div>
+                <div className="stamp mt-1">Network Contacts</div>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg text-center">
-                <div className="text-2xl font-bold text-gray-800">{applications.filter(a => a.status === 'Offer').length}</div>
-                <div className="text-sm text-gray-500">Offers Received</div>
+              <div className="p-4 bg-panel-lit">
+                <div className="readout text-ink">{applications.filter(a => a.status === 'Offer').length}</div>
+                <div className="stamp mt-1">Offers Received</div>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg text-center">
-                <div className="text-2xl font-bold text-gray-800">{Math.round(applications.length > 0 ? (applications.filter(a => a.status !== 'Applied' && a.status !== 'Ghosted').length / applications.length) * 100 : 0)}%</div>
-                <div className="text-sm text-gray-500">Response Rate</div>
+              <div className="p-4 bg-panel-lit">
+                <div className="readout text-ink">{Math.round(applications.length > 0 ? (applications.filter(a => a.status !== 'Applied' && a.status !== 'Ghosted').length / applications.length) * 100 : 0)}%</div>
+                <div className="stamp mt-1">Response Rate</div>
               </div>
             </div>
           </div>

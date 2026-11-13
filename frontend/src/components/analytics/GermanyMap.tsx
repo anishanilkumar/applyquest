@@ -1,9 +1,10 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { MapPin, Info, Loader2 } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { JobApplication, ApplicationStatus } from '../../types';
 import 'leaflet/dist/leaflet.css';
+import { PALETTE as P, stageHex } from '../../utils/statusStyle';
 
 // Fix for default markers in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -113,18 +114,8 @@ const StatusMarker: React.FC<{
     const topStatus = Object.entries(statusCounts)
       .sort(([,a], [,b]) => b - a)[0]?.[0] as ApplicationStatus;
 
-    switch (topStatus) {
-      case 'Offer': return '#10B981'; // green
-      case 'Final Round':
-      case 'Technical Round 1':
-      case 'Technical Round 2': return '#F97316'; // orange
-      case 'Phone Screen': return '#F59E0B'; // yellow
-      case 'Replied': return '#8B5CF6'; // purple
-      case 'Applied': return '#3B82F6'; // blue
-      case 'Rejected': return '#EF4444'; // red
-      case 'Ghosted': return '#6B7280'; // gray
-      default: return '#6B7280';
-    }
+    // The marker takes the colour of the most common stage there.
+    return stageHex(topStatus ?? 'Applied');
   };
 
   const color = getStatusColor(location.applications);
@@ -135,23 +126,19 @@ const StatusMarker: React.FC<{
     html: `
       <div style="
         background-color: ${color};
-        border: 3px solid white;
+        border: 2px solid ${P.ground};
         border-radius: 50%;
-        width: 24px;
-        height: 24px;
+        width: 26px;
+        height: 26px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
-        font-weight: bold;
+        color: ${P.ground};
+        font-family: 'Plex Mono', ui-monospace, monospace;
+        font-weight: 500;
         font-size: 12px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         cursor: pointer;
-        transition: transform 0.2s;
-      "
-      onmouseover="this.style.transform='scale(1.2)'"
-      onmouseout="this.style.transform='scale(1)'"
-      >
+      ">
         ${location.count}
       </div>
     `,
@@ -164,13 +151,13 @@ const StatusMarker: React.FC<{
       <Popup>
         <div className="p-2 min-w-[200px]">
           <div className="flex items-center gap-2 mb-2">
-            <MapPin className="w-4 h-4 text-indigo-600" />
-            <h3 className="font-semibold text-gray-800">{location.name}</h3>
+            <MapPin className="w-4 h-4 text-arc" />
+            <h3 className="font-semibold text-ink">{location.name}</h3>
           </div>
 
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600">Total applications:</span>
+              <span className="text-ink-dim">Total applications:</span>
               <span className="font-medium">{location.count}</span>
             </div>
 
@@ -182,7 +169,7 @@ const StatusMarker: React.FC<{
               }, {} as Record<ApplicationStatus, number>)
             ).map(([status, count]) => (
               <div key={status} className="flex justify-between text-xs">
-                <span className="text-gray-500">{status}:</span>
+                <span className="text-ink-dim">{status}:</span>
                 <span>{count}</span>
               </div>
             ))}
@@ -275,35 +262,29 @@ const GermanyMap: React.FC<GermanyMapProps> = ({ applications }) => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl p-6 shadow-md">
+      <div className="instrument">
         <div className="flex items-center gap-3 mb-6">
-          <div className="bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full p-3">
-            <MapPin className="w-6 h-6 text-white" />
-          </div>
-          <h2 className="text-xl font-bold text-gray-800">Germany Applications Map</h2>
+          <h2 className="label">Germany Applications Map</h2>
         </div>
 
-        <div className="h-96 flex items-center justify-center bg-gray-50 rounded-lg">
-          <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-4" />
-            <p className="text-gray-600">Loading map and geocoding locations...</p>
-          </div>
+        {/* Loading: the map's shape in slate, no spinner. */}
+        <div className="h-96 placeholder flex items-end p-3">
+          <p className="stamp uppercase">Placing locations</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-md">
+    <div className="instrument">
       <div className="flex items-center gap-3 mb-6">
-        <div className="bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full p-3">
-          <MapPin className="w-6 h-6 text-white" />
-        </div>
-        <h2 className="text-xl font-bold text-gray-800">Germany Applications Map</h2>
+        <h2 className="label">Germany Applications Map</h2>
       </div>
 
       {/* Map Container */}
-      <div className="h-96 rounded-lg overflow-hidden border border-gray-200">
+      {/* OpenStreetMap's own tiles, darkened by a filter on the tile pane only
+          (index.css, .map-dark) so no new tile host sees the traffic. */}
+      <div className="h-96 overflow-hidden border-2 border-engrave map-dark">
         <MapContainer
           center={germanyCenter}
           zoom={6}
@@ -325,73 +306,37 @@ const GermanyMap: React.FC<GermanyMapProps> = ({ applications }) => {
         </MapContainer>
       </div>
 
-      {/* Legend */}
-      <div className="mt-6">
-        <h3 className="text-sm font-semibold text-gray-800 mb-3">Application Status Legend</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span>Offer</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-            <span>Interview</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <span>Phone Screen</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-            <span>Applied</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-            <span>Replied</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <span>Rejected</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 rounded-full bg-gray-500"></div>
-            <span>Ghosted</span>
-          </div>
-        </div>
+      {/* Legend: the stages, as everywhere else in the app. */}
+      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 stamp uppercase">
+        {[['Applied', 'Sent'], ['Replied', 'In conversation'], ['Offer', 'Offer'], ['Rejected', 'Ended']].map(([s, word]) => (
+          <span key={s} className="flex items-center gap-2"><i className="w-2.5 h-2.5 rounded-circle" style={{ backgroundColor: stageHex(s) }} />{word}</span>
+        ))}
       </div>
 
       {/* Summary Stats */}
-      <div className="mt-6 pt-4 border-t border-gray-200">
+      <div className="mt-6 pt-4 border-t border-engrave">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div>
-            <div className="text-2xl font-bold text-indigo-600">{stats.totalCities}</div>
-            <div className="text-xs text-gray-600">Cities with Applications</div>
+            <div className="text-2xl font-bold text-arc">{stats.totalCities}</div>
+            <div className="stamp">Cities with Applications</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-blue-600">{stats.totalApplications}</div>
-            <div className="text-xs text-gray-600">Total Applications</div>
+            <div className="text-2xl font-bold text-arc">{stats.totalApplications}</div>
+            <div className="stamp">Total Applications</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-green-600">{stats.citiesWithOffers}</div>
-            <div className="text-xs text-gray-600">Cities with Offers</div>
+            <div className="text-2xl font-bold text-arc">{stats.citiesWithOffers}</div>
+            <div className="stamp">Cities with Offers</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-purple-600">{stats.mostActiveCity}</div>
-            <div className="text-xs text-gray-600">Most Active City</div>
+            <div className="text-2xl font-bold text-ink">{stats.mostActiveCity}</div>
+            <div className="stamp">Most Active City</div>
           </div>
         </div>
       </div>
 
       {/* Info about geocoding */}
-      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-        <div className="flex items-start gap-2">
-          <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-          <div className="text-xs text-blue-800">
-            <p className="font-medium mb-1">Map Data:</p>
-            <p>Locations are automatically geocoded using OpenStreetMap's free geocoding service. Results are cached locally for better performance.</p>
-          </div>
-        </div>
-      </div>
+      <p className="mt-4 stamp">Locations are geocoded with OpenStreetMap's free service and cached locally.</p>
     </div>
   );
 };
