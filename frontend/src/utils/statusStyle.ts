@@ -8,7 +8,7 @@ import { ApplicationStatus } from '../types';
 //   Applied                                       live   arc      sent, waiting
 //   Replied, Phone Screen, Technical 1/2, Final   human  gold     a person is in it
 //   Offer                                         offer  green
-//   Rejected, Ghosted                             ended  slate
+//   Rejected, Ghosted, Not Applying               ended  slate
 export type Stage = 'draft' | 'live' | 'human' | 'offer' | 'ended';
 
 const STAGE: Record<ApplicationStatus, Stage> = {
@@ -22,6 +22,7 @@ const STAGE: Record<ApplicationStatus, Stage> = {
   Offer: 'offer',
   Rejected: 'ended',
   Ghosted: 'ended',
+  'Not Applying': 'ended',
 };
 
 export function stageOf(status: ApplicationStatus | string): Stage {

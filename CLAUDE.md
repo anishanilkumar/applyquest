@@ -73,7 +73,7 @@ Models: `User`, `Application` + `ApplicationHistory`, `NetworkContact`, `PointHi
 
 ### The apply queue (`/queue`)
 
-Drafts (`Shortlisted`) worked through one by one: `pages/Queue.tsx`. Ticking a draft moves it Shortlisted -> Applied; "Not applying" moves it Shortlisted -> Rejected, which `stages` already reads as never sent. Both can be undone while the draft is on the page: Applied -> Shortlisted is the usual one-stage step back, and Rejected -> Shortlisted is allowed only when the last move was Shortlisted -> Rejected (`update_application_status`). Sent and set-aside drafts stay on the page for 14 days after they leave Shortlisted (`utils/queue.ts`).
+Drafts (`Shortlisted`) worked through one by one: `pages/Queue.tsx`. Ticking a draft moves it Shortlisted -> Applied; "Not applying" moves it to the **Not Applying** status: a draft set aside, closed like Rejected and Ghosted but never counted as sent (`stages.is_submitted`), so Rejected means only an employer's no. Both can be undone while the draft is on the page: Applied -> Shortlisted is the usual one-stage step back, and Not Applying -> Shortlisted (or -> Applied) is allowed. Drafts set aside before the status existed (Shortlisted -> Rejected, never Applied) were moved to Not Applying by migration `b0c1d2e3f4a5`; the old Shortlisted -> Rejected path still counts as not sent. Sent and set-aside drafts stay on the page for 14 days after they leave Shortlisted (`utils/queue.ts`).
 
 P(interview) is computed in the browser (`utils/odds.ts`) from submitted applications: per segment (effort, role type, fit band) p̂ = (i + 10·p₀)/(n + 10), and a draft's P is the geometric mean of its three. The fit bands match `outcome_stats` in `mcp_server.py`.
 

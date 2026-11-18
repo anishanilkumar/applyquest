@@ -134,7 +134,7 @@ const Profile: React.FC = () => {
                 <div className="stamp mt-1">Offers Received</div>
               </div>
               <div className="p-4 bg-panel-lit">
-                <div className="readout text-ink">{Math.round(applications.length > 0 ? (applications.filter(a => a.status !== 'Applied' && a.status !== 'Ghosted').length / applications.length) * 100 : 0)}%</div>
+                <div className="readout text-ink">{Math.round(applications.length > 0 ? (applications.filter(a => !['Applied', 'Ghosted', 'Not Applying'].includes(a.status)).length / applications.length) * 100 : 0)}%</div>
                 <div className="stamp mt-1">Response Rate</div>
               </div>
             </div>

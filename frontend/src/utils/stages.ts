@@ -12,7 +12,8 @@ const PIPELINE: ApplicationStatus[] = [
   'Offer',
 ];
 
-const CLOSED: ApplicationStatus[] = ['Rejected', 'Ghosted'];
+// Not Applying is a draft set aside: closed like these, but never sent.
+const CLOSED: ApplicationStatus[] = ['Rejected', 'Ghosted', 'Not Applying'];
 
 // True for a move that rewrites where the application stands rather than
 // advancing it: a step back to an earlier stage (correcting an application
@@ -53,7 +54,7 @@ export function effectiveHistory(app: JobApplication): ApplicationHistory[] {
 // drafted, and one skipped straight from Shortlisted to Rejected never went
 // out — counting either would skew every rate on the Analytics page.
 export function isSubmitted(app: JobApplication): boolean {
-  if (app.status === 'Shortlisted') return false;
+  if (app.status === 'Shortlisted' || app.status === 'Not Applying') return false;
   const path = effectiveHistory(app);
   const skipped = path.some(h => h.oldStatus === 'Shortlisted' && h.newStatus === 'Rejected')
     && !path.some(h => h.newStatus === 'Applied');

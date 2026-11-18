@@ -163,11 +163,6 @@ PIPELINE = [
     ApplicationStatus.OFFER,
 ]
 
-def _last_move(application):
-    history = sorted(getattr(application, "history", None) or [], key=lambda h: h.changed_at)
-    return (history[-1].old_status, history[-1].new_status) if history else None
-
-
 @router.patch("/{id}/status", response_model=application_schema.Application)
 def update_application_status(
     *,
@@ -195,7 +190,9 @@ def update_application_status(
     # recruiter reopening the role), so either can be reopened at any active stage.
     reopen_statuses = PIPELINE[1:]
     valid_transitions = {
-        ApplicationStatus.SHORTLISTED: [ApplicationStatus.APPLIED, ApplicationStatus.REJECTED],
+        ApplicationStatus.SHORTLISTED: [ApplicationStatus.APPLIED, ApplicationStatus.NOT_APPLYING, ApplicationStatus.REJECTED],
+        # Set aside, then back in the queue, or sent after all.
+        ApplicationStatus.NOT_APPLYING: [ApplicationStatus.SHORTLISTED, ApplicationStatus.APPLIED],
         ApplicationStatus.APPLIED: [ApplicationStatus.REPLIED, ApplicationStatus.REJECTED, ApplicationStatus.GHOSTED],
         ApplicationStatus.REPLIED: [ApplicationStatus.PHONE_SCREEN, ApplicationStatus.REJECTED, ApplicationStatus.GHOSTED],
         ApplicationStatus.PHONE_SCREEN: [ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.REJECTED, ApplicationStatus.GHOSTED],
@@ -213,12 +210,6 @@ def update_application_status(
         current_status in PIPELINE[1:]
         and new_status == PIPELINE[PIPELINE.index(current_status) - 1]
     )
-    # A draft set aside from the apply queue goes Shortlisted -> Rejected, which
-    # the stats already read as never sent. That one move can be undone, back to
-    # Shortlisted; a rejection that came after applying cannot.
-    if (current_status == ApplicationStatus.REJECTED and new_status == ApplicationStatus.SHORTLISTED
-            and _last_move(application) == (ApplicationStatus.SHORTLISTED, ApplicationStatus.REJECTED)):
-        is_step_back = True
 
     if not is_step_back and new_status not in valid_transitions.get(current_status, []):
          raise HTTPException(

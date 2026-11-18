@@ -37,3 +37,15 @@ describe('queueEntry', () => {
     expect(queueEntries([app('Applied', [[undefined, 'Applied', '2026-11-18T10:00:00']])], NOW)).toEqual([]);
   });
 });
+
+describe('Not Applying', () => {
+  it('shows a draft set aside with the new status as skip', () => {
+    const a = app('Not Applying', [['Shortlisted', 'Not Applying', '2026-11-18T10:00:00']]);
+    expect(queueEntry(a, NOW)?.state).toBe('skip');
+  });
+
+  it('returns it to the queue when brought back', () => {
+    const a = app('Shortlisted', [['Shortlisted', 'Not Applying', '2026-11-18T10:00:00'], ['Not Applying', 'Shortlisted', '2026-11-18T11:00:00']]);
+    expect(queueEntry(a, NOW)?.state).toBe('todo');
+  });
+});

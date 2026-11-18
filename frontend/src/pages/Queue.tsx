@@ -9,7 +9,7 @@ import { QUEUE_WINDOW_DAYS, QueueEntry, QueueState, queueEntries } from '../util
 
 // The apply queue: drafts waiting to be sent, worked through one by one.
 // Ticking a draft marks it Applied; "Not applying" sets it aside
-// (Shortlisted -> Rejected, never counted as sent). Both can be undone while
+// (Shortlisted -> Not Applying, never counted as sent). Both can be undone while
 // the draft is still on the page. P(interview) comes from the track record
 // (utils/odds.ts) and is a ranking signal, not a forecast.
 
@@ -68,7 +68,7 @@ const Queue: React.FC = () => {
     if (e.state === 'sent') return move(e.app, 'Shortlisted');
     return move(e.app, 'Applied');
   };
-  const toggleSkip = (e: QueueEntry) => (e.state === 'skip' ? move(e.app, 'Shortlisted') : move(e.app, 'Rejected', 'Not applying'));
+  const toggleSkip = (e: QueueEntry) => (e.state === 'skip' ? move(e.app, 'Shortlisted') : move(e.app, 'Not Applying'));
 
   const copy = (label: string, value: string) => {
     navigator.clipboard?.writeText(value).then(() => toast.success(`${label} file name copied`), () => toast(value));

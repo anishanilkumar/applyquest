@@ -47,7 +47,7 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ applications, initial, in
 
   // Live applications first; closed ones are still selectable for the record.
   const choices = useMemo(() => {
-    const closed = (a: JobApplication) => ['Rejected', 'Ghosted', 'Shortlisted'].includes(a.status);
+    const closed = (a: JobApplication) => ['Rejected', 'Ghosted', 'Shortlisted', 'Not Applying'].includes(a.status);
     return [...applications].sort((a, b) =>
       Number(closed(a)) - Number(closed(b)) || a.companyName.localeCompare(b.companyName));
   }, [applications]);

@@ -36,6 +36,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
     { id: 'Offer', name: 'Offer' },
     { id: 'Rejected', name: 'Rejected' },
     { id: 'Ghosted', name: 'Ghosted' },
+    { id: 'Not Applying', name: 'Not applying' },
   ];
 
 
@@ -243,14 +244,14 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                             Mark Applied
                           </button>
                           <button
-                            onClick={() => handleQuickStatus(app.id, 'Rejected')}
+                            onClick={() => handleQuickStatus(app.id, 'Not Applying')}
                             className="btn btn-sm btn-quiet flex-1"
                           >
-                            Skip
+                            Not applying
                           </button>
                         </div>
                       )}
-                      {!isMentorView && app.status !== 'Shortlisted' && app.status !== 'Rejected' && (
+                      {!isMentorView && !['Shortlisted', 'Rejected', 'Not Applying'].includes(app.status) && (
                         <div className="flex gap-2 mt-3 pt-3 border-t border-engrave">
                           <button
                             onClick={() => handleQuickStatus(app.id, 'Rejected')}

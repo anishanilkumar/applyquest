@@ -75,7 +75,7 @@ PUBLIC_URL = os.environ.get(
 VALID_STATUSES = [
     "Shortlisted", "Applied", "Replied", "Phone Screen",
     "Technical Round 1", "Technical Round 2", "Final Round",
-    "Offer", "Rejected", "Ghosted",
+    "Offer", "Rejected", "Ghosted", "Not Applying",
 ]
 
 # How much effort went into an application. Unknown is the default for anything
@@ -234,7 +234,8 @@ def mark_status(application_id: str, new_status: str, notes: Optional[str] = Non
     """Change an application's status. Records history and may trigger a notification email.
 
     Only legal transitions are accepted by the backend:
-      Shortlisted -> Applied | Rejected
+      Shortlisted -> Applied | Not Applying | Rejected
+      Not Applying-> Shortlisted | Applied
       Applied     -> Replied | Rejected | Ghosted
       Replied     -> Phone Screen | Rejected | Ghosted
       Phone Screen-> Technical Round 1 | Rejected | Ghosted
@@ -243,9 +244,9 @@ def mark_status(application_id: str, new_status: str, notes: Optional[str] = Non
       Final Round -> Offer | Rejected | Ghosted
       Offer       -> Rejected | Ghosted
       Rejected    -> Applied | Replied | Phone Screen | Tech Round 1/2 | Final Round | Offer
-                     | Shortlisted, only to undo a draft set aside (Shortlisted -> Rejected)
       Ghosted     -> Rejected | any of the stages Rejected can reopen to
     Rejected/Ghosted can be reopened because an application sometimes comes back.
+    Not Applying is a draft the user decided not to send: never counted as sent.
     Any stage from Applied to Offer can also step back exactly one stage, to correct
     an application advanced too far; a step back sends no notification email.
     On an illegal transition the backend returns an error describing it — read it and
@@ -374,8 +375,7 @@ def update_application(
     salary_estimated true when that range is an estimate rather than taken
     from the posting, salary_ask the yearly figure in euros to give when a
     form asks for an expectation (e.g. 85000), and heads_up one thing to check
-    before sending. To set a draft aside ("not applying"), mark_status it
-    Shortlisted -> Rejected; that is never counted as sent.
+    before sending. To set a draft aside, mark_status it Not Applying.
     """
     if effort is not None and effort not in VALID_EFFORTS:
         return {"error": "invalid_effort", "detail": f"effort must be one of {VALID_EFFORTS}"}
@@ -473,9 +473,10 @@ def _fit_band(score: Optional[int]) -> str:
 
 
 def _was_submitted(app: dict) -> bool:
-    # A draft still in Shortlisted, or one skipped from there straight to
-    # Rejected, never went out. Mirrors isSubmitted in the frontend.
-    if app.get("status") == "Shortlisted":
+    # A draft still in Shortlisted, one set aside as Not Applying, or one
+    # skipped from Shortlisted straight to Rejected (the older way of setting
+    # one aside) never went out. Mirrors isSubmitted in the frontend.
+    if app.get("status") in ("Shortlisted", "Not Applying"):
         return False
     moves = {(h.get("old_status"), h.get("new_status")) for h in app.get("history") or []}
     skipped = ("Shortlisted", "Rejected") in moves and not any(new == "Applied" for _, new in moves)

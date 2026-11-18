@@ -90,7 +90,8 @@ export type ApplicationStatus =
   | 'Final Round'
   | 'Offer'
   | 'Rejected'
-  | 'Ghosted';
+  | 'Ghosted'
+  | 'Not Applying'; // a draft set aside, never sent
 
 export type GermanLevel = 'None' | 'Basic' | 'Fluent';
 

@@ -115,6 +115,7 @@ def test_outcome_stats_groups_submitted_applications():
 def test_outcome_stats_leaves_out_skipped_drafts():
     apps = [
         {"status": "Rejected", "history": [{"old_status": "Shortlisted", "new_status": "Rejected"}]},
+        {"status": "Not Applying", "history": [{"old_status": "Shortlisted", "new_status": "Not Applying"}]},
         {"status": "Rejected", "history": [{"old_status": "Shortlisted", "new_status": "Applied"},
                                            {"old_status": "Applied", "new_status": "Rejected"}]},
     ]

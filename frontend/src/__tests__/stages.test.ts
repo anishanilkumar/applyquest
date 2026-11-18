@@ -81,6 +81,8 @@ describe('isSubmitted', () => {
 
   it('excludes a draft skipped straight to Rejected', () => {
     expect(isSubmitted(app('Rejected', [move('Shortlisted', 'Rejected')]))).toBe(false);
+    expect(isSubmitted(app('Not Applying', [move('Shortlisted', 'Not Applying')]))).toBe(false);
+    expect(isSubmitted(app('Applied', [move('Shortlisted', 'Not Applying'), move('Not Applying', 'Applied')]))).toBe(true);
   });
 
   it('counts a draft that was sent and then rejected', () => {

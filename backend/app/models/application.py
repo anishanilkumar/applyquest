@@ -17,6 +17,8 @@ class ApplicationStatus(str, enum.Enum):
     OFFER = "Offer"
     REJECTED = "Rejected"
     GHOSTED = "Ghosted"
+    # A draft the user decided not to send. Never counted as sent.
+    NOT_APPLYING = "Not Applying"
 
 class GermanLevel(str, enum.Enum):
     NONE = "None"

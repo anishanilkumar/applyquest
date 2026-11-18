@@ -152,7 +152,7 @@ const ApplicationProcessSankey: React.FC<ApplicationProcessSankeyProps> = ({ app
         applications.forEach(app => {
             // Shortlisted is no longer part of the flow: a job only enters the
             // chart once it has actually been applied to.
-            if (app.status === 'Shortlisted') return;
+            if (app.status === 'Shortlisted' || app.status === 'Not Applying') return;
 
             const stages = new Set<string>(['Applied']);
 

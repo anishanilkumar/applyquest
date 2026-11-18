@@ -41,7 +41,7 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
   // Status options
   const statusOptions: ApplicationStatus[] = [
     'Applied', 'Replied', 'Phone Screen', 'Technical Round 1',
-    'Technical Round 2', 'Final Round', 'Offer', 'Rejected', 'Ghosted'
+    'Technical Round 2', 'Final Round', 'Offer', 'Rejected', 'Ghosted', 'Not Applying'
   ];
 
   // Filter and sort applications

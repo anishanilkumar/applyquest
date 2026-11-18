@@ -39,3 +39,11 @@ def test_a_corrected_step_does_not_count():
     assert effective_history(a) == [(S.APPLIED, S.REPLIED)]
     assert not has_reached_interview(a)
     assert has_positive_response(a)
+
+
+def test_a_draft_set_aside_is_not_sent_until_it_is():
+    assert not is_submitted(app(S.NOT_APPLYING, (S.SHORTLISTED, S.NOT_APPLYING)))
+    back = app(S.SHORTLISTED, (S.SHORTLISTED, S.NOT_APPLYING), (S.NOT_APPLYING, S.SHORTLISTED))
+    assert not is_submitted(back) and effective_history(back) == []
+    sent = app(S.APPLIED, (S.SHORTLISTED, S.NOT_APPLYING), (S.NOT_APPLYING, S.APPLIED))
+    assert is_submitted(sent) and effective_history(sent) == [(S.SHORTLISTED, S.APPLIED)]

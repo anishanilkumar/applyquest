@@ -9,7 +9,8 @@ from app.models.application import ApplicationStatus as S
 # The forward pipeline, in order. Rejected and Ghosted sit outside it.
 PIPELINE = [S.SHORTLISTED, S.APPLIED, S.REPLIED, S.PHONE_SCREEN,
             S.TECHNICAL_ROUND_1, S.TECHNICAL_ROUND_2, S.FINAL_ROUND, S.OFFER]
-CLOSED = [S.REJECTED, S.GHOSTED]
+# Not Applying is a draft set aside: closed like these, but it was never sent.
+CLOSED = [S.REJECTED, S.GHOSTED, S.NOT_APPLYING]
 INTERVIEW = [S.PHONE_SCREEN, S.TECHNICAL_ROUND_1, S.TECHNICAL_ROUND_2, S.FINAL_ROUND]
 REACHED_INTERVIEW = INTERVIEW + [S.OFFER]
 # A human engaged. A rejection is a "no" and ghosting is silence — neither counts.
@@ -49,7 +50,7 @@ def _held(app) -> set:
 
 def is_submitted(app) -> bool:
     """Sent to the employer: not a draft, and not a draft skipped straight to Rejected."""
-    if app.status == S.SHORTLISTED:
+    if app.status in (S.SHORTLISTED, S.NOT_APPLYING):
         return False
     path = effective_history(app)
     skipped = (S.SHORTLISTED, S.REJECTED) in path and not any(new == S.APPLIED for _, new in path)
