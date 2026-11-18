@@ -47,6 +47,12 @@ export interface JobApplication {
   coverLetterFile?: string;
   researchFile?: string;
   archiveDir?: string;
+  // The apply queue: the salary to name when asked (euros a year), whether
+  // salaryRange is an estimate rather than the posting's, and one thing to
+  // check before sending.
+  salaryAsk?: number;
+  salaryEstimated?: boolean;
+  headsUp?: string;
 }
 
 // A scheduled conversation with an employer (backend: models/interview.py).

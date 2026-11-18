@@ -71,6 +71,16 @@ Models: `User`, `Application` + `ApplicationHistory`, `NetworkContact`, `PointHi
 - The dev server proxies `/api` to `http://localhost:8000` (set in `package.json`).
 - **Look:** the Instrument house style (the `instrument-design` skill), adopted November 2026. The palette is a Tailwind theme named by job (`bg-panel`, `text-ink`, `text-arc`, `text-gold`…) over CSS variables in `index.css`, which also holds the component classes (`instrument`, `label`, `stamp`, `btn`, `input`, `verdict`, `dot`, `tag`) and its departures. `rounded-*` is capped at 2px and `shadow-*` is none for every class, in `tailwind.config.js`. Application stages have one colour each, from `utils/statusStyle.ts` (`stageVar`, `stageHex`); `components/common/Marks.tsx` draws a status (`StatusMark`), a 1-5 rating as lit squares (`Priority`) and a `Tag`. Charts and the map take literal colours from `PALETTE` there. `lint.sh` from the skill should pass on `frontend/src`.
 
+### The apply queue (`/queue`)
+
+Drafts (`Shortlisted`) worked through one by one: `pages/Queue.tsx`. Ticking a draft moves it Shortlisted -> Applied; "Not applying" moves it Shortlisted -> Rejected, which `stages` already reads as never sent. Both can be undone while the draft is on the page: Applied -> Shortlisted is the usual one-stage step back, and Rejected -> Shortlisted is allowed only when the last move was Shortlisted -> Rejected (`update_application_status`). Sent and set-aside drafts stay on the page for 14 days after they leave Shortlisted (`utils/queue.ts`).
+
+P(interview) is computed in the browser (`utils/odds.ts`) from submitted applications: per segment (effort, role type, fit band) p̂ = (i + 10·p₀)/(n + 10), and a draft's P is the geometric mean of its three. The fit bands match `outcome_stats` in `mcp_server.py`.
+
+The queue's own fields, written by ai-job-search through `update_application` (sync fields, no points): `salary_ask` (euros a year), `salary_estimated` (the range is an estimate, not the posting's), `heads_up` (one thing to check before sending).
+
+**Friday:** the queue is web-only for now. Quest stays a read-only summary; ticking drafts from Friday is a known to-do, noted in Friday's README too.
+
 ### Friday: the summary and the nudges
 
 Friday (Anish's Android app, `~/projects/friday`) shows the search read-only in its Quest section and carries the nudges. Email is off in production; the nudges are the channel.

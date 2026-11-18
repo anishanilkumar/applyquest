@@ -27,6 +27,9 @@ class ApplicationBase(BaseModel):
     cover_letter_file: Optional[str] = None
     research_file: Optional[str] = None
     archive_dir: Optional[str] = Field(default=None, pattern=r"^[a-z0-9_]+$")
+    salary_ask: Optional[int] = Field(default=None, ge=0)
+    salary_estimated: Optional[bool] = None
+    heads_up: Optional[str] = None
 
 class ApplicationCreate(ApplicationBase):
     pass
@@ -53,6 +56,9 @@ class ApplicationUpdate(BaseModel):
     cover_letter_file: Optional[str] = None
     research_file: Optional[str] = None
     archive_dir: Optional[str] = Field(default=None, pattern=r"^[a-z0-9_]+$")
+    salary_ask: Optional[int] = Field(default=None, ge=0)
+    salary_estimated: Optional[bool] = None
+    heads_up: Optional[str] = None
 
 class ApplicationHistoryBase(BaseModel):
     old_status: Optional[ApplicationStatus]

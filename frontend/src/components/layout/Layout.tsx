@@ -1,6 +1,6 @@
 import React, { ReactNode, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, BarChart3, Users, User, LogOut, Eye, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, Briefcase, BarChart3, Users, User, LogOut, Eye, CalendarDays, ListChecks } from 'lucide-react';
 import { upcomingInterviews } from '../../utils/interviews';
 import { useAppContext } from '../../context/AppContext';
 
@@ -22,6 +22,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', badge: 0 },
     { path: '/applications', icon: Briefcase, label: 'Applications', badge: 0 },
+    { path: '/queue', icon: ListChecks, label: 'Queue', badge: 0 },
     { path: '/interviews', icon: CalendarDays, label: 'Interviews', badge: interviewBadge },
     { path: '/analytics', icon: BarChart3, label: 'Analytics', badge: 0 },
     { path: '/network', icon: Users, label: 'Network', badge: 0 },

@@ -14,7 +14,8 @@ router = APIRouter()
 # Fields the ai-job-search workflow keeps in sync. Writing only these is
 # bookkeeping rather than the user working on an application, so it earns no
 # points — otherwise a backfill would inflate the level by one point a row.
-SYNC_FIELDS = {"effort", "fit_score", "role_type", "cv_file", "cover_letter_file", "research_file", "archive_dir"}
+SYNC_FIELDS = {"effort", "fit_score", "role_type", "cv_file", "cover_letter_file", "research_file", "archive_dir",
+               "salary_ask", "salary_estimated", "heads_up"}
 
 @router.get("/", response_model=List[application_schema.Application])
 def read_applications(
@@ -162,6 +163,11 @@ PIPELINE = [
     ApplicationStatus.OFFER,
 ]
 
+def _last_move(application):
+    history = sorted(getattr(application, "history", None) or [], key=lambda h: h.changed_at)
+    return (history[-1].old_status, history[-1].new_status) if history else None
+
+
 @router.patch("/{id}/status", response_model=application_schema.Application)
 def update_application_status(
     *,
@@ -207,6 +213,12 @@ def update_application_status(
         current_status in PIPELINE[1:]
         and new_status == PIPELINE[PIPELINE.index(current_status) - 1]
     )
+    # A draft set aside from the apply queue goes Shortlisted -> Rejected, which
+    # the stats already read as never sent. That one move can be undone, back to
+    # Shortlisted; a rejection that came after applying cannot.
+    if (current_status == ApplicationStatus.REJECTED and new_status == ApplicationStatus.SHORTLISTED
+            and _last_move(application) == (ApplicationStatus.SHORTLISTED, ApplicationStatus.REJECTED)):
+        is_step_back = True
 
     if not is_step_back and new_status not in valid_transitions.get(current_status, []):
          raise HTTPException(

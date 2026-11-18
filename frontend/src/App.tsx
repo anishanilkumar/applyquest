@@ -5,6 +5,7 @@ import { AppProvider, useAppContext } from './context/AppContext';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Applications from './pages/Applications';
+import Queue from './pages/Queue';
 import Interviews from './pages/Interviews';
 import Analytics from './pages/Analytics';
 import Network from './pages/Network';
@@ -85,6 +86,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Applications />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/queue"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Queue />
                 </Layout>
               </ProtectedRoute>
             }

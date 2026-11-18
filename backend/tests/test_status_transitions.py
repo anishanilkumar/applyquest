@@ -109,3 +109,35 @@ def test_cannot_jump_back_more_than_one_stage(current, target):
         update_application_status(db=make_db(app), id="app-1", new_status=target, current_user=make_user())
 
     assert exc.value.status_code == 400
+
+
+# --- undoing "not applying" from the apply queue ---
+
+def _move(old, new, minute):
+    from datetime import datetime
+    return SimpleNamespace(old_status=old, new_status=new, changed_at=datetime(2026, 11, 18, 12, minute))
+
+
+def test_draft_set_aside_can_return_to_the_queue():
+    app = make_application(ApplicationStatus.REJECTED)
+    app.history = [_move(None, ApplicationStatus.SHORTLISTED, 0),
+                   _move(ApplicationStatus.SHORTLISTED, ApplicationStatus.REJECTED, 5)]
+
+    update_application_status(
+        db=make_db(app), id="app-1", new_status=ApplicationStatus.SHORTLISTED, current_user=make_user()
+    )
+
+    assert app.status == ApplicationStatus.SHORTLISTED
+
+
+def test_rejection_after_applying_cannot_return_to_the_queue():
+    app = make_application(ApplicationStatus.REJECTED)
+    app.history = [_move(ApplicationStatus.SHORTLISTED, ApplicationStatus.APPLIED, 0),
+                   _move(ApplicationStatus.APPLIED, ApplicationStatus.REJECTED, 5)]
+
+    with pytest.raises(HTTPException) as exc:
+        update_application_status(
+            db=make_db(app), id="app-1", new_status=ApplicationStatus.SHORTLISTED, current_user=make_user()
+        )
+
+    assert exc.value.status_code == 400

@@ -61,6 +61,13 @@ class Application(Base):
     # The application's folder under ai-job-search's documents/applications/
     # (posting, submitted documents, interview prep packs). A folder name only.
     archive_dir = Column(String, nullable=True)
+    # The apply queue's fields, also written by ai-job-search when it drafts:
+    # the salary to name when a form asks for an expectation (euros a year),
+    # whether salary_range is an estimate rather than taken from the posting,
+    # and one thing to check before sending.
+    salary_ask = Column(Integer, nullable=True)
+    salary_estimated = Column(Boolean, nullable=True)
+    heads_up = Column(Text, nullable=True)
 
     user = relationship("User", back_populates="applications")
     history = relationship("ApplicationHistory", back_populates="application", cascade="all, delete-orphan")

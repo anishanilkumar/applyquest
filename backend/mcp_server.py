@@ -243,6 +243,7 @@ def mark_status(application_id: str, new_status: str, notes: Optional[str] = Non
       Final Round -> Offer | Rejected | Ghosted
       Offer       -> Rejected | Ghosted
       Rejected    -> Applied | Replied | Phone Screen | Tech Round 1/2 | Final Round | Offer
+                     | Shortlisted, only to undo a draft set aside (Shortlisted -> Rejected)
       Ghosted     -> Rejected | any of the stages Rejected can reopen to
     Rejected/Ghosted can be reopened because an application sometimes comes back.
     Any stage from Applied to Offer can also step back exactly one stage, to correct
@@ -349,6 +350,9 @@ def update_application(
     cover_letter_file: Optional[str] = None,
     research_file: Optional[str] = None,
     archive_dir: Optional[str] = None,
+    salary_ask: Optional[int] = None,
+    salary_estimated: Optional[bool] = None,
+    heads_up: Optional[str] = None,
 ) -> Any:
     """Enrich an existing application with job details discovered from an email.
 
@@ -365,6 +369,13 @@ def update_application(
     effort is how much went into the application: "Full" (tailored CV and cover
     letter, screening questions answered), "Light" (some tailoring), "Generic"
     (standard CV, no tailoring, e.g. a one-click Easy Apply) or "Unknown".
+
+    For the apply queue page: salary_range as text ("EUR 70-90k"),
+    salary_estimated true when that range is an estimate rather than taken
+    from the posting, salary_ask the yearly figure in euros to give when a
+    form asks for an expectation (e.g. 85000), and heads_up one thing to check
+    before sending. To set a draft aside ("not applying"), mark_status it
+    Shortlisted -> Rejected; that is never counted as sent.
     """
     if effort is not None and effort not in VALID_EFFORTS:
         return {"error": "invalid_effort", "detail": f"effort must be one of {VALID_EFFORTS}"}
@@ -384,6 +395,9 @@ def update_application(
         "cover_letter_file": cover_letter_file,
         "research_file": research_file,
         "archive_dir": archive_dir,
+        "salary_ask": salary_ask,
+        "salary_estimated": salary_estimated,
+        "heads_up": heads_up,
     }
     body = {k: v for k, v in body.items() if v is not None}
     if not body:

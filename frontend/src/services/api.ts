@@ -67,6 +67,9 @@ const transformApplication = (data: any): JobApplication => ({
     coverLetterFile: data.cover_letter_file ?? undefined,
     researchFile: data.research_file ?? undefined,
     archiveDir: data.archive_dir ?? undefined,
+    salaryAsk: data.salary_ask ?? undefined,
+    salaryEstimated: data.salary_estimated ?? undefined,
+    headsUp: data.heads_up ?? undefined,
     history: data.history ? data.history.map((h: any) => ({
         id: h.id,
         applicationId: h.application_id,
