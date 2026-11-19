@@ -2,7 +2,7 @@ from typing import Any, List, Optional
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy import or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from app.api import deps
 from app.models import application as application_model
 from app.models import user as user_model
@@ -15,7 +15,7 @@ router = APIRouter()
 # bookkeeping rather than the user working on an application, so it earns no
 # points — otherwise a backfill would inflate the level by one point a row.
 SYNC_FIELDS = {"effort", "fit_score", "role_type", "cv_file", "cover_letter_file", "research_file", "archive_dir",
-               "salary_ask", "salary_estimated", "heads_up"}
+               "salary_ask", "salary_estimated", "heads_up", "minutes_spent"}
 
 @router.get("/", response_model=List[application_schema.Application])
 def read_applications(
@@ -222,6 +222,15 @@ def update_application_status(
     # applied from the day it is actually submitted.
     if current_status == ApplicationStatus.SHORTLISTED and new_status == ApplicationStatus.APPLIED:
         application.applied_date = date.today()
+    # What the track record says at the moment of sending, kept for calibration.
+    # The draft itself is not yet sent, so it is not part of its own evidence.
+    if new_status == ApplicationStatus.APPLIED and current_status in (ApplicationStatus.SHORTLISTED, ApplicationStatus.NOT_APPLYING):
+        from app.core import odds
+        others = (db.query(application_model.Application)
+                  .filter(application_model.Application.user_id == current_user.id,
+                          application_model.Application.id != application.id)
+                  .options(selectinload(application_model.Application.history)).all())
+        application.predicted_p = odds.odds_model(others).p(application)
     db.add(application)
     
     # Record history

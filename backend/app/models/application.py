@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, Boolean, Enum, Text, ForeignKey, Date
+from sqlalchemy import Column, String, Integer, DateTime, Boolean, Enum, Text, ForeignKey, Date, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
@@ -70,6 +70,11 @@ class Application(Base):
     salary_ask = Column(Integer, nullable=True)
     salary_estimated = Column(Boolean, nullable=True)
     heads_up = Column(Text, nullable=True)
+    # P(interview) from core/odds.py at the moment it was sent, written by the
+    # server (never by a client), so calibration can be checked later.
+    predicted_p = Column(Float, nullable=True)
+    # How long the application took, in minutes (a sync field).
+    minutes_spent = Column(Integer, nullable=True)
 
     user = relationship("User", back_populates="applications")
     history = relationship("ApplicationHistory", back_populates="application", cascade="all, delete-orphan")

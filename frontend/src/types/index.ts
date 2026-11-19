@@ -53,6 +53,10 @@ export interface JobApplication {
   salaryAsk?: number;
   salaryEstimated?: boolean;
   headsUp?: string;
+  // Minutes the application took (a sync field), and P(interview) as the
+  // server's odds model put it when the application was sent (read-only).
+  minutesSpent?: number;
+  predictedP?: number;
 }
 
 // A scheduled conversation with an employer (backend: models/interview.py).

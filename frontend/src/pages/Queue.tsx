@@ -1,17 +1,18 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ExternalLink, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAppContext } from '../context/AppContext';
 import { applicationService } from '../services/api';
 import { ApplicationEffort, ApplicationStatus, JobApplication } from '../types';
-import { oddsModel } from '../utils/odds';
+import { CREDIBLE, DECAY, HORIZON_DAYS, K, oddsModel } from '../utils/odds';
 import { QUEUE_WINDOW_DAYS, QueueEntry, QueueState, queueEntries } from '../utils/queue';
 
 // The apply queue: drafts waiting to be sent, worked through one by one.
 // Ticking a draft marks it Applied; "Not applying" sets it aside
 // (Shortlisted -> Not Applying, never counted as sent). Both can be undone while
 // the draft is still on the page. P(interview) comes from the track record
-// (utils/odds.ts) and is a ranking signal, not a forecast.
+// (utils/odds.ts) and is a ranking signal, not a forecast. The minutes from
+// opening a posting to ticking it are added to the draft's minutes_spent.
 
 type Filter = QueueState | 'all';
 type Tier = ApplicationEffort | 'any';
@@ -22,12 +23,16 @@ const FILTER_LABEL: Record<Filter, string> = { todo: 'To send', sent: 'Sent', sk
 const shortDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '');
 const euros = (n: number) => `€${Math.round(n / 1000)}k`;
 const fileName = (path: string) => path.split('/').pop()!.replace(/\.(tex|pdf)$/, '');
+// Longer than this and the posting was left open, not worked on.
+const MAX_SEND_MINUTES = 120;
 
 const Queue: React.FC = () => {
   const { applications, setApplications, isMentorView } = useAppContext();
   const [filter, setFilter] = useState<Filter>('todo');
   const [tier, setTier] = useState<Tier>('any');
   const [busy, setBusy] = useState<string | null>(null);
+  // When each posting was opened from this page, to time the sending.
+  const opened = useRef(new Map<string, number>());
 
   const model = useMemo(() => oddsModel(applications), [applications]);
   const entries = useMemo(() => {
@@ -51,22 +56,34 @@ const Queue: React.FC = () => {
     return () => { document.title = before; };
   }, [tabTitle]);
 
-  const move = async (app: JobApplication, to: ApplicationStatus, notes?: string) => {
+  const move = async (app: JobApplication, to: ApplicationStatus, notes?: string): Promise<boolean> => {
     setBusy(app.id);
     try {
       const updated = await applicationService.updateStatus(app.id, to, notes);
       setApplications(prev => prev.map(a => (a.id === updated.id ? updated : a)));
+      return true;
     } catch {
       toast.error('Not saved: the status change was refused.');
+      return false;
     } finally {
       setBusy(null);
     }
   };
 
   // Un-sending is a one-stage step back, so only an application still at Applied can return.
-  const toggleSent = (e: QueueEntry) => {
+  const toggleSent = async (e: QueueEntry) => {
     if (e.state === 'sent') return move(e.app, 'Shortlisted');
-    return move(e.app, 'Applied');
+    if (!(await move(e.app, 'Applied'))) return;
+    const start = opened.current.get(e.app.id);
+    const minutes = start ? Math.round((Date.now() - start) / 60000) : 0;
+    if (minutes < 1 || minutes > MAX_SEND_MINUTES) return;
+    opened.current.delete(e.app.id);
+    try {
+      const updated = await applicationService.update(e.app.id, { minutesSpent: (e.app.minutesSpent ?? 0) + minutes });
+      setApplications(prev => prev.map(a => (a.id === updated.id ? updated : a)));
+    } catch {
+      // The time is a nicety; the send itself is saved.
+    }
   };
   const toggleSkip = (e: QueueEntry) => (e.state === 'skip' ? move(e.app, 'Shortlisted') : move(e.app, 'Not Applying'));
 
@@ -178,7 +195,8 @@ const Queue: React.FC = () => {
 
                   <div className="flex flex-wrap gap-2 items-center">
                     {a.jobUrl && (
-                      <a className="btn btn-primary btn-sm gap-2" href={a.jobUrl} target="_blank" rel="noopener noreferrer">
+                      <a className="btn btn-primary btn-sm gap-2" href={a.jobUrl} target="_blank" rel="noopener noreferrer"
+                        onClick={() => { if (!opened.current.has(a.id)) opened.current.set(a.id, Date.now()); }}>
                         Open posting <ExternalLink className="w-4 h-4" strokeWidth={1.6} />
                       </a>
                     )}
@@ -208,11 +226,14 @@ const Queue: React.FC = () => {
       <details className="instrument">
         <summary className="label cursor-pointer min-h-[44px] flex items-center">P(interview)</summary>
         <p className="stamp mt-2">
-          p₀ = {model.base.interviews}/{model.base.sent} = {model.base.p.toFixed(3)}. Per segment (tier, role type, fit band): p̂ = (i + 10·p₀) / (n + 10). Per draft: geometric mean of its three p̂. Expected interviews = Σp.
+          p₀ = {model.base.p.toFixed(3)} ({model.base.interviews} interviews / {model.base.sent} sent, weighted). Per segment (tier, role type, fit band):
+          p | data ~ Beta(α, β), α = {K}·p₀ + Σw·y, β = {K}·(1−p₀) + Σw·f. f = 1 for a closed application, G(t) for one still waiting t days
+          (the share of replies in by then, blended with t/{HORIZON_DAYS}); w = {DECAY}^weeks. Per draft: geometric mean of its three E[p].
+          Interval: {Math.round(CREDIBLE * 100)}% credible. Expected interviews = Σp.
         </p>
         <div className="overflow-x-auto mt-3">
           <table className="table">
-            <thead><tr><th>Segment</th><th className="n">i</th><th className="n">n</th><th className="n">p̂</th></tr></thead>
+            <thead><tr><th>Segment</th><th className="n">i</th><th className="n">n</th><th className="n">E[p]</th><th className="n">{Math.round(CREDIBLE * 100)}% CI</th></tr></thead>
             <tbody>
               {model.segments.map(s => (
                 <tr key={`${s.kind}:${s.name}`}>
@@ -220,6 +241,7 @@ const Queue: React.FC = () => {
                   <td className="n">{s.interviews}</td>
                   <td className="n">{s.sent}</td>
                   <td className="n">{s.p.toFixed(3)}</td>
+                  <td className="n text-ink-dim">{s.lo.toFixed(3)}–{s.hi.toFixed(3)}</td>
                 </tr>
               ))}
             </tbody>

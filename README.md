@@ -29,7 +29,7 @@ uvicorn app.main:app --reload
 
 - Gamified job tracking with points, levels, and streaks
 - Kanban board for application management
-- Apply queue: drafts waiting to be sent, ranked by P(interview) from your own track record, with the posting link, salary range and ask, a heads-up, and the CV and cover letter file names; tick one when it's sent, or set it aside
+- Apply queue: drafts waiting to be sent, ranked by P(interview) from your own track record (a Bayesian Beta-Binomial model with credible intervals, which allows for replies still to come and checks its own calibration), with the posting link, salary range and ask, a heads-up, and the CV and cover letter file names; tick one when it's sent, or set it aside
 - Analytics and visualizations
 - Network contact management
 - Germany-specific job search fields

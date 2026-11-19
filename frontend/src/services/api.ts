@@ -70,6 +70,8 @@ const transformApplication = (data: any): JobApplication => ({
     salaryAsk: data.salary_ask ?? undefined,
     salaryEstimated: data.salary_estimated ?? undefined,
     headsUp: data.heads_up ?? undefined,
+    minutesSpent: data.minutes_spent ?? undefined,
+    predictedP: data.predicted_p ?? undefined,
     history: data.history ? data.history.map((h: any) => ({
         id: h.id,
         applicationId: h.application_id,

@@ -38,6 +38,18 @@ def test_submitting_a_shortlisted_application_dates_it_today():
     assert app.applied_date == date.today()
 
 
+@patch("app.core.odds.odds_model")
+def test_sending_stores_the_odds_at_that_moment(odds_model):
+    odds_model.return_value.p.return_value = 0.042
+    app = make_application()
+    update_application_status(db=make_db(app), id="app-1", new_status=ApplicationStatus.APPLIED, notes=None, current_user=make_user())
+    assert app.predicted_p == 0.042
+    # Later news doesn't rewrite what was predicted.
+    odds_model.return_value.p.return_value = 0.9
+    update_application_status(db=make_db(app), id="app-1", new_status=ApplicationStatus.REPLIED, notes=None, current_user=make_user())
+    assert app.predicted_p == 0.042
+
+
 def test_later_transitions_keep_the_applied_date():
     drafted = date.today() - timedelta(days=5)
     app = make_application(status=ApplicationStatus.APPLIED, applied_date=drafted)

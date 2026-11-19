@@ -30,6 +30,7 @@ class ApplicationBase(BaseModel):
     salary_ask: Optional[int] = Field(default=None, ge=0)
     salary_estimated: Optional[bool] = None
     heads_up: Optional[str] = None
+    minutes_spent: Optional[int] = Field(default=None, ge=0, le=1440)
 
 class ApplicationCreate(ApplicationBase):
     pass
@@ -59,6 +60,7 @@ class ApplicationUpdate(BaseModel):
     salary_ask: Optional[int] = Field(default=None, ge=0)
     salary_estimated: Optional[bool] = None
     heads_up: Optional[str] = None
+    minutes_spent: Optional[int] = Field(default=None, ge=0, le=1440)
 
 class ApplicationHistoryBase(BaseModel):
     old_status: Optional[ApplicationStatus]
@@ -78,6 +80,8 @@ class Application(ApplicationBase):
     user_id: UUID
     created_at: datetime
     updated_at: datetime
+    # Read-only: set by the server when the application is sent.
+    predicted_p: Optional[float] = None
     history: List[ApplicationHistory] = []
 
     class Config:

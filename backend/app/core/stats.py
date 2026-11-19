@@ -2,7 +2,8 @@
 
 One read-only summary: the runway (runway.py), applications per week against
 the pace it asks for, the funnel, what gets replies, the streak, the
-shortlist still waiting, and the next interviews. Every count uses the same
+shortlist still waiting, the next interviews, and the odds model's posteriors
+and calibration (odds.py). Every count uses the same
 definitions as the Dashboard and Analytics (stages.py). Dates are Berlin's,
 as the streak's are.
 """
@@ -12,6 +13,7 @@ import math
 from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
+from app.core import odds
 from app.core.runway import compute_runway
 from app.core.stages import has_positive_response, has_reached_interview, has_reached_offer, is_submitted
 from app.core.working_days import _is_off_day
@@ -135,6 +137,7 @@ def summary(user, applications: list, interviews: list, off_days: set[date], now
             "drafts": len(drafts),
         },
         "drivers": _drivers(sent),
+        "odds": odds.summary(applications, now),
         "shortlist": {
             "count": len(drafts),
             "oldest": [{

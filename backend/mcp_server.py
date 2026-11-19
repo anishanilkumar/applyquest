@@ -354,6 +354,7 @@ def update_application(
     salary_ask: Optional[int] = None,
     salary_estimated: Optional[bool] = None,
     heads_up: Optional[str] = None,
+    minutes_spent: Optional[int] = None,
 ) -> Any:
     """Enrich an existing application with job details discovered from an email.
 
@@ -376,6 +377,9 @@ def update_application(
     from the posting, salary_ask the yearly figure in euros to give when a
     form asks for an expectation (e.g. 85000), and heads_up one thing to check
     before sending. To set a draft aside, mark_status it Not Applying.
+
+    minutes_spent is how long the application took to prepare and send, in
+    whole minutes; it feeds interviews per hour by effort tier.
     """
     if effort is not None and effort not in VALID_EFFORTS:
         return {"error": "invalid_effort", "detail": f"effort must be one of {VALID_EFFORTS}"}
@@ -398,6 +402,7 @@ def update_application(
         "salary_ask": salary_ask,
         "salary_estimated": salary_estimated,
         "heads_up": heads_up,
+        "minutes_spent": minutes_spent,
     }
     body = {k: v for k, v in body.items() if v is not None}
     if not body:
@@ -538,6 +543,26 @@ def outcome_stats() -> Any:
     if resp.status_code != 200:
         return _err(resp)
     return _outcome_stats(resp.json())
+
+
+@mcp.tool()
+def interview_odds() -> Any:
+    """P(interview) as a Bayesian model of the track record (core/odds.py).
+
+    Per segment (Tier = effort, Role = role type, Fit = fit band): the Beta
+    posterior (alpha, beta), its mean p and a 90% credible interval [lo, hi].
+    Applications still waiting count as a partial "no", weighted by how many
+    replies would have arrived by now, and older evidence fades by 0.98 a week.
+    Also: in_flight_expected (interviews still expected from applications
+    waiting for a reply) and calibration of the predictions stored at sending
+    (n, expected, observed, Brier). A wide interval marks a segment where more
+    applications would teach the most.
+    """
+    with _client() as c:
+        resp = c.get("/stats/summary")
+    if resp.status_code != 200:
+        return _err(resp)
+    return resp.json().get("odds")
 
 
 if __name__ == "__main__":
