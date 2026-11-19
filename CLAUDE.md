@@ -162,4 +162,4 @@ There is no committed DB dump and the local `applyquest` DB is usually empty, so
 - Milestones (10/25/50/100 applications) trigger email notifications via Resend API (`core/email.py`).
 - Levels: 1 (0 pts) -> 10 "Closer" (12000 pts), defined in `core/gamification.py` (the Dashboard copies the thresholds). A level-up pings Friday.
 - The summary's `game` block (today, banked = Σ P(interview | no reply yet), quests) feeds the Dashboard's Quest card and the 12:30 nudge (`nudges.midday`, behind today's target on a working day). `tests/conftest.py` stubs the endpoint's game calls; `tests/test_quest.py` tests them.
-- **Friday:** the Quest section doesn't show the game block yet (known to-do, also in Friday's README); the nudges and pings already reach it.
+- **Friday:** the Quest section shows the game block (today, banked, freezes, next level, quests) and the odds line, parsing both as optional so a summary cached before them still reads.
