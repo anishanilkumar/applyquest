@@ -39,3 +39,9 @@ def streak_is_unbroken(last_date: date, today: date, off_days: set[date]) -> boo
         if not _is_off_day(last_date + timedelta(days=i), off_days):
             return False
     return True
+
+
+def missed_working_days(last_date: date, today: date, off_days: set[date]) -> int:
+    """Working days strictly between last_date and today."""
+    return sum(1 for i in range(1, (today - last_date).days)
+               if not _is_off_day(last_date + timedelta(days=i), off_days))

@@ -10,6 +10,7 @@ export interface User {
   levelName: string;
   currentStreak: number;
   longestStreak: number;
+  streakFreezes: number;
   // Runway settings (utils/runway.ts): the date the search must end by, how
   // long hiring takes, and how long the paperwork after an offer needs.
   searchDeadline?: string;
@@ -140,4 +141,24 @@ export interface Activity {
   pointsEarned: number;
   applicationId?: string;
   createdAt: string;
+}
+// The game's part of GET /stats/summary (backend core/quest.py).
+export interface Quest {
+  id: string;
+  key: 'volume' | 'explore' | 'oldest';
+  title: string;
+  detail: string;
+  progress: number;
+  target: number;
+  done: boolean;
+  xp: number;
+}
+
+export interface GameState {
+  today: { target: number | null; sent: number; working: boolean };
+  banked: number;
+  quests: Quest[];
+  freezes: number;
+  nextLevel: { level: number; name: string; minPoints: number } | null;
+  calibration: { n: number; expected: number; observed: number; brier: number | null };
 }

@@ -2,8 +2,9 @@
 
 One read-only summary: the runway (runway.py), applications per week against
 the pace it asks for, the funnel, what gets replies, the streak, the
-shortlist still waiting, the next interviews, and the odds model's posteriors
-and calibration (odds.py). Every count uses the same
+shortlist still waiting, the next interviews, the odds model's posteriors
+and calibration (odds.py), and the game: today's target, the interviews banked
+and the week's quests (quest.py). Every count uses the same
 definitions as the Dashboard and Analytics (stages.py). Dates are Berlin's,
 as the streak's are.
 """
@@ -13,7 +14,8 @@ import math
 from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from app.core import odds
+from app.core import odds, quest
+from app.core.gamification import next_level
 from app.core.runway import compute_runway
 from app.core.stages import has_positive_response, has_reached_interview, has_reached_offer, is_submitted
 from app.core.working_days import _is_off_day
@@ -104,6 +106,11 @@ def summary(user, applications: list, interviews: list, off_days: set[date], now
     waiting = sorted(drafts, key=lambda a: a.created_at or datetime.min)
     upcoming = sorted((i for i in interviews if i.starts_at and i.starts_at >= now), key=lambda i: i.starts_at)[:5]
 
+    odds_block = odds.summary(applications, now)
+    week_target = math.ceil(target) if target is not None else None
+    game = quest.state(applications, this_week, week_target, week_sent, per_day.get(today, 0),
+                       working_left, odds_block["in_flight_expected"])
+
     recent = []
     since = now.replace(tzinfo=None) - timedelta(days=14)
     for a in applications:
@@ -121,9 +128,11 @@ def summary(user, applications: list, interviews: list, off_days: set[date], now
             "active": berlin_date(user.updated_at) == today,
         },
         "streak": {"current": user.current_streak, "longest": user.longest_streak,
-                   "level": user.level, "level_name": user.level_name, "points": user.points},
+                   "freezes": getattr(user, "streak_freezes", 0) or 0,
+                   "level": user.level, "level_name": user.level_name, "points": user.points,
+                   "next_level": next_level(user.points)},
         "week": {"start": this_week.isoformat(), "sent": week_sent,
-                 "target": math.ceil(target) if target is not None else None,
+                 "target": week_target,
                  "target_chance": TARGET_CHANCE, "working_days_left": working_left},
         "weeks": weeks,
         "days": days,
@@ -137,7 +146,8 @@ def summary(user, applications: list, interviews: list, off_days: set[date], now
             "drafts": len(drafts),
         },
         "drivers": _drivers(sent),
-        "odds": odds.summary(applications, now),
+        "odds": odds_block,
+        "game": game,
         "shortlist": {
             "count": len(drafts),
             "oldest": [{

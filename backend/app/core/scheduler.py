@@ -70,6 +70,8 @@ def job_streak_check():
             return
         if user.current_streak <= 1:
             return  # No streak worth reporting
+        if (user.streak_freezes or 0) > 0:
+            return  # A freeze covers the day; it is spent on the next activity
         if _utc_naive_to_berlin_date(user.updated_at) == yesterday:
             return  # Was active yesterday — streak intact
         notify_streak_broken(user.name, user.current_streak)
@@ -157,6 +159,12 @@ def job_friday_evening():
     _friday(nudges.evening)
 
 
+def job_friday_midday():
+    """12:30 Berlin: behind today's target on a working day."""
+    from app.core import nudges
+    _friday(nudges.midday)
+
+
 def job_friday_weekly():
     """Monday 8:30 Berlin: last week against the target, and the runway."""
     from app.core import nudges
@@ -169,6 +177,7 @@ def start_scheduler():
     scheduler.add_job(job_weekly_summary, CronTrigger(day_of_week="sun", hour=19, minute=0, timezone=BERLIN))
     # The nudges, as Friday notifications (the emails above only send with RESEND_API_KEY set).
     scheduler.add_job(job_friday_evening, CronTrigger(hour=20, minute=0, timezone=BERLIN))
+    scheduler.add_job(job_friday_midday, CronTrigger(hour=12, minute=30, timezone=BERLIN))
     scheduler.add_job(job_friday_weekly, CronTrigger(day_of_week="mon", hour=8, minute=30, timezone=BERLIN))
     scheduler.start()
     logger.info("Scheduler started")

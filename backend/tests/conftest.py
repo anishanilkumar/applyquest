@@ -29,3 +29,21 @@ import app.models.application  # noqa: F401,E402
 import app.models.network  # noqa: F401,E402
 import app.models.point_history  # noqa: F401,E402
 import app.models.user  # noqa: F401,E402
+
+
+import pytest  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def no_game(request, monkeypatch):
+    """The status endpoint's points need a real session; its tests use a MagicMock.
+
+    core/quest.py is tested on its own (test_quest.py), so the endpoint's
+    calls into it are stubbed everywhere else.
+    """
+    if request.module.__name__.endswith("test_quest"):
+        return
+    from app.api.v1.endpoints import applications
+    from app.core import quest
+    monkeypatch.setattr(quest, "on_move", lambda *a, **k: [])
+    monkeypatch.setattr(applications, "_award_game", lambda *a, **k: [])

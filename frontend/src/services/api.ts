@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, JobApplication, NetworkContact, ApplicationStatus, Interview } from '../types';
+import { User, JobApplication, NetworkContact, ApplicationStatus, Interview, GameState } from '../types';
 
 const API_URL = '/api/v1';
 
@@ -34,6 +34,7 @@ const transformUser = (data: any): User => ({
     levelName: data.level_name,
     currentStreak: data.current_streak,
     longestStreak: data.longest_streak,
+    streakFreezes: data.streak_freezes ?? 0,
     searchDeadline: data.search_deadline ?? undefined,
     hiringWeeks: data.hiring_weeks ?? 6,
     paperworkWeeks: data.paperwork_weeks ?? 4,
@@ -147,9 +148,20 @@ export const userService = {
         const response = await apiClient.put('/user/', toSnakeCase(userData));
         return transformUser(response.data);
     },
-    claimDailyGoalBonus: async (): Promise<User> => {
-        const response = await apiClient.post('/user/daily-goal-bonus');
-        return transformUser(response.data);
+};
+
+export const gameService = {
+    // The game's slice of the summary Friday reads (backend core/stats.py).
+    get: async (): Promise<GameState> => {
+        const { data } = await apiClient.get('/stats/summary');
+        return {
+            today: { target: data.game.today.target, sent: data.game.today.sent, working: data.today.working },
+            banked: data.game.banked,
+            quests: data.game.quests,
+            freezes: data.streak.freezes ?? 0,
+            nextLevel: data.streak.next_level ?? null,
+            calibration: data.odds.calibration,
+        };
     },
 };
 

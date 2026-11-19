@@ -163,6 +163,17 @@ PIPELINE = [
     ApplicationStatus.OFFER,
 ]
 
+def _award_game(db: Session, user) -> list:
+    """Pay out the day's target and finished quests from the summary, once each."""
+    from app.api.v1.endpoints.stats import load_summary
+    from app.core import quest
+    s = load_summary(db, user)
+    news = quest.award(db, user, s["game"], date.fromisoformat(s["today"]["date"]))
+    if news:
+        db.commit()
+    return news
+
+
 @router.patch("/{id}/status", response_model=application_schema.Application)
 def update_application_status(
     *,
@@ -224,13 +235,15 @@ def update_application_status(
         application.applied_date = date.today()
     # What the track record says at the moment of sending, kept for calibration.
     # The draft itself is not yet sent, so it is not part of its own evidence.
+    model = None
     if new_status == ApplicationStatus.APPLIED and current_status in (ApplicationStatus.SHORTLISTED, ApplicationStatus.NOT_APPLYING):
         from app.core import odds
         others = (db.query(application_model.Application)
                   .filter(application_model.Application.user_id == current_user.id,
                           application_model.Application.id != application.id)
                   .options(selectinload(application_model.Application.history)).all())
-        application.predicted_p = odds.odds_model(others).p(application)
+        model = odds.odds_model(others)
+        application.predicted_p = model.p(application)
     db.add(application)
     
     # Record history
@@ -241,15 +254,22 @@ def update_application_status(
         notes=notes
     )
     db.add(history)
-    
+
+    # Points for the send (or taken back for an un-send), then the day's
+    # target and the week's quests, each paid once (core/quest.py).
+    from app.core import friday, quest
+    news = quest.on_move(db, current_user, application, current_status, new_status, model)
     db.commit()
     db.refresh(application)
+    news += _award_game(db, current_user)
+    for said in news:
+        friday.tell(*said)
 
     # A step back is a correction, not news — don't announce it.
     if is_step_back:
         return application
 
-    from app.core import friday, nudges
+    from app.core import nudges
     news = nudges.good_news(new_status, application.company_name, application.position_title)
     if news:
         friday.tell(*news)

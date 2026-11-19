@@ -32,7 +32,10 @@ def evening(s: dict) -> tuple[str, str] | None:
     if not t["working"] or t["sent"] > 0:
         return None
     streak = s["streak"]["current"]
-    if streak >= 2 and not t["active"]:
+    freezes = s["streak"].get("freezes", 0)
+    if streak >= 2 and not t["active"] and freezes:
+        title = f"A freeze will cover today ({_plural(freezes, 'left')})"
+    elif streak >= 2 and not t["active"]:
         title = f"Your {streak}-day streak ends tonight"
     else:
         title = "No application sent today"
@@ -44,6 +47,26 @@ def evening(s: dict) -> tuple[str, str] | None:
     else:
         waiting = "The shortlist is empty: one good find is a start."
     return title, f"{waiting} {_week_line(s)}"
+
+
+def midday(s: dict) -> tuple[str, str] | None:
+    """12:30 on a working day, behind today's target: how far, and what is banked."""
+    t = s["today"]
+    game = s.get("game") or {}
+    target = (game.get("today") or {}).get("target")
+    if not t["working"] or not target or t["sent"] >= target:
+        return None
+    left = target - t["sent"]
+    title = f"{t['sent']} of {target} sent today"
+    body = f"{_plural(left, 'more')} by 20:00 keeps the week on its 80% pace."
+    banked = game.get("banked")
+    if banked:
+        body += f" In flight: {banked:.2f} interviews expected."
+    quests = [q for q in game.get("quests", []) if not q["done"]]
+    if quests:
+        q = quests[0]
+        body += f" Quest: {q['title']} ({q['progress']}/{q['target']})."
+    return title, body
 
 
 def weekly(s: dict) -> tuple[str, str]:

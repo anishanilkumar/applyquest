@@ -18,6 +18,8 @@ class User(Base):
     level_name = Column(String, default='Novice')
     current_streak = Column(Integer, default=0)
     longest_streak = Column(Integer, default=0)
+    # Each covers one missed working day (core/gamification.py).
+    streak_freezes = Column(Integer, nullable=False, default=0, server_default='0')
     last_goal_bonus_date = Column(Date, nullable=True)
     # Runway: the date the search must end by (e.g. a visa window), how long
     # hiring takes from application to offer, and how much of the window the

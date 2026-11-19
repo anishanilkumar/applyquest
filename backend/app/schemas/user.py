@@ -27,6 +27,7 @@ class User(UserBase):
     level_name: str
     current_streak: int
     longest_streak: int
+    streak_freezes: int = 0
     search_deadline: Optional[date] = None
     hiring_weeks: int = 6
     paperwork_weeks: int = 4

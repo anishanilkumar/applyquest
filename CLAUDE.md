@@ -153,7 +153,13 @@ There is no committed DB dump and the local `applyquest` DB is usually empty, so
 
 ### Points system
 
-- Create application: +2 pts
-- Status change to interview stages: +5–15 pts depending on stage
+- Create application: +2 pts; a user's own edit: +1 (sync fields pay nothing).
+- **Sending** (Shortlisted or Not Applying -> Applied): `round(1000·predicted_p)`, at least 1, so points track expected interviews (`core/quest.py`). Keyed to the application (`reference_type` "send"): un-sending (Applied -> Shortlisted) takes them back, and sending again doesn't pay twice.
+- **Lucky draw:** each send draws from the Beta posteriors of its three segments; a geometric mean above that of their 95% points pays +50 and pings Friday. Rare by construction.
+- **Day target:** the week's target (the runway's pace for 80%) less what was sent before today, over the working days left. Meeting it pays +25 once a day. It replaced the Dashboard's random daily goals; `POST /user/daily-goal-bonus` is left for old clients and nothing calls it.
+- **Weekly quests** (fixed from the state at Monday 00:00): send the week's target (+100), 3 sends in the segment with the widest credible interval, skipping Unknown/Unscored (+75), clear the five drafts that had waited longest (+50). Each pays once, as a PointHistory row whose reason names the quest and week. Awarded after every status move (`_award_game` in `endpoints/applications.py`).
+- **Streak freezes** (`User.streak_freezes`): one earned every 5th day of streak, at most 2 held; on the next activity after a gap, freezes cover the missed working days if there are enough. The midnight check emails no mentor while a freeze is held. `recalculate_streak.py` doesn't know about freezes.
 - Milestones (10/25/50/100 applications) trigger email notifications via Resend API (`core/email.py`).
-- Levels: 1 (0 pts) → 6 "Offer Magnet" (1500 pts), defined in `core/gamification.py`.
+- Levels: 1 (0 pts) -> 10 "Closer" (12000 pts), defined in `core/gamification.py` (the Dashboard copies the thresholds). A level-up pings Friday.
+- The summary's `game` block (today, banked = Σ P(interview | no reply yet), quests) feeds the Dashboard's Quest card and the 12:30 nudge (`nudges.midday`, behind today's target on a working day). `tests/conftest.py` stubs the endpoint's game calls; `tests/test_quest.py` tests them.
+- **Friday:** the Quest section doesn't show the game block yet (known to-do, also in Friday's README); the nudges and pings already reach it.
