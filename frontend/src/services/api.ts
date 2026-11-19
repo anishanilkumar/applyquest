@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, JobApplication, NetworkContact, ApplicationStatus, Interview, GameState } from '../types';
+import { User, JobApplication, NetworkContact, ApplicationStatus, Interview, GameState, RegressionModel } from '../types';
 
 const API_URL = '/api/v1';
 
@@ -148,6 +148,11 @@ export const userService = {
         const response = await apiClient.put('/user/', toSnakeCase(userData));
         return transformUser(response.data);
     },
+};
+
+export const modelService = {
+    // null until there is a track record to fit.
+    get: async (): Promise<RegressionModel | null> => (await apiClient.get('/stats/model')).data,
 };
 
 export const gameService = {

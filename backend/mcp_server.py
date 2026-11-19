@@ -557,12 +557,23 @@ def interview_odds() -> Any:
     waiting for a reply) and calibration of the predictions stored at sending
     (n, expected, observed, Brier). A wide interval marks a segment where more
     applications would teach the most.
+
+    regression: the logistic regression over all factors at once (effort,
+    role, fit band, cover letter, source; core/model.py), with each
+    coefficient's posterior mean and sd on the log-odds scale, the pooling
+    scale sigma the data chose, and each draft's P, 90% interval and a
+    Thompson draw. Coefficients near 0 with a large sd mean "no evidence yet".
     """
     with _client() as c:
         resp = c.get("/stats/summary")
-    if resp.status_code != 200:
-        return _err(resp)
-    return resp.json().get("odds")
+        if resp.status_code != 200:
+            return _err(resp)
+        reg = c.get("/stats/model")
+    out = resp.json().get("odds") or {}
+    if reg.status_code == 200 and reg.json():
+        r = reg.json()
+        out["regression"] = {k: r[k] for k in ("sigma", "n", "coefficients", "drafts")}
+    return out
 
 
 if __name__ == "__main__":

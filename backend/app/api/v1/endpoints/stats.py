@@ -31,3 +31,15 @@ def read_summary(
 ) -> Any:
     """The job search at a glance (read-only), for Friday's ApplyQuest section."""
     return load_summary(db, current_user)
+
+
+@router.get("/model")
+def read_model(
+    db: Session = Depends(deps.get_db),
+    current_user: user_model.User = Depends(deps.get_current_user),
+) -> Any:
+    """P(interview) from the logistic regression (core/model.py): coefficients, and each draft's P, interval and a Thompson draw."""
+    from app.core import model
+    apps = (db.query(Application).filter(Application.user_id == current_user.id)
+            .options(selectinload(Application.history)).all())
+    return model.summary(apps, datetime.now(timezone.utc))

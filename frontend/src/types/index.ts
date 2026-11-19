@@ -162,3 +162,11 @@ export interface GameState {
   nextLevel: { level: number; name: string; minPoints: number } | null;
   calibration: { n: number; expected: number; observed: number; brier: number | null };
 }
+
+// GET /stats/model (backend core/model.py): the logistic regression.
+export interface RegressionModel {
+  sigma: number;
+  n: number;
+  coefficients: { name: string; mean: number; sd: number }[];
+  drafts: Record<string, { p: number; lo: number; hi: number; draw: number }>;
+}

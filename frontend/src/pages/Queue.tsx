@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ExternalLink, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAppContext } from '../context/AppContext';
-import { applicationService } from '../services/api';
-import { ApplicationEffort, ApplicationStatus, JobApplication } from '../types';
+import { applicationService, modelService } from '../services/api';
+import { ApplicationEffort, ApplicationStatus, JobApplication, RegressionModel } from '../types';
 import { CREDIBLE, DECAY, HORIZON_DAYS, K, oddsModel } from '../utils/odds';
 import { QUEUE_WINDOW_DAYS, QueueEntry, QueueState, queueEntries } from '../utils/queue';
 
@@ -11,11 +11,15 @@ import { QUEUE_WINDOW_DAYS, QueueEntry, QueueState, queueEntries } from '../util
 // Ticking a draft marks it Applied; "Not applying" sets it aside
 // (Shortlisted -> Not Applying, never counted as sent). Both can be undone while
 // the draft is still on the page. P(interview) comes from the track record
-// (utils/odds.ts) and is a ranking signal, not a forecast. The minutes from
+// the logistic regression (backend core/model.py) for drafts, the prediction
+// stored at sending for what was sent, and the segment model (utils/odds.ts)
+// where neither is there (the mentor view). "Explore" orders drafts by one
+// Thompson draw from the regression's posterior instead of its mean. The minutes from
 // opening a posting to ticking it are added to the draft's minutes_spent.
 
 type Filter = QueueState | 'all';
 type Tier = ApplicationEffort | 'any';
+type Order = 'odds' | 'explore';
 
 const TIERS: Tier[] = ['any', 'Full', 'Light', 'Generic'];
 const FILTER_LABEL: Record<Filter, string> = { todo: 'To send', sent: 'Sent', skip: 'Not applying', all: 'All' };
@@ -35,10 +39,23 @@ const Queue: React.FC = () => {
   const opened = useRef(new Map<string, number>());
 
   const model = useMemo(() => oddsModel(applications), [applications]);
+  const [regression, setRegression] = useState<RegressionModel | null>(null);
+  const [order, setOrder] = useState<Order>('odds');
+  const drafted = applications.filter(a => a.status === 'Shortlisted').length;
+  useEffect(() => {
+    if (isMentorView) return;
+    modelService.get().then(setRegression).catch(() => setRegression(null));
+  }, [isMentorView, drafted, applications.length]);
+
   const entries = useMemo(() => {
-    const list = queueEntries(applications).map(e => ({ ...e, p: model.p(e.app) }));
-    return list.sort((a, b) => b.p - a.p || (b.app.fitScore ?? 0) - (a.app.fitScore ?? 0));
-  }, [applications, model]);
+    const list = queueEntries(applications).map(e => {
+      const r = regression?.drafts[e.app.id];
+      const p = r?.p ?? e.app.predictedP ?? model.p(e.app);
+      return { ...e, p, lo: r?.lo, hi: r?.hi, draw: r?.draw ?? p };
+    });
+    const key = (x: typeof list[number]) => (order === 'explore' ? x.draw : x.p);
+    return list.sort((a, b) => key(b) - key(a) || (b.app.fitScore ?? 0) - (a.app.fitScore ?? 0));
+  }, [applications, model, regression, order]);
 
   const count = (s: QueueState) => entries.filter(e => e.state === s).length;
   const live = entries.filter(e => e.state !== 'skip');
@@ -121,6 +138,13 @@ const Queue: React.FC = () => {
             </button>
           ))}
         </div>
+        {regression && (
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Order">
+            <button className="chip" aria-pressed={order === 'odds'} onClick={() => setOrder('odds')} title="Highest P(interview) first">By odds</button>
+            <button className="chip" aria-pressed={order === 'explore'} title="One draw from the posterior: uncertain drafts sometimes come first"
+              onClick={() => { setOrder('explore'); modelService.get().then(setRegression).catch(() => {}); }}>Explore</button>
+          </div>
+        )}
         <div className="flex flex-wrap gap-2" role="group" aria-label="Effort">
           {TIERS.map(t => (
             <button key={t} className="chip" aria-pressed={tier === t} onClick={() => setTier(t)}>
@@ -162,6 +186,7 @@ const Queue: React.FC = () => {
                     <div className="flex items-baseline gap-2 whitespace-nowrap">
                       <span className="stamp">P(INT)</span>
                       <span className={`text-xl font-semibold ${off || e.p < 0.02 ? 'text-ink-dim' : 'text-arc'}`}>{e.p.toFixed(3)}</span>
+                      {e.lo != null && e.hi != null && <span className="stamp">{e.lo.toFixed(3)}–{e.hi.toFixed(3)}</span>}
                     </div>
                   </div>
 
@@ -223,12 +248,37 @@ const Queue: React.FC = () => {
         </ul>
       )}
 
+      {regression && (
+        <details className="instrument">
+          <summary className="label cursor-pointer min-h-[44px] flex items-center">P(interview): the regression</summary>
+          <p className="stamp mt-2">
+            logit p = b₀ + Σ b[group, level] over tier, role, fit band, cover letter and source; b ~ N(0, σ²) with σ = {regression.sigma} chosen by
+            the Laplace evidence ({regression.n} sent, weighted as below). A draft's P = E[σ(xβ)] ≈ σ(μ/√(1 + πs²/8)), interval σ(μ ± 1.645 s).
+            Explore ranks by one draw β ~ N(β̂, H⁻¹) shared by every draft. Coefficients are log-odds against the average.
+          </p>
+          <div className="overflow-x-auto mt-3">
+            <table className="table">
+              <thead><tr><th>Factor</th><th className="n">b</th><th className="n">sd</th></tr></thead>
+              <tbody>
+                {regression.coefficients.slice(1).sort((x, y) => y.mean - x.mean).map(c => (
+                  <tr key={c.name}>
+                    <td className="text-ink-dim">{c.name.replace('=', ' · ')}</td>
+                    <td className={`n ${Math.abs(c.mean) > 2 * c.sd ? (c.mean > 0 ? 'text-arc' : 'text-gold') : ''}`}>{c.mean >= 0 ? '+' : ''}{c.mean.toFixed(2)}</td>
+                    <td className="n text-ink-dim">{c.sd.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
+
       <details className="instrument">
-        <summary className="label cursor-pointer min-h-[44px] flex items-center">P(interview)</summary>
+        <summary className="label cursor-pointer min-h-[44px] flex items-center">P(interview) by segment</summary>
         <p className="stamp mt-2">
           p₀ = {model.base.p.toFixed(3)} ({model.base.interviews} interviews / {model.base.sent} sent, weighted). Per segment (tier, role type, fit band):
           p | data ~ Beta(α, β), α = {K}·p₀ + Σw·y, β = {K}·(1−p₀) + Σw·f. f = 1 for a closed application, G(t) for one still waiting t days
-          (the share of replies in by then, blended with t/{HORIZON_DAYS}); w = {DECAY}^weeks. Per draft: geometric mean of its three E[p].
+          (the share of replies in by then, blended with t/{HORIZON_DAYS}); w = {DECAY}^weeks. Shown per draft only where the regression isn't loaded (the geometric mean of its three E[p]); it still picks the week's explore quest.
           Interval: {Math.round(CREDIBLE * 100)}% credible. Expected interviews = Σp.
         </p>
         <div className="overflow-x-auto mt-3">

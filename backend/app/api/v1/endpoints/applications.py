@@ -243,7 +243,11 @@ def update_application_status(
                           application_model.Application.id != application.id)
                   .options(selectinload(application_model.Application.history)).all())
         model = odds.odds_model(others)
-        application.predicted_p = model.p(application)
+        # The regression (core/model.py) when there is a track record to fit;
+        # the segment model is kept for the lucky draw and the quests.
+        from app.core import model as regression
+        fitted = regression.fit(others)
+        application.predicted_p = fitted.p(application) if fitted else model.p(application)
     db.add(application)
     
     # Record history
