@@ -115,5 +115,5 @@ def test_the_fit_is_cached_until_the_applications_change():
 def test_summary_is_plain_data():
     s = model.summary(synthetic(200) + [app(S.SHORTLISTED, i=7)], NOW, random.Random(0))
     assert s["coefficients"][0]["name"] == "(intercept)"
-    assert set(s["drafts"]["a7"]) == {"p", "lo", "hi", "draw"}
+    assert set(s["drafts"]["a7"]) == {"p", "lo", "hi", "draw", "mu", "s"}
     assert all(math.isfinite(c["mean"]) for c in s["coefficients"])

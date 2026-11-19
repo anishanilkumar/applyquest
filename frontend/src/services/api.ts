@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { User, JobApplication, NetworkContact, ApplicationStatus, Interview, GameState, RegressionModel } from '../types';
+import { User, JobApplication, NetworkContact, ApplicationStatus, Interview, RegressionModel } from '../types';
 
 const API_URL = '/api/v1';
 
-const apiClient = axios.create({
+export const apiClient = axios.create({
     baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json',
@@ -153,21 +153,6 @@ export const userService = {
 export const modelService = {
     // null until there is a track record to fit.
     get: async (): Promise<RegressionModel | null> => (await apiClient.get('/stats/model')).data,
-};
-
-export const gameService = {
-    // The game's slice of the summary Friday reads (backend core/stats.py).
-    get: async (): Promise<GameState> => {
-        const { data } = await apiClient.get('/stats/summary');
-        return {
-            today: { target: data.game.today.target, sent: data.game.today.sent, working: data.today.working },
-            banked: data.game.banked,
-            quests: data.game.quests,
-            freezes: data.streak.freezes ?? 0,
-            nextLevel: data.streak.next_level ?? null,
-            calibration: data.odds.calibration,
-        };
-    },
 };
 
 export const applicationService = {

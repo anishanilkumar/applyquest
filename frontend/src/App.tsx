@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AppProvider, useAppContext } from './context/AppContext';
+import { SummaryProvider } from './context/SummaryContext';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Applications from './pages/Applications';
@@ -39,6 +40,7 @@ function App() {
   return (
     <Router>
       <AppProvider>
+      <SummaryProvider>
         {/* Toasts as house callouts: a panel with a left rule in the state's colour. */}
         <Toaster
           position="top-right"
@@ -141,6 +143,7 @@ function App() {
             }
           />
         </Routes>
+      </SummaryProvider>
       </AppProvider>
     </Router>
   );

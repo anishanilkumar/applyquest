@@ -268,7 +268,9 @@ def drafts(applications: list, model: Fit, rng: random.Random | None = None) -> 
         if a.status != S.SHORTLISTED:
             continue
         lo, hi = model.interval(a)
-        out[str(a.id)] = {"p": model.p(a), "lo": lo, "hi": hi, "draw": model.p_with(beta, a)}
+        mu, s2 = model.linear(a)
+        out[str(a.id)] = {"p": model.p(a), "lo": lo, "hi": hi, "draw": model.p_with(beta, a),
+                          "mu": mu, "s": math.sqrt(s2)}
     return out
 
 

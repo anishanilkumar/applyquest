@@ -3,6 +3,7 @@ import { Settings } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { userService } from '../../services/api';
 import { computeRunway, paceFor, Stage } from '../../utils/runway';
+import Explain from '../common/Explain';
 
 const TARGETS = [0.5, 0.8, 0.9];
 const fmtDate = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -12,7 +13,7 @@ const perWeek = (x: number) => (Number.isFinite(x) ? `${Math.ceil(x)}/week` : '�
 const StageTile: React.FC<{ stage: Stage; unit: string }> = ({ stage, unit }) => (
   <div className="flex-1 min-w-[7rem] rounded-lg bg-panel-lit px-3 py-2">
     <div className="text-xs text-ink-dim">{stage.label} rate</div>
-    <div className="text-lg font-bold text-ink">{pct(stage.rate)}</div>
+    <div className="text-lg font-bold text-ink"><Explain k={`runway.stage.${stage.label.toLowerCase()}`}>{pct(stage.rate)}</Explain></div>
     <div className="text-xs text-ink-dim">
       {stage.successes} of {stage.trials} {unit}
       {(stage.assumed || stage.successes === 0) && (
@@ -137,7 +138,7 @@ const RunwayCard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,20rem)_1fr] gap-6">
         {/* Headline: the odds at the current pace */}
         <div>
-          <div className="text-5xl font-bold text-ink tabular-nums">{pct(r.chance)}</div>
+          <div className="text-5xl font-bold text-ink tabular-nums"><Explain k="runway.chance">{pct(r.chance)}</Explain></div>
           <div className="text-sm text-ink mt-1">
             chance of an offer by <span className="font-semibold">{fmtDate(r.offerBy)}</span>
           </div>
@@ -147,10 +148,10 @@ const RunwayCard: React.FC = () => {
           <p className="text-xs text-ink-dim mt-3 leading-relaxed">
             {closed
               ? `The last useful application date (${fmtDate(r.lastApplyBy)}) has passed — this is what is already in flight.`
-              : <>At your pace of <span className="font-semibold text-ink">{r.pacePerWeek.toFixed(1)}/week</span> (last 4 weeks), about{' '}
-                  <span className="font-semibold text-ink">{Math.round(r.projectedApplications)}</span> more applications before{' '}
-                  <span className="font-semibold text-ink">{fmtDate(r.lastApplyBy)}</span>, the last date one can still turn into an offer in time.</>}
-            {r.inFlight > 0 && ` ${r.inFlight} live application${r.inFlight === 1 ? '' : 's'} add ${pct(r.inFlightChance)} on their own.`}
+              : <>At your pace of <Explain k="runway.pace" className="font-semibold text-ink">{r.pacePerWeek.toFixed(1)}/week</Explain> (last 4 weeks), about{' '}
+                  <Explain k="runway.chance" className="font-semibold text-ink">{Math.round(r.projectedApplications)}</Explain> more applications before{' '}
+                  <Explain k="runway.weeks_left" className="font-semibold text-ink">{fmtDate(r.lastApplyBy)}</Explain>, the last date one can still turn into an offer in time.</>}
+            {r.inFlight > 0 && <> {r.inFlight} live application{r.inFlight === 1 ? '' : 's'} add <Explain k="runway.in_flight">{pct(r.inFlightChance)}</Explain> on their own.</>}
           </p>
         </div>
 
@@ -158,7 +159,7 @@ const RunwayCard: React.FC = () => {
           {/* The funnel the odds come from */}
           <div>
             <div className="text-xs font-medium text-ink-dim mb-2">
-              Your funnel — about <span className="text-ink font-semibold">{Math.round(r.applicationsPerOffer)}</span> applications per offer
+              Your funnel — about <Explain k="runway.per_application" className="text-ink font-semibold">{Math.round(r.applicationsPerOffer)}</Explain> applications per offer
             </div>
             <div className="flex flex-wrap gap-2">
               <StageTile stage={r.stages[0]} unit="sent" />
@@ -178,7 +179,7 @@ const RunwayCard: React.FC = () => {
                   return (
                     <div key={t} className={`flex-1 min-w-[6rem] rounded-lg px-3 py-2 border ${onPace ? 'border-engrave bg-panel-lit' : 'border-engrave'}`}>
                       <div className="text-xs text-ink-dim">{pct(t)} chance</div>
-                      <div className="text-lg font-bold text-ink">{perWeek(need)}</div>
+                      <div className="text-lg font-bold text-ink"><Explain k="runway.need">{perWeek(need)}</Explain></div>
                       <div className="text-xs text-ink-dim">{onPace ? 'on pace' : Number.isFinite(need) ? `+${Math.ceil(need - r.pacePerWeek)} vs now` : 'out of reach'}</div>
                     </div>
                   );

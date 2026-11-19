@@ -5,6 +5,7 @@ import { useAppContext } from '../context/AppContext';
 import { applicationService, modelService } from '../services/api';
 import { ApplicationEffort, ApplicationStatus, JobApplication, RegressionModel } from '../types';
 import { CREDIBLE, DECAY, HORIZON_DAYS, K, oddsModel } from '../utils/odds';
+import Explain from '../components/common/Explain';
 import { QUEUE_WINDOW_DAYS, QueueEntry, QueueState, queueEntries } from '../utils/queue';
 
 // The apply queue: drafts waiting to be sent, worked through one by one.
@@ -51,7 +52,7 @@ const Queue: React.FC = () => {
     const list = queueEntries(applications).map(e => {
       const r = regression?.drafts[e.app.id];
       const p = r?.p ?? e.app.predictedP ?? model.p(e.app);
-      return { ...e, p, lo: r?.lo, hi: r?.hi, draw: r?.draw ?? p };
+      return { ...e, p, lo: r?.lo, hi: r?.hi, draw: r?.draw ?? p, mu: r?.mu, s: r?.s };
     });
     const key = (x: typeof list[number]) => (order === 'explore' ? x.draw : x.p);
     return list.sort((a, b) => key(b) - key(a) || (b.app.fitScore ?? 0) - (a.app.fitScore ?? 0));
@@ -118,12 +119,12 @@ const Queue: React.FC = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <div className="label">Interviews expected</div>
-            <div className="readout">{expectedSent.toFixed(1)}</div>
+            <div className="readout"><Explain k="queue.expected" vars={{ e: expectedSent, n: count('sent') }}>{expectedSent.toFixed(1)}</Explain></div>
             <div className="stamp">Σp over what you sent</div>
           </div>
           <div>
             <div className="label">Still on the table</div>
-            <div className="readout">{expectedLeft.toFixed(1)}</div>
+            <div className="readout"><Explain k="queue.expected" vars={{ e: expectedLeft, n: count('todo') }}>{expectedLeft.toFixed(1)}</Explain></div>
             <div className="stamp">Σp if you send the rest</div>
           </div>
           <div className="meter col-span-2" aria-hidden="true"><i style={{ width: `${live.length ? (100 * count('sent')) / live.length : 0}%` }} /></div>
@@ -185,8 +186,11 @@ const Queue: React.FC = () => {
                     </h3>
                     <div className="flex items-baseline gap-2 whitespace-nowrap">
                       <span className="stamp">P(INT)</span>
-                      <span className={`text-xl font-semibold ${off || e.p < 0.02 ? 'text-ink-dim' : 'text-arc'}`}>{e.p.toFixed(3)}</span>
-                      {e.lo != null && e.hi != null && <span className="stamp">{e.lo.toFixed(3)}–{e.hi.toFixed(3)}</span>}
+                      <Explain k={e.mu != null ? 'model.p' : 'odds.draft_segments'} vars={{ mu: e.mu, s: e.s, p: e.p }}
+                        className={`text-xl font-semibold ${off || e.p < 0.02 ? 'text-ink-dim' : 'text-arc'}`}>{e.p.toFixed(3)}</Explain>
+                      {e.lo != null && e.hi != null && (
+                        <Explain k="model.interval" vars={{ mu: e.mu, s: e.s, lo: e.lo, hi: e.hi }} className="stamp">{e.lo.toFixed(3)}–{e.hi.toFixed(3)}</Explain>
+                      )}
                     </div>
                   </div>
 
@@ -252,9 +256,9 @@ const Queue: React.FC = () => {
         <details className="instrument">
           <summary className="label cursor-pointer min-h-[44px] flex items-center">P(interview): the regression</summary>
           <p className="stamp mt-2">
-            logit p = b₀ + Σ b[group, level] over tier, role, fit band, cover letter and source; b ~ N(0, σ²) with σ = {regression.sigma} chosen by
+            logit p = b₀ + Σ b[group, level] over tier, role, fit band, cover letter and source; b ~ N(0, σ²) with σ = <Explain k="model.sigma">{regression.sigma}</Explain> chosen by
             the Laplace evidence ({regression.n} sent, weighted as below). A draft's P = E[σ(xβ)] ≈ σ(μ/√(1 + πs²/8)), interval σ(μ ± 1.645 s).
-            Explore ranks by one draw β ~ N(β̂, H⁻¹) shared by every draft. Coefficients are log-odds against the average.
+            <Explain k="model.draw">Explore</Explain> ranks by one draw β ~ N(β̂, H⁻¹) shared by every draft. Coefficients are log-odds against the average.
           </p>
           <div className="overflow-x-auto mt-3">
             <table className="table">
@@ -263,7 +267,7 @@ const Queue: React.FC = () => {
                 {regression.coefficients.slice(1).sort((x, y) => y.mean - x.mean).map(c => (
                   <tr key={c.name}>
                     <td className="text-ink-dim">{c.name.replace('=', ' · ')}</td>
-                    <td className={`n ${Math.abs(c.mean) > 2 * c.sd ? (c.mean > 0 ? 'text-arc' : 'text-gold') : ''}`}>{c.mean >= 0 ? '+' : ''}{c.mean.toFixed(2)}</td>
+                    <td className={`n ${Math.abs(c.mean) > 2 * c.sd ? (c.mean > 0 ? 'text-arc' : 'text-gold') : ''}`}><Explain k="model.coef" vars={{ name: c.name, mean: c.mean, sd: c.sd, z: c.mean / c.sd, or: Math.exp(c.mean) }}>{c.mean >= 0 ? '+' : ''}{c.mean.toFixed(2)}</Explain></td>
                     <td className="n text-ink-dim">{c.sd.toFixed(2)}</td>
                   </tr>
                 ))}
@@ -276,9 +280,9 @@ const Queue: React.FC = () => {
       <details className="instrument">
         <summary className="label cursor-pointer min-h-[44px] flex items-center">P(interview) by segment</summary>
         <p className="stamp mt-2">
-          p₀ = {model.base.p.toFixed(3)} ({model.base.interviews} interviews / {model.base.sent} sent, weighted). Per segment (tier, role type, fit band):
+          p₀ = <Explain k="odds.base">{model.base.p.toFixed(3)}</Explain> ({model.base.interviews} interviews / {model.base.sent} sent, weighted). Per segment (tier, role type, fit band):
           p | data ~ Beta(α, β), α = {K}·p₀ + Σw·y, β = {K}·(1−p₀) + Σw·f. f = 1 for a closed application, G(t) for one still waiting t days
-          (the share of replies in by then, blended with t/{HORIZON_DAYS}); w = {DECAY}^weeks. Shown per draft only where the regression isn't loaded (the geometric mean of its three E[p]); it still picks the week's explore quest.
+          (<Explain k="odds.G">the share of replies in by then</Explain>, blended with t/{HORIZON_DAYS}); <Explain k="odds.decay">w = {DECAY}^weeks</Explain>. Shown per draft only where the regression isn't loaded (the geometric mean of its three E[p]); it still picks the week's explore quest.
           Interval: {Math.round(CREDIBLE * 100)}% credible. Expected interviews = Σp.
         </p>
         <div className="overflow-x-auto mt-3">
@@ -290,7 +294,7 @@ const Queue: React.FC = () => {
                   <td className="text-ink-dim">{s.kind} · {s.name}</td>
                   <td className="n">{s.interviews}</td>
                   <td className="n">{s.sent}</td>
-                  <td className="n">{s.p.toFixed(3)}</td>
+                  <td className="n"><Explain k="odds.segment" vars={{ kind: s.kind, name: s.name, i: s.interviews, n: s.sent, alpha: s.alpha, beta: s.beta, p: s.p, lo: s.lo, hi: s.hi }}>{s.p.toFixed(3)}</Explain></td>
                   <td className="n text-ink-dim">{s.lo.toFixed(3)}–{s.hi.toFixed(3)}</td>
                 </tr>
               ))}

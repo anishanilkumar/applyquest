@@ -96,6 +96,9 @@ def summary(user, applications: list, interviews: list, off_days: set[date], now
             "need_per_week": need,
             "in_flight": r.in_flight,
             "applications_per_offer": _finite(r.applications_per_offer),
+            "offer_per_application": r.offer_per_application,
+            "in_flight_chance": r.in_flight_chance,
+            "projected_applications": r.projected_applications,
             "stages": [s.as_dict() for s in r.stages],
         }
 
@@ -119,7 +122,7 @@ def summary(user, applications: list, interviews: list, off_days: set[date], now
                 recent.append((h.changed_at, a, h.new_status))
     recent.sort(key=lambda t: t[0], reverse=True)
 
-    return {
+    out = {
         "now": now.isoformat(),
         "today": {
             "date": today.isoformat(),
@@ -165,3 +168,9 @@ def summary(user, applications: list, interviews: list, off_days: set[date], now
         "recent": [{"company": a.company_name, "title": a.position_title, "status": st.value,
                     "at": at.replace(tzinfo=timezone.utc).isoformat()} for at, a, st in recent[:5]],
     }
+    from app.core import glossary, model
+    fitted = model.cached_fit(applications, now)
+    regression = {"sigma": fitted.sigma, "n": fitted.n, "log_evidence": fitted.log_evidence,
+                  "coefficients": fitted.names} if fitted else None
+    out["glossary"] = glossary.build(out, regression)
+    return out

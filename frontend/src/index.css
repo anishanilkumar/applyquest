@@ -234,3 +234,15 @@
 /* OSM's light tiles turned to dark navy: invert, turn the hues back, and
    dim. Only the tile pane, so markers and popups keep their real colours. */
 .map-dark .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.4); }
+
+/* ---- Explain: a value whose maths opens on hover, tap or focus (components/common/Explain.tsx) ---- */
+@layer components {
+  .explain { cursor: help; text-decoration: underline dotted rgb(var(--slate)); text-decoration-thickness: 2px; text-underline-offset: 0.2em; }
+  .explain:hover, .explain[aria-expanded="true"] { text-decoration-color: rgb(var(--arc)); }
+  .explain-pop {
+    position: fixed; z-index: 60; display: block; padding: 0.875rem 1rem; cursor: auto;
+    background: rgb(var(--panel-lit)); border: 2px solid rgb(var(--engrave)); border-left: 6px solid rgb(var(--arc));
+    font-weight: 400; letter-spacing: normal; line-height: 1.4; text-align: left; white-space: normal; text-transform: none;
+    font-size: 1rem; overflow-wrap: anywhere;
+  }
+}

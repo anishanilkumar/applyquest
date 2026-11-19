@@ -5,6 +5,7 @@ import { useAppContext } from '../../context/AppContext';
 import RunwayCard from './RunwayCard';
 import NextInterviewsCard from './NextInterviewsCard';
 import QuestCard from './QuestCard';
+import Explain from '../common/Explain';
 import { hasPositiveResponse, hasReachedInterview, isSubmitted } from '../../utils/stages';
 
 const ApplyQuestDashboard: React.FC = () => {
@@ -69,7 +70,7 @@ const ApplyQuestDashboard: React.FC = () => {
         {/* Level and points: kept, shown as a plain readout. */}
         <section className="instrument">
           <span className="label">Level {user.level}</span>
-          <p className="readout mt-2">{user.levelName || 'Novice'}</p>
+          <p className="readout mt-2"><Explain k="level">{user.levelName || 'Novice'}</Explain></p>
           <div className="flex gap-1 mt-4" aria-label={`${levelTicks} of 10 toward the next level`}>
             {Array.from({ length: 10 }, (_, i) => (
               <i key={i} className={`h-3 flex-1 ${i < levelTicks ? 'bg-arc' : 'bg-engrave'}`} />
@@ -81,7 +82,7 @@ const ApplyQuestDashboard: React.FC = () => {
         {/* Streak: working days in a row with an application. */}
         <section className="instrument">
           <span className="label">Streak</span>
-          <p className="mt-2"><span className="hero text-gold">{user.currentStreak}</span> <span className="stamp">days</span></p>
+          <p className="mt-2"><Explain k="streak" className="hero text-gold">{user.currentStreak}</Explain> <span className="stamp">days</span></p>
           <div className="flex gap-1 mt-4" aria-hidden="true">
             {Array.from({ length: 7 }, (_, i) => (
               <i key={i} className={`h-3 flex-1 ${i < Math.min(user.currentStreak, 7) ? 'bg-gold' : 'bg-engrave'}`} />
@@ -95,10 +96,10 @@ const ApplyQuestDashboard: React.FC = () => {
           <p className="mt-2"><span className="hero text-arc">{quickStats.totalApplications}</span></p>
           <dl className="mt-3 space-y-1 text-sm">
             <div className="flex justify-between" title="A reply or any later stage; rejections and ghosting don't count">
-              <dt className="text-ink-dim">Positive response</dt><dd className="font-mono">{quickStats.responseRate}%</dd>
+              <dt className="text-ink-dim">Positive response</dt><dd className="font-mono"><Explain k="rate.response">{quickStats.responseRate}%</Explain></dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-ink-dim">Interview rate</dt><dd className="font-mono">{quickStats.interviewRate}%</dd>
+              <dt className="text-ink-dim">Interview rate</dt><dd className="font-mono"><Explain k="rate.interview">{quickStats.interviewRate}%</Explain></dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-ink-dim">Awaiting an outcome</dt><dd className="font-mono">{quickStats.activeApplications}</dd>
